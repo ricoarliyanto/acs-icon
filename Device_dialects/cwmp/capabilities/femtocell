@@ -1,0 +1,6 @@
+# Femtocell capability
+# A device has Femtocell capabilities
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Femtocell.%force-value = "true"
+}

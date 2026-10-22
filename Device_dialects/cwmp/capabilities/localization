@@ -1,0 +1,6 @@
+# Localization capability
+# A device supports localization
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Localization.%force-value = "true"
+}

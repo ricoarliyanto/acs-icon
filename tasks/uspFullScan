@@ -1,0 +1,12 @@
+val arguments = Map(
+  "DwellTime" -> "120",
+  "DFSDwellTime" -> "600",
+  "HomeTime" -> "300"
+)
+
+usp.sendOperate(
+  command = "Device.WiFi.Radio.1.FullScan()",
+  commandKey = "sth",
+  sendResponse = true,
+  inputArguments = arguments,
+)

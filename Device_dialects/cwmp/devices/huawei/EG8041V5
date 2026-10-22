@@ -1,0 +1,307 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.gpon"
+include "cwmp.ext.wan.gpon.huawei"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.voip"
+include "cwmp.capabilities.wifi"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood"
+include "cwmp.ext.wifi.neighborhood.huawei"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+include "tools.remapping"
+
+remappingStrategy {
+  wifiSecurity {
+    // Expression check if all real key values are set to NONE
+    isNone = """if(
+      realValue('BeaconType') == 'Basic' and
+      realValue('BasicEncryptionModes') == 'None' and
+      realValue('BasicAuthenticationMode') == 'None'
+    ) 'NONE'"""
+
+    // Expresion return proper value for relevant real key to set NONE
+    setNone = """if(value == 'NONE')(
+      map('BeaconType' -> 'Basic',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+
+    // Expression check if all real key values are set to WPA
+    isWpa = """if(
+      realValue('BeaconType') == 'WPA' and
+      realValue('WPAEncryptionModes') == 'TKIPEncryption' and
+      realValue('WPAAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA'"""
+
+    // Expresion return proper value for relevant real key to set WPA
+    setWpa = """if(value == 'WPA')(
+      map('BeaconType' -> 'WPA',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+
+    // Expression check if all real key values are set to WPA2
+    isWpa2 = """if(
+      realValue('BeaconType') == '11i' and
+      realValue('IEEE11iEncryptionModes') == 'AESEncryption' and
+      realValue('IEEE11iAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA2'"""
+
+    // Expresion return proper value for relevant real key to set WPA2
+    setWpa2 = """if(value == 'WPA2')(
+      map('BeaconType' -> '11i',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+
+    // Expression check if all real key values are set to WPA_WPA2
+    isWpa_Wpa2 = """if(
+      realValue('BeaconType') == 'WPAand11i' and
+      realValue('WPAEncryptionModes') == 'TKIPEncryption' and
+      realValue('WPAAuthenticationMode') == 'PSKAuthentication' and
+      realValue('IEEE11iEncryptionModes') == 'AESEncryption' and
+      realValue('IEEE11iAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA_WPA2'"""
+
+    // Expresion return proper value for relevant real key to set WPA_WPA2
+    setWpa_Wpa2 = """if(value == 'WPA_WPA2')(
+      map('BeaconType' -> 'WPAand11i',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+  }
+  read_converter {
+    WiFi.%i {
+      Security = ${tools.expression} {
+        expression = """${
+          """${remappingStrategy.wifiSecurity.isNone}""" else
+          """${remappingStrategy.wifiSecurity.isWpa}""" else
+          """${remappingStrategy.wifiSecurity.isWpa2}""" else
+          """${remappingStrategy.wifiSecurity.isWpa_Wpa2}""" else 'CUSTOM' }"""
+      }
+      ChannelWidth {
+        expression = "${map('0'->'Auto','1'->'20','2'->'40','3'->'Auto').getOr(singleValue,'NONE')}"
+        type = expression
+      }
+    }
+    WAN.GPON.1.SupplyVoltage {
+      expression =  "${singleValue.toLong / 1000.0}"
+      type = expression
+    }
+  }
+  write_converter {
+    WiFi.%i {
+      Security = ${tools.expression} {
+        expression = """${
+            """${remappingStrategy.wifiSecurity.setNone}""" else
+            """${remappingStrategy.wifiSecurity.setWpa}""" else
+            """${remappingStrategy.wifiSecurity.setWpa2}""" else
+            """${remappingStrategy.wifiSecurity.setWpa_Wpa2}""" else null}"""
+      }
+    }
+    Diagnostics.Download.DownloadURL = ${tools.expression} {
+      expression = "${if (key.keyName == 'DownloadURL') value else '4'}"
+    }
+    WiFi.1 {
+      ChannelWidth = ${tools.expression} {
+        expression = "${map('Auto'->'0','20'->'1','40'->'2').get(value)}"
+      }
+    }
+    WiFi.2 {
+      ChannelWidth = ${tools.expression} {
+        expression = "${map('Auto'->'3','20'->'1','40'->'2').get(value)}"
+      }
+    }
+  }
+  activeKey.gpon = "${sv.activeWan.toParameterKey}"
+  activeKey.pon = "root.WANDevice.1.X_GponInterafceConfig"
+  activeKey.pon_fix = "root.WANDevice.1.X_GponInterfaceConfig"
+
+  mapping {
+    root.X_AVS_EXT.Diagnostics.Download.DownloadURL.real = ["root.DownloadDiagnostics.NumberOfConnections","root.DownloadDiagnostics.DownloadURL"]
+    
+    
+    root.X_AVS_EXT.System {
+      cpeCpuUsed.real = "root.X_AVS_EXT.Resources.CPUUsed"
+      cpeMemUsed.real = "root.X_AVS_EXT.Resources.RAMUsedPercent"
+      Uptime.real = "root.X_AVS_EXT.Status.UpTime"
+    }
+    root.X_AVS_EXT.LAN {
+      Port.%i {
+        DuplexMode.real = ${remappingStrategy.activeKey.lan}.LANEthernetInterfaceConfig.%i.DuplexMode
+      }
+    }
+    root.X_AVS_EXT {
+      WiFi {
+        1 {
+          Enable.real = "root.LANDevice.1.WLANConfiguration.1.RadioEnabled"
+          Password.real = "root.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase"
+          SupportedStandards.real = "root.LANDevice.1.WLANConfiguration.1.X_HW_SupportedStandards"
+          ChannelWidth.real = "${sv.vdmWlan1.toParameterKey}.X_HW_HT20"
+          Security.real = "root.LANDevice.1.WLANConfiguration.1.BeaconType"
+          NoiseFloor.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_Noise"
+          AssociatedDevice.%i {
+            SignalStrength.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_RSSI"
+            SignalToNoiseRatio.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_SNR"
+            Stats {
+              Downstream {
+                LastDataRate.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_RxRate"
+              }
+              Upstream {
+                LastDataRate.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_TxRate"
+              }
+            }
+          }
+        }
+        2 {
+          Enable.real = "root.LANDevice.1.WLANConfiguration.1.RadioEnabled"
+          Password.real = "root.LANDevice.1.WLANConfiguration.5.PreSharedKey.1.KeyPassphrase"
+          SupportedStandards.real = "root.LANDevice.1.WLANConfiguration.5.X_HW_SupportedStandards"
+          ChannelWidth.real = "${sv.vdmWlan2.toParameterKey}.X_HW_HT20"
+          Security.real = "root.LANDevice.1.WLANConfiguration.5.BeaconType"
+          AssociatedDevice.%i {
+            SignalStrength.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.X_HW_RSSI"
+            SignalToNoiseRatio.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.X_HW_SNR"
+            Stats {
+              Downstream {
+                LastDataRate.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.X_HW_RxRate"
+              }
+              Upstream {
+                LastDataRate.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.X_HW_TxRate"
+              }
+            }
+          }
+        }
+      }
+      WAN {
+        GPON.1 {
+          Status.real = ["root.WANDevice.1.X_GponInterafceConfig.Status", "root.WANDevice.1.X_GponInterfaceConfig.Status"]
+          TransceiverTemperature.real = ["root.WANDevice.1.X_GponInterafceConfig.TransceiverTemperature", "root.WANDevice.1.X_GponInterfaceConfig.TransceiverTemperature"]
+          BiasCurrent.real = ["root.WANDevice.1.X_GponInterafceConfig.BiasCurrent", "root.WANDevice.1.X_GponInterfaceConfig.BiasCurrent"]
+          RXPower.real = ["root.WANDevice.1.X_GponInterafceConfig.RXPower", "root.WANDevice.1.X_GponInterfaceConfig.RXPower"]
+          TXPower.real = ["root.WANDevice.1.X_GponInterafceConfig.TXPower", "root.WANDevice.1.X_GponInterfaceConfig.TXPower"]
+          SupplyVoltage.real = ["root.WANDevice.1.X_GponInterafceConfig.SupplyVoltage", "root.WANDevice.1.X_GponInterfaceConfig.SupplyVoltage"]
+          Stats {
+            Downstream {
+              BroadcastPackets.real = ["root.WANDevice.1.X_GponInterafceConfig.Stats.RBroadcastPackets", "root.WANDevice.1.X_GponInterfaceConfig.Stats.RBroadcastPackets"]
+              MulticastPackets.real = ["root.WANDevice.1.X_GponInterafceConfig.Stats.RMulticastPackets", "root.WANDevice.1.X_GponInterfaceConfig.Stats.RMulticastPackets"]
+              PausePackets.real = ["root.WANDevice.1.X_GponInterafceConfig.Stats.RPausePackets", "root.WANDevice.1.X_GponInterfaceConfig.Stats.RPausePackets"]
+              UnicastPackets.real = ["root.WANDevice.1.X_GponInterafceConfig.Stats.RUnicastPackets", "root.WANDevice.1.X_GponInterfaceConfig.Stats.RUnicastPackets"]
+            }
+            Upstream {
+              BroadcastPackets.real = ["root.WANDevice.1.X_GponInterafceConfig.Stats.SBroadcastPackets", "root.WANDevice.1.X_GponInterfaceConfig.Stats.SBroadcastPackets"]
+              MulticastPackets.real = ["root.WANDevice.1.X_GponInterafceConfig.Stats.SMulticastPackets", "root.WANDevice.1.X_GponInterfaceConfig.Stats.SMulticastPackets"]
+              PausePackets.real = ["root.WANDevice.1.X_GponInterafceConfig.Stats.SPausePackets", "root.WANDevice.1.X_GponInterfaceConfig.Stats.SPausePackets"]
+              UnicastPackets.real = ["root.WANDevice.1.X_GponInterafceConfig.Stats.SUnicastPackets", "root.WANDevice.1.X_GponInterfaceConfig.Stats.SUnicastPackets"]
+            }
+          }
+        }
+      }
+      LAN.Devices.%i.Stats.Downstream.BytesLocal.real = ${remappingStrategy.activeKey.lan}.Hosts.Host.%i.X_HW_Stats.BytesReceived
+      LAN.Devices.%i.Stats.Upstream.BytesLocal.real = ${remappingStrategy.activeKey.lan}.Hosts.Host.%i.X_HW_Stats.BytesSent
+    }
+  }
+}
+cwmp.messageTimeout = 180000
+cwmp.sessionTimeout = 180000
+
+
+virtualPatching.patching.root.X_AVS_EXT.WiFi.%any.AssociatedDevice.%any {
+  Stats.Downstream.LastDataRate.%patch-value = "${node.value.toInt * 1000}"
+  Stats.Upstream.LastDataRate.%patch-value = "${node.value.toInt * 1000}"
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT.WAN {
+    Type.%force-value = "GPON"
+    GPON.1.Technology.%force-value = "GPON"
+  }
+  root.X_AVS_EXT.WiFi {
+    1 {
+      Standard {
+        %patch-value = "${node.value.drop(2).splitBy('').join(',')}"
+        %patch-outgoing-value = "${node.value.splitBy(',').join.reverse.concat('11').reverse}"
+      }
+      SupportedStandards {
+        %force-value = "b,g,n"
+      }
+      PossibleSecurities {
+        %force-type = "xsd:string"
+        %force-value = "NONE,WPA,WPA2,WPA_WPA2"
+      }
+      ChannelWidth {
+        %force-writable = true
+      }
+    }
+    2 {
+      Standard {
+        %patch-value = "${if(node.value == '11ac') node.value.drop(2) else if(node.value == '11anac') node.value.drop(2).reverse.drop(2).reverse.splitBy('').join(',').concat(',ac') else node.value.drop(2).splitBy('').join(',')}"
+        %patch-outgoing-value = "${if(node.value == 'ac') node.value.reverse.concat('11').reverse else node.value.splitBy(',').join.reverse.concat('11').reverse}"
+      }
+      SupportedStandards {
+         %force-value = "a,n,ac"
+      }
+      PossibleSecurities {
+        %force-type = "xsd:string"
+        %force-value = "NONE,WPA,WPA2,WPA_WPA2"
+      }
+      ChannelWidth {
+        %force-writable = true
+      }
+    }
+  }
+  root.X_AVS_EXT.Capabilities.IPTV {
+    %force-object-exists = true
+  }
+  root.X_AVS_EXT.LAN.Devices.1.IPAddress {
+    "%force-object-exists" = true
+  }
+}

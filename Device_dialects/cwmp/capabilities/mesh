@@ -1,0 +1,6 @@
+# Mesh capability
+# A device supports WiFi Mesh
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Mesh.%force-value = "true"
+}

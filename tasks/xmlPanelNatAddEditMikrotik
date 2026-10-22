@@ -1,0 +1,34 @@
+<config>
+  <store target="next_id" value="${if(task.property.nextInstance ? '' != '') (task.property.nextInstance.toInt - 1).toString   else ''}" />
+  <store target="action" value="${if(task.property.Action ? '' != '') 'action=\&quot;'+task.property.Action + '\&quot;' else ''}" />
+  <store target="chain" value="${if(task.property.Chain ? '' != '')  'chain=\&quot;'+task.property.Chain+ '\&quot;' else ''}" />
+  <store target="comment" value="${if(task.property.Comment ? '' != '')  'comment=\&quot;'+task.property.Comment + '\&quot;' else ''}" />
+  <store target="dst_address" value="${if(task.property.DstAddress ? '' != '') 'dst-addrress=\&quot;'+task.property.DstAddress + '\&quot;' else ''}" />
+  <store target="dst_port" value="${if(task.property.DstPort ? '' != '') 'dst-port=\&quot;'+task.property.DstPort  + '\&quot;' else ''}" />
+  <store target="ipsec_policy_p1" value="${if(task.property.IpSecPolicyDirection? '' != '') task.property.IpSecPolicyDirection else ''}" />
+  <store target="ipsec_policy_p2" value="${if(task.property.IpSecPolicy? '' != '') task.property.IpSecPolicy else ''}" />
+  <store target="ipsec_policy" value="${if(!list(#ipsec_policy_p1,#ipsec_policy_p2).filter(p=&gt;p != null and p != '').isEmpty) 'ipsec-policy=\&quot;'+list(#ipsec_policy_p2,#ipsec_policy_p1).filter(p=&gt;p != null and p != '').join(',').stripSuffix(',')+'\&quot;' else ''} " />
+  <store target="out_interface" value="${if(task.property.OutInterface ? '' != '') 'out-interface=\&quot;'+task.property.OutInterface + '\&quot;' else ''}" />
+  <store target="port" value="${if(task.property.Port ? '' != '')  'port=\&quot;'+task.property.Port + '\&quot;' else ''}" />
+  <store target="protocol" value="${if(task.property.Protocol ? '' != '')  'protocol=\&quot;'+task.property.Protocol + '\&quot;' else ''}" />
+  <store target="src_address" value="${if(task.property.SrcAddress ? '' != '') 'src-address=\&quot;'+task.property.SrcAddress   + '\&quot;' else ''}" />
+  <store target="src_port" value="${if(task.property.SrcPort ? '' != '') 'src-port=\&quot;'+task.property.SrcPort  + '\&quot;' else ''}" />
+  <store target="in_interface" value="${if(task.property.InInterface ? '' != '') 'in-interface=\&quot;'+task.property.InInterface  + '\&quot;' else ''}" />
+  <log message="/ip firewall nat add ${#chain}" />
+  <store target="cliCommand" value="/ip firewall nat add ${#chain}" />
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+  </cli>
+  <foreach list="${list(#action,#comment,#dst_address,#dst_port,#ipsec_policy,#out_interface,#port,#protocol,#src_address,#src_port,#in_interface).filter(p=&gt; !p.empty)}">
+    <log message="/ip firewall nat set numbers=${#next_id} ${#i} " />
+    <store target="cliCommand" value="/ip firewall nat set numbers=${#next_id} ${#i} " />
+    <cli protocol="${sv.protocol}">
+      <command cmd="/ip firewall nat set numbers=${#next_id} ${#i} " />
+      <out target="output" />
+    </cli>
+    <if expr="${#output.contains('expected end of command')}">
+      <finish status="ERROR" message="Error while executing the task ${#output}&quot;" />
+    </if>
+  </foreach>
+  <getParameters key="Device.X_AVS_EXT.Firewall.NAT." />
+</config>

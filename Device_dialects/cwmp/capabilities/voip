@@ -1,0 +1,6 @@
+# VoIP capability
+# A device supports VoIP
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.VoIP.%force-value = "true"
+}

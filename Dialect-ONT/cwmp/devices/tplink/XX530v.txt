@@ -1,0 +1,140 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic.dm2"
+include "cwmp.capabilities.management.dm2"
+include "cwmp.capabilities.resources.dm2"
+include "cwmp.capabilities.status.dm2"
+include "cwmp.capabilities.syslog.dm2"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet.dm2"
+include "cwmp.capabilities.ppp.dm2"
+include "cwmp.capabilities.wan.dm2"
+include "cwmp.capabilities.gpon.dm2"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging.dm2"
+include "cwmp.capabilities.dhcp.dm2"
+include "cwmp.capabilities.dns.dm2"
+include "cwmp.capabilities.firewall.dm2"
+include "cwmp.capabilities.forwarding.dm2"
+include "cwmp.capabilities.iptv.dm2"
+include "cwmp.capabilities.lan.dm2"
+include "cwmp.capabilities.ntp.dm2"
+include "cwmp.capabilities.process.dm2"
+include "cwmp.capabilities.radius.dm2"
+include "cwmp.capabilities.routing.dm2"
+include "cwmp.capabilities.storage.dm2"
+include "cwmp.capabilities.usb.dm2"
+include "cwmp.capabilities.users.dm2"
+include "cwmp.capabilities.voip.dm2"
+include "cwmp.capabilities.vlan.dm2"
+include "cwmp.capabilities.wifi.dm2"
+include "cwmp.capabilities.xmpp.dm2"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics.dm2"
+include "cwmp.capabilities.neighborhood.dm2"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+remappingStrategy {
+  mapping {
+    root.X_AVS_EXT {
+      VoIP {
+        Profile.%i {
+          Enable.real = "root.Services.VoiceService.%i.VoiceProfile.1.Enable"
+          OutboundProxy {
+            Address.real = "root.Services.VoiceService.%i.VoiceProfile.1.SIP.OutboundProxy"
+            Port.real = "root.Services.VoiceService.%i.VoiceProfile.1.SIP.OutboundProxyPort"
+          }
+          Proxy {
+            Address.real = "root.Services.VoiceService.%i.VoiceProfile.1.SIP.ProxyServer"
+            Port.real = "root.Services.VoiceService.%i.VoiceProfile.1.SIP.ProxyServerPort"
+            Transport.real = "root.Services.VoiceService.%i.VoiceProfile.1.SIP.ProxyServerTransport"
+          }
+          Registrar {
+            Address.real = "root.Services.VoiceService.%i.VoiceProfile.1.SIP.RegistrarServer"
+            Port.real = "root.Services.VoiceService.%i.VoiceProfile.1.SIP.RegistrarServerPort"
+            Transport.real = "root.Services.VoiceService.%i.VoiceProfile.1.SIP.RegistrarServerTransport"
+          }
+          Line.%j {
+            Enable.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Enable"
+            Status.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Status"
+            CallState.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.CallState"
+            DirectoryNumber.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.DirectoryNumber"
+            PhysicalInterfaceList.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.PhyReferenceList"
+            Account {
+              UserName.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.SIP.AuthUserName"
+              Password.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.SIP.AuthPassword"
+              URI.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.SIP.URI"
+            }
+            Stats {
+              OutgoingCalls {
+                Failed.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.OutgoingCallsFailed"
+                Connected.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.OutgoingCallsConnected"
+                Attempted.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.OutgoingCallsAttempted"
+                Answered.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.OutgoingCallsAnswered"
+              }
+              IncomingCalls {
+                Failed.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.IncomingCallsFailed"
+                Connected.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.IncomingCallsConnected"
+                Received.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.IncomingCallsReceived"
+                Answered.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.IncomingCallsAnswered"
+              }
+              Downstream {
+                Bytes.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.BytesReceived"
+                Packets.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.PacketsReceived"
+            }
+              Upstream {
+                Bytes.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.BytesSent"
+                Packets.real = "root.Services.VoiceService.%i.VoiceProfile.1.Line.%j.Stats.PacketsSent"
+            }
+            }
+          }
+        }
+      }
+      WAN {
+        GPON.%i {
+          Enable.real = "root.Optical.Interface.%i.X_TP_GPON_Config.Enable"
+          Status.real = "root.Optical.Interface.%i.X_TP_GPON_Config.Status"
+          Technology.real = "root.Optical.Interface.%i.X_TP_GPON_Config.PonType"
+          BiasCurrent.real = "root.Optical.Interface.%i.X_TP_GPON_Config.BiasCurrent"
+          MACAddress.real = "root.Optical.Interface.%i.X_TP_GPON_Config.MACAddress"
+          RXPower.real = "root.Optical.Interface.%i.X_TP_GPON_Config.RXPower"
+          TXPower.real = "root.Optical.Interface.%i.X_TP_GPON_Config.TXPower"
+          SupplyVottage.real = "root.Optical.Interface.%i.X_TP_GPON_Config.SupplyVottage"
+          TransceiverTemperature.real = "root.Optical.Interface.%i.X_TP_GPON_Config.TransceiverTemperature"
+          Stats {
+            Downstream {
+              Bytes.real = "root.Optical.Interface.%i.Stats.BytesReceived"
+              Packets.real = "root.Optical.Interface.%i.Stats.PacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "root.Optical.Interface.%i.Stats.BytesSent"
+              Packets.real = "root.Optical.Interface.%i.Stats.PacketsSent"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    WiFi {
+      %any {
+        SupportedStandards = null
+        SupportedStandards = {}
+      }
+    }
+  }
+}

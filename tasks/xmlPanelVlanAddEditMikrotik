@@ -1,0 +1,47 @@
+<config>
+  <store target="vlanId" value="${task.property.vlanId}" />
+  <store target="vlanName" value="${task.property.vlanName}" />
+  <store target="vlanInterface" value="${task.property.vlanInterface}" />
+  <store target="vlanArp" value="${task.property.vlanArp}" />
+  <store target="vlanMtu" value="${task.property.vlanMTU}" />
+  <store target="vlanUseServiceTag" value="${task.property.vlanUseServiceTag}" />
+  <store target="cliCommand1" value="/interface vlan add name=${#vlanName} vlan-id=${#vlanId} interface=${#vlanInterface} arp=${#vlanArp} mtu=${#vlanMtu} use-service-tag=no" />
+  <store target="cliCommand2" value="/interface vlan add name=${#vlanName} vlan-id=${#vlanId} interface=${#vlanInterface} arp=${#vlanArp} mtu=${#vlanMtu} use-service-tag=yes" />
+  <if expr="${#vlanUseServiceTag=='false'}">
+    <cli protocol="${sv.protocol}">
+      <command cmd="${#cliCommand1}" />
+      <out target="output1" />
+    </cli>
+    <else>
+      <cli protocol="${sv.protocol}">
+        <command cmd="${#cliCommand2}" />
+        <out target="output2" />
+      </cli>
+    </else>
+  </if>
+  <if expr="${#output1.contains('failure: already have interface with such name')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output1.contains('input does not match any value of interface')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output1.contains('value of vlan-id out of range (1..4095)')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output1.contains('failure: could not set mtu')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output2.contains('failure: already have interface with such name')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output2.contains('input does not match any value of interface')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output2.contains('value of vlan-id out of range (1..4095)')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output2.contains('failure: could not set mtu')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <getParameters key="Device.X_AVS_EXT.VLAN." />
+</config>

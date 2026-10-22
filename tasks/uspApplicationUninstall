@@ -1,0 +1,2 @@
+val uuid = task.parameters.uuid.get
+device.dm.SoftwareModules.DeploymentUnit.any.UUID.whereValueIs(uuid).key.parent.`Uninstall()`.operation()

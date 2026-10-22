@@ -1,0 +1,10 @@
+{
+  "files.associations": {
+    "*": "ruby"
+  },
+  "editor.bracketPairColorization.enabled": true,
+  "[hocon]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  }
+}

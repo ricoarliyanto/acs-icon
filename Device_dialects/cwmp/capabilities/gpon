@@ -1,0 +1,6 @@
+# GPON capability
+# A device is able to connect via GPON
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.GPON.%force-value = "true"
+}

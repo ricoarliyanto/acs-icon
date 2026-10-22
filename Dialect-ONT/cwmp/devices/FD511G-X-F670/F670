@@ -1,0 +1,170 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.gpon"
+include "cwmp.capabilities.ethernet"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.routing"
+# include "cwmp.capabilities.wifi" 
+include "cwmp.capabilities.vlan"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+include "tools.remapping"
+
+remappingStrategy {
+    
+    # Read converters for unit correction
+    # REVERTING TO PROVEN WORKING SYNTAX (Step 168/171)
+    # Quoted Keys + Quoted "type" + Commas.
+    # Removed complex .toDouble() logic temporarily to verify syntax stability.
+    read_converter {
+        "WAN.GPON.1.SupplyVoltage" {
+             expression = "${singleValue.toString().replaceAll('[^0-9.]', '')}",
+             "type" : "expression"
+        },
+        "WAN.GPON.1.RXPower" {
+             expression = "${singleValue.toString().replaceAll('[^0-9.-]', '')}",
+             "type" : "expression"
+        },
+        "WAN.GPON.1.TXPower" {
+             expression = "${singleValue.toString().replaceAll('[^0-9.-]', '')}",
+             "type" : "expression"
+        },
+        "WAN.GPON.1.BiasCurrent" {
+             expression = "${singleValue.toString().replaceAll('[^0-9.]', '')}",
+             "type" : "expression"
+        },
+        "WAN.GPON.1.TransceiverTemperature" {
+             expression = "${singleValue}",
+             "type" : "expression"
+        },
+        
+        # Force WAN Type defaults
+        "WAN.Type" {
+             expression = "${'GPON'}",
+             "type" : "expression"
+        },
+        "WAN.WANAccessType" {
+             expression = "${'GPON'}",
+             "type" : "expression"
+        }
+    }
+
+    mapping {
+        # === SYSTEM RESOURCES ===
+        root.X_AVS_EXT.Resources {
+            CPUUsed.real = "root.DeviceInfo.ProcessStatus.CPUUsage"
+            RAMUsedPercent.real = "root.DeviceInfo.X_CMS_MemUsage" 
+        }
+        
+        root.X_AVS_EXT.Status {
+             Temperature.real = "root.DeviceInfo.XponInterface.TransceiverTemperature"
+        }
+
+        # === WAN GLOBAL ===
+        root.X_AVS_EXT.WAN {
+             # Standard WANDevice mappings
+             MACAddress.real = "root.WANDevice.1.WANEthernetInterfaceConfig.MACAddress"
+             
+             # Connection Details
+             IPAddress.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress"
+             Netmask.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.SubnetMask"
+             Gateway.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DefaultGateway"
+             DNSServers.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DNSServers"
+             Uptime.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Uptime"
+
+             # Generic WAN Stats (using GPON stats as proxy)
+             Stats {
+                Downstream {
+                    Bytes.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesReceived"
+                    Packets.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsReceived"
+                }
+                Upstream {
+                    Bytes.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesSent"
+                    Packets.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsSent"
+                }
+             }
+
+             # Dummy key for Type/WANAccessType to be overwritten by converter. 
+             # We use XponInterface.Status (UP) so converter receives a value to replace.
+             Type.real = "root.DeviceInfo.XponInterface.Status"
+             WANAccessType.real = "root.DeviceInfo.XponInterface.Status"
+             
+             # Map detailed stats from GponInterfaceConfig
+             GPON.1 {
+                Status.real = "root.DeviceInfo.XponInterface.Status"
+                TransceiverTemperature.real = "root.DeviceInfo.XponInterface.TransceiverTemperature"
+                BiasCurrent.real = "root.DeviceInfo.XponInterface.BiasCurrent"
+                RXPower.real = "root.DeviceInfo.XponInterface.RXPower"
+                TXPower.real = "root.DeviceInfo.XponInterface.TXPower"
+                SupplyVoltage.real = "root.DeviceInfo.XponInterface.SupplyVottage" # Note: Typo in Datamodel 'Vottage'
+                
+                Stats {
+                    Downstream {
+                        Bytes.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesReceived"
+                        Packets.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsReceived"
+                        BroadcastPackets.real =  "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RBroadcastPackets"
+                        MulticastPackets.real =  "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RMulticastPackets"
+                        UnicastPackets.real =    "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RUnicastPackets"
+                        PausePackets.real =      "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RPausePackets"
+                    }
+                    Upstream {
+                        Bytes.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesSent"
+                        Packets.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsSent"
+                        BroadcastPackets.real =  "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SBroadcastPackets"
+                        MulticastPackets.real =  "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SMulticastPackets"
+                        UnicastPackets.real =    "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SUnicastPackets"
+                        PausePackets.real =      "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SPausePackets"
+                    }
+                    
+                    FECError.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.FECError"
+                    HECError.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.HECError"
+                    DropPackets.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.DropPackets"
+                }
+            }
+        }
+        
+        # === Top Level Mappings requested ===
+        root.X_AVS_EXT.cpeRXPower.real = "root.DeviceInfo.XponInterface.RXPower"
+        root.X_AVS_EXT.cpeTXPower.real = "root.DeviceInfo.XponInterface.TXPower"
+
+        # === DIAGNOSTICS ===
+        root.X_AVS_EXT.Diagnostics.Download.DownloadURL.real = "root.DownloadDiagnostics.DownloadURL"
+        root.X_AVS_EXT.Diagnostics.Upload.UploadURL.real = "root.UploadDiagnostics.UploadURL"
+    }
+}
+
+virtualPatching {
+  patching {
+    root.X_AVS_EXT.WAN.GPON.1.%force-object-exists = "true"
+    root.X_AVS_EXT.Resources.%force-object-exists = "true"
+  }
+}
+
+cwmp.messageTimeout = 180000
+cwmp.sessionTimeout = 180000

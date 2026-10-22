@@ -1,0 +1,91 @@
+<config>
+    <!-- WCD.1 PPP -->
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress" output="PppIP1" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.MACAddress" output="PppMac1" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.X_ZTE-COM_VLANID" output="PppVlan1" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username" output="PppUser1" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.X_ZTE-COM_ServiceList" output="PppSvc1" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.MaxMTUSize" output="PppMtu1" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.TransportType" output="internetType1" ignoreFaults="true" />
+
+    <!-- WCD.2 PPP -->
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.ExternalIPAddress" output="PppIP2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.MACAddress" output="PppMac2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.X_ZTE-COM_VLANID" output="PppVlan2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.Username" output="PppUser2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.X_ZTE-COM_ServiceList" output="PppSvc2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.MaxMTUSize" output="PppMtu2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.TransportType" output="internetType2" ignoreFaults="true" />
+
+    <!-- WCD.3 PPP -->
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection.1.ExternalIPAddress" output="PppIP3" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection.1.MACAddress" output="PppMac3" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection.1.X_ZTE-COM_VLANID" output="PppVlan3" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection.1.Username" output="PppUser3" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection.1.X_ZTE-COM_ServiceList" output="PppSvc3" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection.1.MaxMTUSize" output="PppMtu3" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection.1.TransportType" output="internetType3" ignoreFaults="true" />
+
+    <!-- WCD.4 PPP -->
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.4.WANPPPConnection.1.ExternalIPAddress" output="PppIP4" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.4.WANPPPConnection.1.MACAddress" output="PppMac4" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.4.WANPPPConnection.1.X_ZTE-COM_VLANID" output="PppVlan4" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.4.WANPPPConnection.1.Username" output="PppUser4" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.4.WANPPPConnection.1.X_ZTE-COM_ServiceList" output="PppSvc4" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.4.WANPPPConnection.1.MaxMTUSize" output="PppMtu4" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.4.WANPPPConnection.1.TransportType" output="internetType4" ignoreFaults="true" />
+
+
+    <!-- EVALUATE WCD.1 -->
+    <if expr="${#PppSvc1 != null and (#PppSvc1.toLowerCaseEnglish.contains('inet') or #PppSvc1.toLowerCaseEnglish.contains('internet'))}">
+        <store type="devProp" target="cpeInternetWanExternalIPAddress" value="${#PppIP1}" />
+        <store type="devProp" target="cpeInternetWanVLANID" value="${#PppVlan1}" />
+        <store type="devProp" target="cpeInternetWanMaxMTUSize" value="${#PppMtu1}" />
+        <store type="devProp" target="cpePppUsername" value="${#PppUser1}" />
+        <store type="devProp" target="internetType" value="${#internetType1}" />
+        <store type="devProp" target="cpeActiveWanMac" value="${#PppMac1}" />
+    </if>
+    <if expr="${#PppSvc1 != null and (#PppSvc1.toLowerCaseEnglish.contains('tr069') or #PppSvc1.toLowerCaseEnglish.contains('tr'))}">
+        <store type="devProp" target="cpeActiveTr069Mac" value="${#PppMac1}" />
+    </if>
+
+    <!-- EVALUATE WCD.2 -->
+    <if expr="${#PppSvc2 != null and (#PppSvc2.toLowerCaseEnglish.contains('inet') or #PppSvc2.toLowerCaseEnglish.contains('internet'))}">
+        <store type="devProp" target="cpeInternetWanExternalIPAddress" value="${#PppIP2}" />
+        <store type="devProp" target="cpeInternetWanVLANID" value="${#PppVlan2}" />
+        <store type="devProp" target="cpeInternetWanMaxMTUSize" value="${#PppMtu2}" />
+        <store type="devProp" target="cpePppUsername" value="${#PppUser2}" />
+        <store type="devProp" target="internetType" value="${#internetType2}" />
+        <store type="devProp" target="cpeActiveWanMac" value="${#PppMac2}" />
+    </if>
+    <if expr="${#PppSvc2 != null and (#PppSvc2.toLowerCaseEnglish.contains('tr069') or #PppSvc2.toLowerCaseEnglish.contains('tr'))}">
+        <store type="devProp" target="cpeActiveTr069Mac" value="${#PppMac2}" />
+    </if>
+
+    <!-- EVALUATE WCD.3 -->
+    <if expr="${#PppSvc3 != null and (#PppSvc3.toLowerCaseEnglish.contains('inet') or #PppSvc3.toLowerCaseEnglish.contains('internet'))}">
+        <store type="devProp" target="cpeInternetWanExternalIPAddress" value="${#PppIP3}" />
+        <store type="devProp" target="cpeInternetWanVLANID" value="${#PppVlan3}" />
+        <store type="devProp" target="cpeInternetWanMaxMTUSize" value="${#PppMtu3}" />
+        <store type="devProp" target="cpePppUsername" value="${#PppUser3}" />
+        <store type="devProp" target="internetType" value="${#internetType3}" />
+        <store type="devProp" target="cpeActiveWanMac" value="${#PppMac3}" />
+    </if>
+    <if expr="${#PppSvc3 != null and (#PppSvc3.toLowerCaseEnglish.contains('tr069') or #PppSvc3.toLowerCaseEnglish.contains('tr'))}">
+        <store type="devProp" target="cpeActiveTr069Mac" value="${#PppMac3}" />
+    </if>
+
+    <!-- EVALUATE WCD.4 -->
+    <if expr="${#PppSvc4 != null and (#PppSvc4.toLowerCaseEnglish.contains('inet') or #PppSvc4.toLowerCaseEnglish.contains('internet'))}">
+        <store type="devProp" target="cpeInternetWanExternalIPAddress" value="${#PppIP4}" />
+        <store type="devProp" target="cpeInternetWanVLANID" value="${#PppVlan4}" />
+        <store type="devProp" target="cpeInternetWanMaxMTUSize" value="${#PppMtu4}" />
+        <store type="devProp" target="cpePppUsername" value="${#PppUser4}" />
+        <store type="devProp" target="internetType" value="${#internetType4}" />
+        <store type="devProp" target="cpeActiveWanMac" value="${#PppMac4}" />
+    </if>
+    <if expr="${#PppSvc4 != null and (#PppSvc4.toLowerCaseEnglish.contains('tr069') or #PppSvc4.toLowerCaseEnglish.contains('tr'))}">
+        <store type="devProp" target="cpeActiveTr069Mac" value="${#PppMac4}" />
+    </if>
+
+</config>

@@ -1,0 +1,6 @@
+# Captive portal capability
+# A device is able to serve captive portal for a Wi-Fi network.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.CaptivePortal.%force-value = "true"
+}

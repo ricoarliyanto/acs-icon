@@ -1,0 +1,4 @@
+<config>
+  <set key="Root.X_AVS_EXT.WiFi.${#radio}.RegulatoryDomain" value="${#domain}" />
+  <log message="Domain changed to ${#domain} on radio ${#radio} by Heal Action" />
+</config>

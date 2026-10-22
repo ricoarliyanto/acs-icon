@@ -1,0 +1,13 @@
+<config>
+  <store target="name" value="${task.property.Name}" />
+  <store target="protocol-mode" value="${task.property.ProtocolMode}" />
+  <store target="cliCommand" value="/interface bridge add name=${#name} protocol-mode=${#`protocol-mode`}" />
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <if expr="${#output.contains('expected end of command')}">
+    <finish status="ERROR" message="Error while executing the task: ${#output}" />
+  </if>
+  <getParameters key="Device.X_AVS_EXT.Bridging." />
+</config>

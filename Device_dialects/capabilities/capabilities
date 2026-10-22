@@ -1,0 +1,77 @@
+include "tools.patching"
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    %force-object-exists = true
+    Capabilities {
+      %override-tree = true
+      %force-object-exists = true
+      Alarm = ${tools.patching.boolean.false}
+      Applications = ${tools.patching.boolean.false}
+      Backup = ${tools.patching.boolean.false}
+      Bridging = ${tools.patching.boolean.false}
+      CaptivePortal = ${tools.patching.boolean.false}
+      ChannelWiFiDiagnostic = ${tools.patching.boolean.false}
+      CMTS = ${tools.patching.boolean.false}
+      CMTSLine = ${tools.patching.boolean.false}
+      DHCP = ${tools.patching.boolean.false}
+      Diagnostics = ${tools.patching.boolean.false}
+      DNS = ${tools.patching.boolean.false}
+      DSL = ${tools.patching.boolean.false}
+      DSLAM = ${tools.patching.boolean.false}
+      DSLAMLine = ${tools.patching.boolean.false}
+      eRouter = ${tools.patching.boolean.false}
+      Ethernet = ${tools.patching.boolean.false}
+      Firewall = ${tools.patching.boolean.false}
+      FirstUseDate = ${tools.patching.boolean.false}
+      Forwarding = ${tools.patching.boolean.false}
+      Generic = ${tools.patching.boolean.false}
+      HFC = ${tools.patching.boolean.false}
+      IPTV = ${tools.patching.boolean.false}
+      IPTVRich = ${tools.patching.boolean.false}
+      Interfaces = ${tools.patching.boolean.false}
+      LAN = ${tools.patching.boolean.false}
+      LEDs = ${tools.patching.boolean.false}
+      Localization = ${tools.patching.boolean.false}
+      LTE = ${tools.patching.boolean.false}
+      MACFiltering = ${tools.patching.boolean.false}
+      Management = ${tools.patching.boolean.false}
+      Mesh = ${tools.patching.boolean.false}
+      MTA = ${tools.patching.boolean.false}
+      Neighborhood = ${tools.patching.boolean.false}
+      NTP = ${tools.patching.boolean.false}
+      ParentalControl = ${tools.patching.boolean.false}
+      Ping = ${tools.patching.boolean.false}
+      PLC = ${tools.patching.boolean.false}
+      GPON = ${tools.patching.boolean.false}
+      PortStatistics = ${tools.patching.boolean.false}
+      PPP = ${tools.patching.boolean.false}
+      Process = ${tools.patching.boolean.false}
+      QoS = ${tools.patching.boolean.false}
+      Reboot = ${tools.patching.boolean.false}
+      Radius = ${tools.patching.boolean.false}
+      Resources = ${tools.patching.boolean.false}
+      Restore = ${tools.patching.boolean.false}
+      Routing = ${tools.patching.boolean.false}
+      Schedule = ${tools.patching.boolean.false}
+      ShelfSlotPort = ${tools.patching.boolean.false}
+      Status = ${tools.patching.boolean.false}
+      Storage = ${tools.patching.boolean.false}
+      Syslog = ${tools.patching.boolean.false}
+      Temperature = ${tools.patching.boolean.false}
+      UDPEcho = ${tools.patching.boolean.false}
+      UKE = ${tools.patching.boolean.false}
+      USB = ${tools.patching.boolean.false}
+      Users = ${tools.patching.boolean.false}
+      VLAN = ${tools.patching.boolean.false}
+      VLANTermination = ${tools.patching.boolean.false}
+      VoIP = ${tools.patching.boolean.false}
+      WAN = ${tools.patching.boolean.false}
+      WiFi = ${tools.patching.boolean.false}
+      WiFiMaxClients = ${tools.patching.boolean.false}
+      WiFiSsidIsolation = ${tools.patching.boolean.false}
+      WiFiBandSteering = ${tools.patching.boolean.false}
+      XMPP = ${tools.patching.boolean.false}
+    }
+  }
+}

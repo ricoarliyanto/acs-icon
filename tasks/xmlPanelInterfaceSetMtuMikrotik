@@ -1,0 +1,19 @@
+<config>
+  <store target="interfaceName" value="${task.property.Name}" />
+  <store target="interfaceMtu" value="${task.property.Mtu}" />
+  <store target="cliCommand" value="/interface set ${#interfaceName} mtu=${#interfaceMtu}" />
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <if expr="${#output.contains('no such item')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output.contains('an integer required')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output.contains('value of mtu out of range (0..65536)')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <getParameters key="Device.X_AVS_EXT.Interface" />
+</config>

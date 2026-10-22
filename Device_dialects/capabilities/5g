@@ -1,0 +1,6 @@
+# 5G capability
+# A device is able to expose 5G WAN connection parameters and their configuration
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.5G.%force-value = "true"
+}

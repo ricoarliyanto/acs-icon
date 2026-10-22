@@ -1,0 +1,4 @@
+<config>
+  <store target="contractedDownloadSpeed" value="262144000" type="devProp" />
+  <store target="contractedUploadSpeed" value="786432000" type="devProp" />
+</config>

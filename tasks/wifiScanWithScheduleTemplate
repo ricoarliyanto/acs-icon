@@ -1,0 +1,20 @@
+dmkey.root.X_AVS_EXT.Diagnostics.Neighborhood.Run.set("1")
+var state = dmkey.root.X_AVS_EXT.Diagnostics.Neighborhood.State.get()
+log.info("current state: $state")
+
+val taskStart = Timestamp.now()
+do {
+  session.wait(false)
+  state = dmkey.root.X_AVS_EXT.Diagnostics.Neighborhood.State.get()
+  log.info("current state: $state")
+  if (inform.diagnosticsComplete && state.contains("Requested")) {
+    dmkey.root.X_AVS_EXT.Diagnostics.Neighborhood.Run.set("1")
+  }
+} while(!inform.diagnosticsComplete && (Timestamp.now().since(taskStart) < 10.minutes))
+
+if(!inform.diagnosticsComplete){
+  finish(status = "ERROR", summary = "Timeout while waiting for diagnostic to finish")
+} else {
+  state = dmkey.root.X_AVS_EXT.Diagnostics.Neighborhood.State.get()
+  log.info("current state: $state")
+  dmkey.root.X_AVS_EXT.WiFiNeighborhood.getObject()

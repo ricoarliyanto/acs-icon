@@ -1,0 +1,20 @@
+val firmwareVersion = task.parameters.selectDynamic("firmwareVersion").getOr(fail("You should provide firmware version."))
+val deviceProductFirmwareGroup = device.groups.find(el=>el.toString.contains(groups.domainRoot.devicetypes.toString)).get
+val deviceProductTypeGroup = deviceProductFirmwareGroup.parent
+val futureFirmwareVersionGroupId = deviceProductTypeGroup.subgroup("firmwareVersion").?(fallback = fail("You should provide correct firmware version."))
+if(sv.dialectName.getOr("").contains("cwmp.devices.avsystem.suchar")){
+  workflow.setStatus("Success", description = """ 
+    Device firmware version upgraded successfully 
+    New firmwareVersion: ${firmwareVersion} 
+    """)
+  finish()
+}
+val foundResourcesId = http.localRest("resources", method = "GET", uriParameters = Seq(
+  ("searchCriteria" -> "directGroups contains '$futureFirmwareVersionGroupId',category eq 'FIRMWARE'")
+)) |> { result =>
+  if(result.isError) {
+    taskReport.property.error.set("HTTP request to 'resources' failed in group $futureFirmwareVersionGroupId")
+    finish()
+  }
+  result.body.asArray.map(_.asString)
+} 

@@ -1,0 +1,8 @@
+<config>
+  <if expr="${sv.voipProfileRoot != null}">
+    <set key="${sv.voipProfileRoot}SIP.ProxyServer" value="${sv.voipProxyServer}" />
+    <set key="${sv.voipProfileRoot}SIP.RegistrarServer" value="${sv.voipRegistrarServer}" />
+    <set key="${sv.voipProfileRoot}SIP.OutboundProxy" value="${sv.voipOutboundProxy}" />
+    <set key="${sv.voipProfileRoot}SIP.UserAgentDomain" value="${sv.voipUserAgentDomain}" />
+  </if>
+</config>

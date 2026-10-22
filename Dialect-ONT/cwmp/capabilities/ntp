@@ -1,0 +1,6 @@
+# Network Time Protocol support
+# A device is able to synchronize an internal clock using the NTP protocol.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.NTP.%force-value = "true"
+}

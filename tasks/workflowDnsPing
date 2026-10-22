@@ -1,0 +1,20 @@
+<config>
+  <store target="allowedDnsServers" value="${sv.allowedDnsServers ? #allowedDnsServers}" />
+  <workflowExport name="dnsSetToAllowed" value="true" />
+  <if expr="${!(#allowedDnsServers.splitBy(',').toSet.containsAll(dm.X_AVS_EXT.DHCP.DNSServersList.value.splitBy(',').toSet))}">
+    <workflowExport name="allowedDnsServers" value="${#allowedDnsServers}" />
+    <workflowExport name="dnsSetToAllowed" value="false" />
+    <workflowStatus value="Error" desc="workflows.onlineStepTemplate.workflowDnsPing.status.1.description" />
+  </if>
+  <store target="pingHost" value="${dm.X_AVS_EXT.DHCP.DNSServersList.value.splitBy(',').get(0)}" />
+  <task template="IPPingDiagnostics_FromTask" class="com.avsystem.ump.acs.task.diagnostics.IpPingDiagnosticsTask" ignoreError="true">
+    <input alias="pingHost" var="pingHost" />
+  </task>
+  <store target="workflowDnsPingSuccessful" value="${if (#childStatus.startsWith('SUCCESS')) 'true' else 'false'}" />
+  <if expr="${#workflowDnsPingSuccessful.toBoolean ? false}">
+    <workflowStatus value="Success" desc="workflows.onlineStepTemplate.workflowDnsPing.status.2.descriptionworkflowTranslatable${#pingHost}workflowTranslatable" />
+    <else>
+      <workflowStatus value="Error" desc="workflows.onlineStepTemplate.workflowDnsPing.status.3.descriptionworkflowTranslatable${#pingHost}workflowTranslatable" />
+    </else>
+  </if>
+</config>

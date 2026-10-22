@@ -1,0 +1,41 @@
+val root = dmkey.root
+val topLevel = Seq(
+  root.RootDataModelVersion.noDot,
+  root.InterfaceStackNumberOfEntries.noDot,
+  root.Services.dot,
+  root.DeviceInfo.dot,
+  root.ManagementServer.dot,
+  root.GatewayInfo.dot,
+  root.IP.dot,
+  root.Hosts.dot,
+  root.NAT.dot,
+  root.DNS.dot,
+  root.DHCPv4.dot,
+  root.DHCPv6.dot,
+  root.DSLite.dot,
+  root.Routing.dot,
+  root.Firewall.dot,
+  root.WiFi.dot,
+  root.Time.dot,
+  root.Ethernet.dot,
+  root.Bridging.dot,
+  root.Users.dot,
+  root.XMPP.dot,
+  root.InterfaceStack.dot,
+  root.BulkData.dot,
+  root.PeriodicStatistics.dot,
+  root.RouterAdvertisement.dot,
+  root.Security.dot,
+  root.FaultMgmt.dot,
+  root.X_Kaon_COM_CableModem.dot,
+  root.X_Kaon_COM_MTA.dot
+)
+
+val blacklisted = Set(
+  root.Services.VoiceService.dot,
+  root.X_Kaon_COM_MTA.dot
+)
+
+topLevel.filter(tl => !blacklisted.exists(bl => tl.isAncestorOf(bl) || tl == bl)).foreach {
+  ldm.getAll(_)
+}

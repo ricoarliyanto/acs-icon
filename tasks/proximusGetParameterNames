@@ -1,0 +1,1 @@
+<config objectName="${#parameterPath}" recursive="${!#nextLevel.toBoolean}" saveResult="true" />

@@ -1,0 +1,14 @@
+# CLI Ping Strategy configuration
+ipPingStrategy = {
+  type: IP_PING
+  //  perform ping diagnostic
+  command = "ping -c ${ping.repetitions}${if(ping.interface != null && ping.interface != '') ' -i ' + ping.interface.toString else ''} -W ${ping.timeout/1000} ${ping.host}"
+  //  parse command output
+  regex = """(?<packets>\d+) packets transmitted, (?<received>\d+) received, (?<lost>\d+)% packet loss, time (?<time>\d+)ms\r?\nrtt min\/avg\/max\/mdev = (?<min>\d+).\d+\/(?<avg>\d+).\d+\/(?<max>\d+).\d+"""
+  //  order of connection request
+  scheduleCr = true
+  //  connection request delay
+  scheduleCrDelay = 10000
+}
+//  adding to the live datamodel strategies
+liveDatamodelStrategies += ${ipPingStrategy}

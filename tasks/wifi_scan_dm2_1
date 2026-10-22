@@ -1,0 +1,19 @@
+<config>
+  <log message="Starting WiFi scan diagnostics" />
+  <store target="sessionCounter" value="0" />
+  <in key="InternetGatewayDevice.WiFi.NeighboringWiFiDiagnostic">
+    <set key="DiagnosticsState" value="Requested" />
+    <while expr="${#sessionCounter.toDouble &lt; 5 }">
+      <wait blocking="true" />
+      <if expr="${inform.diagnosticsComplete}">
+        <get key="DiagnosticsState" output="state" />
+        <if expr="${#state == 'Completed' or #state == 'Complete'}">
+          <getParameters key="Result" />
+          <finish message="WiFi scan diagnostics compleated" blocking="true" />
+        </if>
+      </if>
+      <store target="sessionCounter" value="${#sessionCounter.toDouble + 1}" />
+    </while>
+    <finish status="ERROR" message="WiFi scan diagnostics failed" blocking="true" />
+  </in>
+</config>

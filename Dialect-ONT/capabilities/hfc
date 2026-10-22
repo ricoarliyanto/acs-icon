@@ -1,0 +1,6 @@
+# HFC WAN capability
+# A device is connected over DOCSIS/HFC and presents basic information about the link.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.HFC.%force-value = "true"
+}

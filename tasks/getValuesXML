@@ -1,0 +1,10 @@
+<config>
+  <store target="response" value="${''}" />
+  <store target="getParameters" value="${#getParameters}" />
+  <store target="callbackUrl" value="${#callbackUrl}" />
+  <foreach list="${#getParameters.split(',').asList}">
+    <get key="${#i}" output="${#i}" />
+    <store target="response" value="${#i+':'+taskReport.stringProperty.get(#i)+','+#response}" />
+  </foreach>
+  <rest url="${#callbackUrl}" content="${#response}" />
+</config>

@@ -1,0 +1,14 @@
+val message = try {
+  task.parameters.selectDynamic("radio").getOpt.filter(_.nonEmpty).fold("No changes made, no radio specified"){ radio => 
+    ldm.set(dmkey.root.X_AVS_EXT.WiFi(radio.toInt).Enable, "true")
+    "Radio $radio has been activated"
+  }
+} catch { e =>
+  log.error("Workflow has encountered an error $e")
+  workflow.setStatus(status = "Error", description = "Workflow has encountered an error: $e")
+  workflow.exportVariable(name = "shouldApplyRecommendation", value = false) //sanity check to not follow up on things
+  fail("Workflow has encountered an error: $e")
+}
+
+
+workflow.setStatus("Success", "$message") 

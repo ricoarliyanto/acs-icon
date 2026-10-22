@@ -1,0 +1,210 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+include "cwmp.capabilities.syslog"
+
+# INTERNET ACCESS
+#include "cwmp.capabilities.dsl"
+#include "cwmp.capabilities.ethernet"
+#include "cwmp.capabilities.lte"
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+#include "cwmp.capabilities.wimax"
+include "cwmp.capabilities.gpon"
+
+# AVAILABLE FEATURES & SERVICES
+#include "cwmp.capabilities.applications"
+#include "cwmp.capabilities.captivePortal"
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+#include "cwmp.capabilities.dns"
+#include "cwmp.capabilities.femtocell"
+#include "cwmp.capabilities.firewall"
+include "cwmp.capabilities.forwarding"
+#include "cwmp.capabilities.iptv"
+#include "cwmp.capabilities.iptvRich"
+#include "cwmp.capabilities.lan"
+#include "cwmp.capabilities.macFiltering"
+include "cwmp.capabilities.ntp"
+#include "cwmp.capabilities.process"
+#include "cwmp.capabilities.radius"
+#include "cwmp.capabilities.routing"
+#include "cwmp.capabilities.storage"
+#include "cwmp.capabilities.usb"
+#include "cwmp.capabilities.users"
+include "cwmp.capabilities.voip"
+include "cwmp.capabilities.wifi"
+#include "cwmp.capabilities.xmpp"
+include "capabilities.wifi"
+
+include "cwmp.ext.wifi.converters"
+
+include "cwmp.ext.wifi.1"
+include "cwmp.ext.wifi.2"
+include "cwmp.ext.wifi.3"
+include "cwmp.ext.wifi.4"
+include "cwmp.ext.wifi.5"
+include "cwmp.ext.wifi.security"
+include "tools.patching.wifiTypes"
+
+include "cwmp.capabilities.lan"
+include "capabilities.lan"
+include "cwmp.ext.lan.ip"
+include "cwmp.ext.lan.port"
+include "cwmp.ext.lan.port.upstream"
+include "cwmp.ext.lan.port.downstream"
+include "cwmp.ext.lan.stats"
+include "cwmp.ext.lan.devices"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood"
+include "cwmp.ext.wifi.neighborhood"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+# FIXES
+remappingStrategy {
+  activeKey.gpon = "${sv.activeWan.ancestorKey(3).toParameterKey}.X_FH_GponInterfaceConfig"
+  lan = "${sv.activeLan.toParameterKey}"
+  lanIpInterface = "${sv.activeLan.toParameterKey}.LANHostConfigManagement.IPInterface"
+  wifiSecurity {
+    // Expression check if all real key values are set to NONE
+    isNone = """if(
+      realValue('BeaconType') == 'None' and
+      realValue('BasicEncryptionModes') == 'None' and
+      realValue('BasicAuthenticationMode') == 'OpenSystem'
+    ) 'NONE'"""
+
+    // Expresion return proper value for relevant real key to set NONE
+    setNone = """if(value == 'NONE')(
+      map('BeaconType' -> 'None',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'OpenSystem'
+      ).get(key.keyName)
+    )"""
+    // Expression check if all real key values are set to WPA_WPA2
+    isWpa_Wpa2 = """if(
+      realValue('BeaconType') == 'WPAand11i' and
+      realValue('WPAEncryptionModes') == 'TKIPandAESEncryption' and
+      realValue('WPAAuthenticationMode') == 'PSKAuthentication' and
+      realValue('IEEE11iEncryptionModes') == 'TKIPandAESEncryption' and
+      realValue('IEEE11iAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA_WPA2'"""
+
+    // Expresion return proper value for relevant real key to set WPA_WPA2
+    setWpa_Wpa2 = """if(value == 'WPA_WPA2')(
+      map('BeaconType' -> 'WPAand11i',
+          'WPAEncryptionModes' -> 'TKIPandAESEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'IEEE11iEncryptionModes' -> 'TKIPandAESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+  }
+  read_converter.WiFi.%i {
+    Security = ${tools.expression} {
+      expression = """${
+          """${remappingStrategy.wifiSecurity.isNone}""" else
+          """${remappingStrategy.wifiSecurity.isWpa_Wpa2}""" else 'CUSTOM' }"""
+    }
+  }
+  write_converter.WiFi.%i {
+    Security = ${tools.expression} {
+      expression = """${
+          """${remappingStrategy.wifiSecurity.setNone}""" else
+          """${remappingStrategy.wifiSecurity.setWpa_Wpa2}""" else null}"""
+    }
+  }
+
+
+  mapping {
+    root.X_AVS_EXT {
+      WAN.PPP {
+        Password.real = "${sv.activePpp.toParameterKey}.Password"
+      }
+      WiFiNeighborhood.%i {
+        BSSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.BSSID"
+        Channel.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.Channel"
+        SSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.SSID"
+        Security.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.SecurityModeEnabled"
+        SignalStrength.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.SignalStrength"
+        Standard.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.OperatingStandards"
+        ChannelBandwidth.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.OperatingChannelBandwidth"
+      }
+      // Access Point Associated Device mappings are commented out as the standard table is empty
+      // and the proprietary table lacks signal data. We rely on root.LAN.Devices (Hosts table) instead.
+
+
+      WAN.GPON {
+        %i = null
+        1 {
+          Status.real = ${remappingStrategy.activeKey.gpon}.Status
+          BiasCurrent.real = ${remappingStrategy.activeKey.gpon}.BiasCurrent
+          TransceiverTemperature.real = ${remappingStrategy.activeKey.gpon}.TransceiverTemperature
+          RXPower.real = ${remappingStrategy.activeKey.gpon}.RXPower
+          TXPower.real = ${remappingStrategy.activeKey.gpon}.TXPower
+          SupplyVoltage.real = ${remappingStrategy.activeKey.gpon}.SupplyVoltage
+          Stats {
+            DropPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.DropPackets
+            FECError.real = ${remappingStrategy.activeKey.gpon}.Stats.FECError
+            HECError.real = ${remappingStrategy.activeKey.gpon}.Stats.HECError
+            Downstream {
+              BroadcastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.RBroadcastPackets
+              MulticastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.RMulticastPackets
+              PausePackets.real = ${remappingStrategy.activeKey.gpon}.Stats.RPausePackets
+              UnicastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.RUnicastPackets
+            }
+            Upstream {
+              BroadcastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.SBroadcastPackets
+              MulticastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.SMulticastPackets
+              PausePackets.real = ${remappingStrategy.activeKey.gpon}.Stats.SPausePackets
+              UnicastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.SUnicastPackets
+            }
+          }
+        }
+      }
+    }
+    
+    root.LAN.Devices.%i {
+       SignalStrength.real = "root.LANDevice.1.Hosts.Host.%i.RSSI"
+       Stats.Upstream.LastDataRate.real = "root.LANDevice.1.Hosts.Host.%i.NegoTxRate"
+       Stats.Downstream.LastDataRate.real = "root.LANDevice.1.Hosts.Host.%i.NegoRxRate"
+    }
+
+    root.X_AVS_EXT {
+       LAN.Devices.%i {
+          SignalStrength.real = "root.LANDevice.1.Hosts.Host.%i.RSSI"
+          Stats.Upstream.LastDataRate.real = "root.LANDevice.1.Hosts.Host.%i.NegoTxRate"
+          Stats.Downstream.LastDataRate.real = "root.LANDevice.1.Hosts.Host.%i.NegoRxRate"
+       }
+    }
+  }
+}
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    LAN {
+      %force-object-exists = true
+      Devices.%force-object-exists = true
+    }
+    WiFi.%any {
+      SupportedStandards.%force-value = "b,g,n"
+    }
+  }
+  root.LANDevice.1.Hosts.Host.%any {
+    RSSI.%force-type = "xsd:int"
+    NegoTxRate.%force-type = "xsd:int"
+    NegoRxRate.%force-type = "xsd:int"
+  }
+}

@@ -1,0 +1,22 @@
+<config>
+  <set key="${device.rootObject.toParameterKey}.X_AVS_EXT.Diagnostics.Neighborhood.Run" value="1" />
+  <store target="sessionCounter" value="0" />
+  <get key="${device.rootObject.toParameterKey}.X_AVS_EXT.Diagnostics.Neighborhood.State" output="state" />
+  <while expr="${#sessionCounter.toInt &lt; 5 &amp;&amp; #state != &quot;Completed&quot;}">
+    <wait blocking="true" />
+    <if expr="${inform.diagnosticsComplete}">
+      <get key="${device.rootObject.toParameterKey}.X_AVS_EXT.Diagnostics.Neighborhood.State" output="state" />
+    </if>
+    <store target="sessionCounter" value="${#sessionCounter.toInt + 1}" />
+  </while>
+  <log message="Refreshing WiFi neighborhood" />
+  <find query="${root.X_AVS_EXT.WiFiNeighborhood.any}" output="wifiNeighborhood" />
+  <if expr="${#wifiNeighborhood != null}">
+    <getParameters key="${device.rootObject.toParameterKey}.X_AVS_EXT.WiFiNeighborhood." />
+    <else>
+      <foreach query="${root.X_AVS_EXT.WiFi.any}" iterator="wifi">
+        <getParameters key="${#wifi}.Neighborhood." />
+      </foreach>
+    </else>
+  </if>
+</config>

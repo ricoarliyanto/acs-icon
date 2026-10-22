@@ -1,0 +1,10 @@
+val whitelist = task.parameters.whitelist.getOr(taskReport.property.whitelist.getOr("")).splitBy(",").map(_.toMAC.printUnix).join(",")
+
+var toSet = Seq.apply[ValueToSet]()
+
+ldm.foreach(ldm.root.X_AVS_EXT.WiFi.any(true))(key => {
+  toSet = toSet.append(ldm.valueToSet(key.MACAddressControl.Enable, "true"))
+    .append(ldm.valueToSet(key.MACAddressControl.AccessList, whitelist))
+    .append(ldm.valueToSet(key.WPS.Enable, "false"))
+})
+ldm.setAll(toSet) 

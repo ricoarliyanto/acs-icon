@@ -1,0 +1,49 @@
+include "cwmp.default"
+
+cwmp.messageTimeout = 300000
+cwmp.serverMessageTimeout = 20000
+
+remappingStrategy {
+  read_converter.WiFi.%i {
+    PossibleChannels = ${tools.readConverters.oneToOne.extractPossibleChannels}
+  }
+  mapping.root {
+    X_AVS_EXT.WiFi.1.Neighborhood = null
+    X_AVS_EXT.WiFi.2.Neighborhood = null
+    X_AVS_EXT.WiFi.3.Neighborhood = null
+    X_AVS_EXT.WiFi.4.Neighborhood = null
+    X_AVS_EXT.WiFi.5 = null
+  }
+}
+
+remappingStrategy.wifiSecurity {
+
+  setWep="""if(value == 'WEP')(
+    if(key.endsWith('BeaconType')) 'Basic' else
+    if(key.endsWith('BasicEncryptionModes')) 'WEPEncryption' else
+    if(key.endsWith('BasicAuthenticationMode')) 'None' else null
+    )"""
+  isWep="""if(     value.entries.exists( e => e.key.keyName == 'BeaconType' && e.value == 'Basic' ) and
+                   value.entries.exists( e => e.key.keyName == 'BasicEncryptionModes' && e.value == 'WEPEncryption' ) and
+                   value.entries.exists( e => e.key.keyName == 'BasicAuthenticationMode' && e.value == 'None' )    ) 'WEP'"""
+
+  isWpa_Wpa2 = """if(
+      value.entries.exists( e => e.key.keyName == 'BeaconType' && e.value == 'WPAand11i' ) and
+      value.entries.exists( e => e.key.keyName == 'WPAEncryptionModes' && (e.value == 'TKIPEncryption' || e.value == 'TKIPandAESEncryption')) and
+      value.entries.exists( e => e.key.keyName == 'WPAAuthenticationMode' && e.value == 'PSKAuthentication' ) and
+      value.entries.exists( e => e.key.keyName == 'IEEE11iEncryptionModes' && (e.value == 'AESEncryption' || e.value == 'TKIPandAESEncryption')) and
+      value.entries.exists( e => e.key.keyName == 'IEEE11iAuthenticationMode' && e.value == 'PSKAuthentication' )
+    ) 'WPA_WPA2'"""
+
+  setWpa_Wpa2 = """if(value == 'WPA_WPA2')(
+      if(key.endsWith('BeaconType')) 'WPAand11i' else
+      if(key.endsWith('WPAEncryptionModes')) 'TKIPandAESEncryption' else
+      if(key.endsWith('WPAAuthenticationMode')) 'PSKAuthentication' else
+      if(key.endsWith('IEEE11iEncryptionModes')) 'TKIPandAESEncryption' else
+      if(key.endsWith('IEEE11iAuthenticationMode')) 'PSKAuthentication' else null
+    )"""
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT.WiFi.%any.Neighborhood.%force-object-exists = false
+}

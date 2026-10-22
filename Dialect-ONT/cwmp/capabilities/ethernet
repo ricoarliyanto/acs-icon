@@ -1,0 +1,6 @@
+# Ethernet WAN capability
+# A device is connected over Ethernet and presents basic information about the Ethernet link.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Ethernet.%force-value = "true"
+}

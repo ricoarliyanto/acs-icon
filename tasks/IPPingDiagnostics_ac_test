@@ -1,0 +1,1 @@
+<config Host="${#pingHost}" NumberOfRepetitions="${#retries.toInt}" />

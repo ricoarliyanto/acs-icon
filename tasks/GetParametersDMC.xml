@@ -1,0 +1,298 @@
+<config>
+  <get key="InternetGatewayDevice.DeviceInfo.UpTime" output="upTime" ignoreFaults="true" />
+  <get key="${sv.activeWan}.ConnectionStatus" output="ConnectionStatus" ignoreFaults="true" />
+  <get key="${sv.activePpp}.ExternalIPAddress" output="ExternalIPAddress" ignoreFaults="true" />
+  <get key="${sv.activeWan}.DNSServers" output="DNSServers" ignoreFaults="true" />
+  <get key="${sv.activeWan}.LastConnectionError" output="LastConnectionError" ignoreFaults="true" />
+  <get key="${sv.activeWan}.MaxMTUSize" output="MaxMTUSize" ignoreFaults="true" />
+  <get key="${sv.activeWan}.MACAddress" output="cpeActiveTr069Mac" ignoreFaults="true" />
+  <get key="${sv.activePpp}.MACAddress" output="cpeActiveWanMac" ignoreFaults="true" />
+  <get key="${sv.activePpp}.Username" output="cpePppUsername" ignoreFaults="true" />
+  <store type="devProp" target="cpeInternetWanConnectionStatus" value="${#ConnectionStatus}" />
+  <store type="devProp" target="IPService" value="${#ExternalIPAddress}" />
+  <store type="devProp" target="cpeInternetWanDNSServers" value="${#DNSServers}" />
+  <store type="devProp" target="cpeInternetWanLastConnectionError" value="${#LastConnectionError}" />
+  <store type="devProp" target="cpeInternetWanMaxMTUSize" value="${#MaxMTUSize}" />
+  <store type="devProp" target="cpeActiveWanMac" value="${#cpeActiveWanMac}" />
+  <store type="devProp" target="cpeActiveTr069Mac" value="${#cpeActiveTr069Mac}" />
+  <store type="devProp" target="cpePppUsername" value="${#cpePppUsername}" />
+  <!-- Copy cpeRXPower to RXPower for backward compatibility -->
+  <store type="devProp" target="RXPower" value="${#cpeRXPower}" />
+  <store type="devProp" target="TXPower" value="${#cpeTXPower}" />
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('huawei')}">
+    <get key="${device.rootObject}.X_AVS_EXT.Resources.CPUUsed" output="cpeCpuUsed" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.Resources.RAMUsedPercent" output="cpeMemUsed" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.Diagnostics.Download.Result.TotalBytesReceived" output="cpeDownload" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.Diagnostics.Upload.Result.TotalBytesSent" output="cpeUpload" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.WiFi.1.SSID" output="cpeActiveSSID2" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.WiFi.1.AutoChannelEnable" output="cpeAutoChannel" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.WAN.Stats.Downstream.Bytes" output="cpeTotalByte" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.WAN.GPON.1.RXPower" output="cpeRXPower" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.WAN.GPON.1.TXPower" output="cpeTXPower" ignoreFaults="true" />
+    <get key="${sv.activePpp}.X_HW_VLAN" output="cpeInternetWanVLANID" ignoreFaults="true" />
+    <get key="${sv.activePpp}.X_HW_SERVICELIST" output="cpeInternetWanServiceList" ignoreFaults="true" />
+    <get key="${sv.activePpp}.X_HW_IPv6.IPv6Address" output="cpeInternetIpv6Address" ignoreFaults="true" />
+    <get key="${sv.activePpp}.X_HW_IPv6.IPv6Prefix" output="cpeInternetIpv6Prefix" ignoreFaults="true" />
+    <if expr="${device.productClass == 'EG8141A5'}">
+       <!-- Attempt to fetch from WANConnectionDevice.1 -->
+       <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress" output="ExtIP1" ignoreFaults="true" />
+       <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.MACAddress" output="WanMac1" ignoreFaults="true" />
+       <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.X_HW_VLAN" output="Vlan1" ignoreFaults="true" />
+       <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username" output="PppUser1" ignoreFaults="true" />
+
+       <!-- Attempt to fetch from WANConnectionDevice.2 -->
+       <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.ExternalIPAddress" output="ExtIP2" ignoreFaults="true" />
+       <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.MACAddress" output="WanMac2" ignoreFaults="true" />
+       <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.X_HW_VLAN" output="Vlan2" ignoreFaults="true" />
+       <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.1.Username" output="PppUser2" ignoreFaults="true" />
+
+       <get key="InternetGatewayDevice.DeviceInfo.X_HW_CpuUsed" output="cpeCpuUsed" ignoreFaults="true" />
+       <get key="InternetGatewayDevice.DeviceInfo.X_HW_MemUsed" output="cpeMemUsed" ignoreFaults="true" />
+
+       <!-- Store values using Scala if-else syntax (Prefer .2 if ExtIP2 exists, else .1) -->
+       <store type="devProp" target="IPService" value="${if (#ExtIP2 != null) #ExtIP2 else #ExtIP1}" />
+       <store type="devProp" target="cpeActiveWanMac" value="${if (#ExtIP2 != null) #WanMac2 else #WanMac1}" />
+       <store type="devProp" target="VLAN_Service" value="${if (#ExtIP2 != null) #Vlan2 else #Vlan1}" />
+       <store type="devProp" target="cpePppUsername" value="${if (#ExtIP2 != null) #PppUser2 else #PppUser1}" />
+    </if>
+    <store type="devProp" target="cpeCpuUsed" value="${#cpeCpuUsed}" />
+    <store type="devProp" target="cpeMemUsed" value="${#cpeMemUsed}" />
+    <store type="devProp" target="cpeDownload" value="${#cpeDownload}" />
+    <store type="devProp" target="cpeUpload" value="${#cpeUpload}" />
+    <store type="devProp" target="cpeActiveSSID2" value="${#cpeActiveSSID2}" />
+    <store type="devProp" target="cpeAutoChannel" value="${#cpeAutoChannel}" />
+    <store type="devProp" target="cpeTotalByte" value="${#cpeTotalByte}" />
+    <store type="devProp" target="cpeRXPower" value="${#cpeRXPower}" />
+    <store type="devProp" target="cpeTXPower" value="${#cpeTXPower}" />
+    <if expr="${device.productClass != 'EG8141A5'}">
+       <store type="devProp" target="VLAN_Service" value="${#cpeInternetWanVLANID}" />
+    </if>
+    <store type="devProp" target="cpeInternetWanServiceList" value="${#cpeInternetWanServiceList}" />
+    <store type="devProp" target="cpeInternetIpv6Address" value="${#cpeInternetIpv6Address}" />
+    <store type="devProp" target="cpeInternetIpv6Prefix" value="${#cpeInternetIpv6Prefix}" />
+  </if>
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('hsgq')}">
+    <get key="${device.rootObject}.X_AVS_EXT.Resources.CPUUsed" output="cpeCpuUsed" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.Resources.RAMUsedPercent" output="cpeMemUsed" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.Diagnostics.Download.Result.TotalBytesReceived" output="cpeDownload" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.Diagnostics.Upload.Result.TotalBytesSent" output="cpeUpload" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.WiFi.1.SSID" output="cpeActiveSSID2" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.WiFi.1.AutoChannelEnable" output="cpeAutoChannel" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.WAN.Stats.Downstream.Bytes" output="cpeTotalByte" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.WAN.GPON.1.RXPower" output="cpeRXPower" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.WAN.GPON.1.TXPower" output="cpeTXPower" ignoreFaults="true" />
+    <store type="devProp" target="cpeCpuUsed" value="${#cpeCpuUsed}" />
+    <store type="devProp" target="cpeMemUsed" value="${#cpeMemUsed}" />
+    <store type="devProp" target="cpeDownload" value="${#cpeDownload}" />
+    <store type="devProp" target="cpeUpload" value="${#cpeUpload}" />
+    <store type="devProp" target="cpeActiveSSID2" value="${#cpeActiveSSID2}" />
+    <store type="devProp" target="cpeAutoChannel" value="${#cpeAutoChannel}" />
+    <store type="devProp" target="cpeTotalByte" value="${#cpeTotalByte}" />
+    <store type="devProp" target="cpeRXPower" value="${#cpeRXPower}" />
+    <store type="devProp" target="cpeTXPower" value="${#cpeTXPower}" />
+  </if>
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('zte') and device.productClass != 'F670L'}">
+    <get key="InternetGatewayDevice.DeviceInfo.X_ZTE_CpuUsage" output="cpeCpuUsed" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.DeviceInfo.X_ZTE_MemUsage" output="cpeMemUsed" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.DownloadDiagnostics.TotalBytesReceived" output="cpeDownload" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.UploadDiagnostics.TotalBytesSent" output="cpeUpload" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID" output="cpeActiveSSID2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AutoChannelEnable" output="cpeAutoChannel" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.TotalBytesReceived" output="cpeTotalByte" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.X_ZTE_RXPwr" output="cpeRXPower" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.X_ZTE_TXPwr" output="cpeTXPower" ignoreFaults="true" />
+    <!-- Fallback to X_AVS_EXT if X_ZTE not available -->
+    <if expr="${#cpeRXPower == null or #cpeRXPower == ''}">
+      <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.RXPower" output="cpeRXPower" ignoreFaults="true" />
+      <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.TXPower" output="cpeTXPower" ignoreFaults="true" />
+    </if>
+    <get key="${sv.activePpp}.X_ZTE_VLANID" output="cpeInternetWanVLANID" ignoreFaults="true" />
+    <store type="devProp" target="cpeCpuUsed" value="${#cpeCpuUsed}" />
+    <store type="devProp" target="cpeMemUsed" value="${#cpeMemUsed}" />
+    <store type="devProp" target="cpeDownload" value="${#cpeDownload}" />
+    <store type="devProp" target="cpeUpload" value="${#cpeUpload}" />
+    <store type="devProp" target="cpeActiveSSID2" value="${#cpeActiveSSID2}" />
+    <store type="devProp" target="cpeAutoChannel" value="${#cpeAutoChannel}" />
+    <store type="devProp" target="cpeTotalByte" value="${#cpeTotalByte}" />
+    <store type="devProp" target="cpeRXPower" value="${#cpeRXPower}" />
+    <store type="devProp" target="cpeTXPower" value="${#cpeTXPower}" />
+    <store type="devProp" target="VLAN_Service" value="${#cpeInternetWanVLANID}" />
+  </if>
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('fiberhome')}">
+    <get key="InternetGatewayDevice.DeviceInfo.X_FH_CpuUsage" output="cpeCpuUsed" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.DeviceInfo.X_FH_MemUsage" output="cpeMemUsed" ignoreFaults="true" />
+    <if expr="${device.productClass == 'HG6145D2'}">
+      <get key="InternetGatewayDevice.X_AVS_EXT.Resources.CPUUsed" output="cpeCpuUsed" ignoreFaults="true" />
+      <get key="InternetGatewayDevice.X_AVS_EXT.Resources.RAMUsedPercent" output="cpeMemUsed" ignoreFaults="true" />
+    </if>
+    <if expr="${device.productClass == 'HG6045D1'}">
+      <get key="InternetGatewayDevice.DeviceInfo.ProcessStatus.CPUUsage" output="cpeCpuUsed" ignoreFaults="true" />
+      <get key="InternetGatewayDevice.DeviceInfo.MemoryStatus.MemoryUsage" output="cpeMemUsed" ignoreFaults="true" />
+    </if>
+    <get key="InternetGatewayDevice.DownloadDiagnostics.TotalBytesReceived" output="cpeDownload" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.UploadDiagnostics.TotalBytesSent" output="cpeUpload" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID" output="cpeActiveSSID2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AutoChannelEnable" output="cpeAutoChannel" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.TotalBytesReceived" output="cpeTotalByte" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.X_FH_GponRxPower" output="cpeRXPower" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.X_FH_GponTxPower" output="cpeTXPower" ignoreFaults="true" />
+    <get key="${sv.activePpp}.X_FH_VLANID" output="cpeInternetWanVLANID" ignoreFaults="true" />
+    <if expr="${device.productClass == 'HG6145D2'}">
+      <get key="${sv.activePpp}.VLANID" output="cpeInternetWanVLANID" ignoreFaults="true" />
+    </if>
+    <if expr="${device.productClass == 'HG6045D1'}">
+      <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.VLANID" output="cpeInternetWanVLANID" ignoreFaults="true" />
+    </if>
+    <store type="devProp" target="cpeCpuUsed" value="${#cpeCpuUsed}" />
+    <store type="devProp" target="cpeMemUsed" value="${#cpeMemUsed}" />
+    <store type="devProp" target="cpeDownload" value="${#cpeDownload}" />
+    <store type="devProp" target="cpeUpload" value="${#cpeUpload}" />
+    <store type="devProp" target="cpeActiveSSID2" value="${#cpeActiveSSID2}" />
+    <store type="devProp" target="cpeAutoChannel" value="${#cpeAutoChannel}" />
+    <store type="devProp" target="cpeTotalByte" value="${#cpeTotalByte}" />
+    <store type="devProp" target="cpeRXPower" value="${#cpeRXPower}" />
+    <store type="devProp" target="cpeTXPower" value="${#cpeTXPower}" />
+    <store type="devProp" target="VLAN_Service" value="${#cpeInternetWanVLANID}" />
+  </if>
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('raisecom')}">
+    <get key="InternetGatewayDevice.DeviceInfo.X_CT-COM_LoadInfo.ProcessorLoad" output="cpeCpuUsed" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.DeviceInfo.X_CT-COM_LoadInfo.MemoryLoad" output="cpeMemUsed" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.DownloadDiagnostics.TotalBytesReceived" output="cpeDownload" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.UploadDiagnostics.TotalBytesSent" output="cpeUpload" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID" output="cpeActiveSSID2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AutoChannelEnable" output="cpeAutoChannel" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.TotalBytesReceived" output="cpeTotalByte" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.PON.X_RT_RxPower" output="cpeRXPower" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.PON.X_RT_TxPower" output="cpeTXPower" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID" output="cpeActiveSSID5" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID" output="cpeActiveSSID5" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_CT-COM_WANGponLinkConfig.VLANIDMark" output="cpeInternetWanVLANID" ignoreFaults="true" />
+    <store type="devProp" target="cpeCpuUsed" value="${#cpeCpuUsed}" />
+    <store type="devProp" target="cpeMemUsed" value="${#cpeMemUsed}" />
+    <store type="devProp" target="cpeDownload" value="${#cpeDownload}" />
+    <store type="devProp" target="cpeUpload" value="${#cpeUpload}" />
+    <store type="devProp" target="cpeActiveSSID2" value="${#cpeActiveSSID2}" />
+    <store type="devProp" target="cpeAutoChannel" value="${#cpeAutoChannel}" />
+    <store type="devProp" target="cpeTotalByte" value="${#cpeTotalByte}" />
+    <store type="devProp" target="cpeRXPower" value="${#cpeRXPower}" />
+    <store type="devProp" target="cpeTXPower" value="${#cpeTXPower}" />
+    <store type="devProp" target="cpeActiveSSID5" value="${#cpeActiveSSID5}" />
+    <store type="devProp" target="VLAN_Service" value="${#cpeInternetWanVLANID}" />
+  </if>
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('bdcom') || device.manufacturer.toLowerCaseEnglish.contains('datacom')}">
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID" output="cpeActiveSSID2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.TransceiverTemperature" output="TransceiverTemperature" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Result.TotalBytesReceived" output="cpeDownload" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower" output="cpeRXPower" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.TXPower" output="cpeTXPower" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.Resources.RAMUsedPercent" output="cpeMemUsed" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.Resources.CPUUsed" output="cpeCpuUsed" ignoreFaults="true" />
+    <store type="devProp" target="cpeActiveSSID2" value="${#cpeActiveSSID2}" />
+    <store type="devProp" target="TransceiverTemperature" value="${#TransceiverTemperature}" />
+    <store type="devProp" target="cpeDownload" value="${#cpeDownload}" />
+    <store type="devProp" target="cpeRXPower" value="${#cpeRXPower}" />
+    <store type="devProp" target="cpeTXPower" value="${#cpeTXPower}" />
+    <store type="devProp" target="cpeMemUsed" value="${#cpeMemUsed}" />
+    <store type="devProp" target="cpeCpuUsed" value="${#cpeCpuUsed}" />
+  </if>
+  <!-- === BDCOM / DATACOM UMUM ===  === BDCOM GP1704-4F-E (10.0.25D.706) - OVERRIDE === -->
+  <if expr="${device.productClass == 'GP1704-4GV2'}">
+    <get key="InternetGatewayDevice.X_AVS_EXT.Resources.CPUUsed" output="cpeCpuUsed" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.Resources.RAMUsedPercent" output="cpeMemUsed" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Result.TotalBytesReceived" output="cpeDownload" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.Result.TotalBytesSent" output="cpeUpload" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WiFi.1.SSID" output="cpeActiveSSID2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WiFi.1.AutoChannelEnable" output="cpeAutoChannel" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.Stats.Downstream.Bytes" output="cpeTotalByte" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.RXPower" output="cpeRXPower" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.TXPower" output="cpeTXPower" ignoreFaults="true" />
+    <store type="devProp" target="cpeCpuUsed" value="${#cpeCpuUsed}" />
+    <store type="devProp" target="cpeMemUsed" value="${#cpeMemUsed}" />
+    <store type="devProp" target="cpeDownload" value="${#cpeDownload}" />
+    <store type="devProp" target="cpeUpload" value="${#cpeUpload}" />
+    <store type="devProp" target="cpeActiveSSID2" value="${#cpeActiveSSID2}" />
+    <store type="devProp" target="cpeAutoChannel" value="${#cpeAutoChannel}" />
+    <store type="devProp" target="cpeTotalByte" value="${#cpeTotalByte}" />
+    <store type="devProp" target="cpeRXPower" value="${#cpeRXPower}" />
+    <store type="devProp" target="cpeTXPower" value="${#cpeTXPower}" />
+  </if>
+  <if expr="${device.productClass == 'GP1704-4F-E'}">
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID" output="SSID_L1W1" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.SSID" output="SSID_L1W2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.2.WLANConfiguration.1.SSID" output="SSID_L2W1" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.2.WLANConfiguration.2.SSID" output="SSID_L2W2" ignoreFaults="true" />
+    
+    <store type="devProp" target="cpeActiveSSID2" value="${if (#SSID_L1W1 != null) #SSID_L1W1 else (if (#SSID_L1W2 != null) #SSID_L1W2 else (if (#SSID_L2W1 != null) #SSID_L2W1 else #SSID_L2W2))}" />
+  </if>
+  <!-- === ZTE F670L (ZTEGD4BE519D) - Custom Mapping - MINIMAL PARAMS === -->
+  <if expr="${device.productClass == 'F670L'}">
+    <!-- CPU & Memory -->
+    <get key="InternetGatewayDevice.DeviceInfo.ProcessStatus.CPUUsage" output="cpeCpuUsed" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.DeviceInfo.X_ZTE-COM_MemUsed" output="cpeMemUsed" ignoreFaults="true" />
+    
+    <!-- GPON Stats - Using X_ZTE-COM_WANPONInterfaceConfig -->
+    <get key="InternetGatewayDevice.WANDevice.1.X_ZTE-COM_WANPONInterfaceConfig.RXPower" output="cpeRXPower" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.X_ZTE-COM_WANPONInterfaceConfig.TXPower" output="cpeTXPower" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.X_ZTE-COM_WANPONInterfaceConfig.TransceiverTemperature" output="TransceiverTemperature" ignoreFaults="true" />
+    
+    <!-- WAN Stats -->
+    <get key="InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.TotalBytesReceived" output="cpeTotalByte" ignoreFaults="true" />
+    
+    <!-- WiFi -->
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID" output="cpeActiveSSID2" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AutoChannelEnable" output="cpeAutoChannel" ignoreFaults="true" />
+    
+    <!-- Dual WAN Connection: PPP for HSI (INTERNET) & IPoE for TR069 -->
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress" output="pppIP" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.MACAddress" output="pppMac" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.X_ZTE-COM_VLANID" output="pppVlan" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username" output="pppUser" ignoreFaults="true" />
+    
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress" output="ipoeIP" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.MACAddress" output="ipoeMac" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_ZTE-COM_VLANID" output="ipoeVlan" ignoreFaults="true" />
+    
+    <!-- Store values -->
+    <store type="devProp" target="cpeCpuUsed" value="${#cpeCpuUsed}" />
+    <store type="devProp" target="cpeMemUsed" value="${#cpeMemUsed}" />
+    <store type="devProp" target="cpeRXPower" value="${#cpeRXPower}" />
+    <store type="devProp" target="cpeTXPower" value="${#cpeTXPower}" />
+    <store type="devProp" target="TransceiverTemperature" value="${#TransceiverTemperature}" />
+    <store type="devProp" target="cpeTotalByte" value="${#cpeTotalByte}" />
+    <store type="devProp" target="cpeActiveSSID2" value="${#cpeActiveSSID2}" />
+    <store type="devProp" target="cpeAutoChannel" value="${#cpeAutoChannel}" />
+    
+    <!-- Store WAN connections -->
+    <store type="devProp" target="IPService" value="${#pppIP}" />
+    <store type="devProp" target="cpeActiveWanMac" value="${#pppMac}" />
+    <store type="devProp" target="VLAN_Service" value="${#pppVlan}" />
+    <store type="devProp" target="cpePppUsername" value="${#pppUser}" />
+    
+    <store type="devProp" target="cpeIpoeIP" value="${#ipoeIP}" />
+    <store type="devProp" target="cpeIpoeMac" value="${#ipoeMac}" />
+    <store type="devProp" target="cpeIpoeVlan" value="${#ipoeVlan}" />
+    
+    <!-- Alias for backward compatibility -->
+    <store type="devProp" target="RXPower" value="${#cpeRXPower}" />
+    <store type="devProp" target="TXPower" value="${#cpeTXPower}" />
+  <!-- === MIKROTIK === -->
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('mikrotik')}">
+    <get key="${device.rootObject}.X_AVS_EXT.Resources.CPUUsed" output="cpeCpuUsed" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.Resources.RAMAvailable" output="MemTotal" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.Resources.RAMFree" output="MemFree" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.Diagnostics.Download.Result.TotalBytesReceived" output="cpeDownload" ignoreFaults="true" />
+    <get key="${device.rootObject}.X_AVS_EXT.Diagnostics.Upload.Result.TotalBytesSent" output="cpeUpload" ignoreFaults="true" />
+    
+    <get key="${device.rootObject}.WiFi.SSID.1.SSID" output="cpeActiveSSID2" ignoreFaults="true" />
+    <get key="${device.rootObject}.WiFi.Radio.1.AutoChannelEnable" output="cpeAutoChannel" ignoreFaults="true" />
+    <get key="${sv.activeWan}.Stats.BytesReceived" output="cpeTotalByte" ignoreFaults="true" />
+    
+    <store type="devProp" target="cpeCpuUsed" value="${#cpeCpuUsed}" />
+    <store type="devProp" target="cpeMemUsed" value="${if (#MemTotal != null and #MemFree != null and #MemTotal.toLong > 0) (((#MemTotal.toLong - #MemFree.toLong) * 100) / #MemTotal.toLong).toString else null}" />
+    <store type="devProp" target="cpeDownload" value="${#cpeDownload}" />
+    <store type="devProp" target="cpeUpload" value="${#cpeUpload}" />
+    <store type="devProp" target="cpeActiveSSID2" value="${#cpeActiveSSID2}" />
+    <store type="devProp" target="cpeAutoChannel" value="${#cpeAutoChannel}" />
+    <store type="devProp" target="cpeTotalByte" value="${#cpeTotalByte}" />
+  </if>
+</config>

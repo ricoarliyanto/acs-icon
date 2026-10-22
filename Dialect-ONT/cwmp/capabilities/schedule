@@ -1,0 +1,6 @@
+# Session schedule capability
+# A device can initiate a session that was previously scheduled by the ACS (or controller).
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Schedule.%force-value = "true"
+}

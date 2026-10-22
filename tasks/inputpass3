@@ -1,0 +1,46 @@
+<config>
+  <!-- Task inputpass3 untuk mengubah PPPoE Password khusus untuk 5 ONT (berdasarkan Serial Number) -->
+  <!-- Mendukung: Huawei, ZTE, Fiberhome, Raisecom -->
+  <!-- Membutuhkan task 'activewanfinder' untuk mengisi sv.activeWan terlebih dahulu -->
+
+  <!-- Anda bisa menggunakan argumen #{inputpass3} jika passwordnya sama untuk semua 5 ONT, -->
+  <!-- atau membuat kondisi spesifik untuk masing-masing ONT. Berikut contohnya: -->
+
+  <!-- Asumsi identifier perangkat menggunakan Serial Number (atau MAC). Ganti SN_ONT_1... dengan SN yang asli -->
+  
+  <if expr="${device.id.contains('SN_ONT_1') or device.id.contains('SN_ONT_2') or device.id.contains('SN_ONT_3') or device.id.contains('SN_ONT_4') or device.id.contains('SN_ONT_5')}">
+
+    <!-- Cek dan terapkan password bergantung pada pabrikannya -->
+    
+    <!-- ========================= HUAWEI ========================= -->
+    <if expr="${device.manufacturer.toLowerCaseEnglish.contains('huawei')}">
+       <set key="${sv.activeWan}Password" value="${#inputpass3}" type="xsd:string" ignoreFaults="true" />
+    </if>
+
+    <!-- ========================= ZTE ========================= -->
+    <if expr="${device.manufacturer.toLowerCaseEnglish.contains('zte')}">
+       <set key="${sv.activeWan}Password" value="${#inputpass3}" type="xsd:string" ignoreFaults="true" />
+    </if>
+
+    <!-- ========================= FIBERHOME ========================= -->
+    <if expr="${device.manufacturer.toLowerCaseEnglish.contains('fiberhome')}">
+       <set key="${sv.activeWan}Password" value="${#inputpass3}" type="xsd:string" ignoreFaults="true" />
+    </if>
+
+    <!-- ========================= RAISECOM ========================= -->
+    <if expr="${device.manufacturer.toLowerCaseEnglish.contains('raisecom')}">
+       <set key="${sv.activeWan}Password" value="${#inputpass3}" type="xsd:string" ignoreFaults="true" />
+    </if>
+    
+  </if>
+
+  <!-- OPSI ALTERNATIF: Jika masing-masing dari 5 ONT menggunakan password yang BERBEDA-BEDA -->
+  <!-- 
+  <if expr="${device.id.contains('SN_ONT_1')}">
+      <set key="${sv.activeWan}Password" value="PasswordKhusus1" type="xsd:string" ignoreFaults="true" />
+  </if>
+  <if expr="${device.id.contains('SN_ONT_2')}">
+      <set key="${sv.activeWan}Password" value="PasswordKhusus2" type="xsd:string" ignoreFaults="true" />
+  </if>
+  -->
+</config>

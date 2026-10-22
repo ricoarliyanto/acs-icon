@@ -1,0 +1,20 @@
+# Remapping configuration
+remappingStrategy = {
+  type: REMAPPING
+
+  alias.root = root.X_AVS_EXT.
+  read_converter {
+    //mix multiple streams into one
+    //can be interpreted as read converter when using 1:1 mapping
+  }
+  write_converter {
+    //split streams from one stream to many
+    //can be interpreted as write converter when using 1:1 mapping
+  }
+  mapping {
+    //mapping definitions, regular ones or with expressions
+    //expressions must be defined using ${}, contrary: instance placeholders cannot use braces
+  }
+}
+
+liveDatamodelStrategies += ${remappingStrategy}

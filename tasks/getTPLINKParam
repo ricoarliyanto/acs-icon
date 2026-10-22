@@ -1,0 +1,46 @@
+<config><get key="Device.X_AVS_EXT.Management.Control.Username" output="tplinkMac" ignoreFaults="true" />
+    <if expr="${#tplinkMac != null and #tplinkMac != ''}">
+      <store type="devProp" target="cpeActiveTr069Mac" value="${#tplinkMac}" />
+      <store type="devProp" target="cpeActiveWanMac" value="${#tplinkMac}" />
+    </if>
+    <get key="Device.PPP.Interface.1.Username" output="tplinkPppUser" ignoreFaults="true" />
+    <if expr="${#tplinkPppUser != null and #tplinkPppUser != ''}">
+      <store type="devProp" target="cpePppUsername" value="${#tplinkPppUser}" />
+    </if>
+    <get key="Device.WiFi.AccessPoint.1.SSID" output="tplinkSsid24" ignoreFaults="true" />
+    <get key="Device.WiFi.AccessPoint.2.SSID" output="tplinkSsid5" ignoreFaults="true" />
+    <if expr="${#tplinkSsid24 != null and #tplinkSsid24 != ''}">
+      <store type="devProp" target="cpeActiveSSID2" value="${#tplinkSsid24}" />
+    </if>
+    <if expr="${#tplinkSsid5 != null and #tplinkSsid5 != ''}">
+      <store type="devProp" target="cpeActiveSSID5" value="${#tplinkSsid5}" />
+    </if>
+    <get key="Device.IP.Diagnostics.DownloadDiagnostics.DownloadURL" output="tplinkDiagUrl" ignoreFaults="true" />
+    <get key="Device.IP.Diagnostics.DownloadDiagnostics.DiagnosticsState" output="tplinkDiagState" ignoreFaults="true" />
+    <!-- MAC Address dari Management Control (format hex, bisa dijadikan MAC)  PPP Username (jika ada)  WiFi SSID: asumsi AccessPoint.1 = 2.4GHz, AccessPoint.2 = 5GHz (sesuaikan dengan perangkat)  Download Diagnostics (opsional)  Nilai diagnostic ini hanya disimpan jika diperlukan, bisa ditambahkan store jika ada target -->
+  <get key="Device.DeviceInfo.ProcessStatus.CPUUsage" output="cpeCpuUsed" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.Resources.RAMUsedPercent" output="cpeMemUsed" ignoreFaults="true" />
+    <get key="Device.IP.Diagnostics.DownloadDiagnostics.TotalBytesReceived" output="cpeDownload" ignoreFaults="true" />
+    <get key="Device.IP.Diagnostics.DownloadDiagnostics.TotalBytesSent" output="cpeUpload" ignoreFaults="true" />
+    <get key="Device.WiFi.SSID.1.SSID" output="cpeActiveSSID2" ignoreFaults="true" />
+    <get key="Device.WiFi.SSID.3.SSID" output="cpeActiveSSID5" ignoreFaults="true" />
+    <get key="Device.WiFi.Radio.1.AutoChannelEnable" output="cpeAutoChannel" ignoreFaults="true" />
+    <get key="Device.WiFi.Radio.2.AutoChannelEnable" output="cpeAutoChannel2" ignoreFaults="true" />
+    <get key="Device.Optical.Interface.1.Stats.BytesReceived" output="cpeTotalByte" ignoreFaults="true" />
+    <get key="Device.Optical.Interface.1.X_TP_GPON_Config.RXPower" output="cpeRXPower" ignoreFaults="true" />
+    <get key="Device.Optical.Interface.1.X_TP_GPON_Config.TXPower" output="cpeTXPower" ignoreFaults="true" />
+    <store type="devProp" target="cpeCpuUsed" value="${#cpeCpuUsed}" />
+    <store type="devProp" target="cpeMemUsed" value="${#cpeMemUsed}" />
+    <store type="devProp" target="cpeDownload" value="${#cpeDownload}" />
+    <store type="devProp" target="cpeUpload" value="${#cpeUpload}" />
+    <store type="devProp" target="cpeActiveSSID2" value="${#cpeActiveSSID2}" />
+    <store type="devProp" target="cpeActiveSSID5" value="${#cpeActiveSSID5}" />
+    <store type="devProp" target="cpeAutoChannel" value="${#cpeAutoChannel}" />
+    <store type="devProp" target="cpeAutoChannel2" value="${#cpeAutoChannel2}" />
+    <store type="devProp" target="cpeTotalByte" value="${#cpeTotalByte}" />
+    <store type="devProp" target="cpeRXPower" value="${#cpeRXPower}" />
+    <store type="devProp" target="cpeTXPower" value="${#cpeTXPower}" />
+    <store type="devProp" target="RXPower" value="${#cpeRXPower}" />
+    <store type="devProp" target="TXPower" value="${#cpeTXPower}" />
+    <store type="devProp" target="TransceiverTemperature" value="${#cpeTransceiverTemperature}" />
+</config>

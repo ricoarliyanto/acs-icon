@@ -1,0 +1,31 @@
+include "cwmp.devices.tplink.WR1043ND"
+
+remappingStrategy.mapping {
+  root.X_AVS_EXT {
+    WiFi {
+      2 {
+        EAP {
+          key = "${sv.vdmWlan2.toParameterKey}"
+          include "cwmp.ext.wifi.radius.avsystem"
+        }
+        include "cwmp.ext.wifi.associatedDevices.avsystem"
+        Security.real = [
+          "${sv.vdmWlan2.toParameterKey}.BeaconType",
+          "${sv.vdmWlan2.toParameterKey}.BasicEncryptionModes",
+          "${sv.vdmWlan2.toParameterKey}.WPAEncryptionModes",
+          "${sv.vdmWlan2.toParameterKey}.WPAAuthenticationMode",
+          "${sv.vdmWlan2.toParameterKey}.IEEE11iEncryptionModes",
+          "${sv.vdmWlan2.toParameterKey}.IEEE11iAuthenticationMode"]
+        include "cwmp.ext.wifi.avsystem"
+      }
+      3 = null
+      4 = null
+      5 = null
+    }
+    WiFiNeighborhood {
+      key = "${sv.vdmWlan2.toParameterKey}"
+      include "cwmp.ext.wifi.neighborhood.avsystem"
+    }
+  }
+
+}

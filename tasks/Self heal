@@ -1,0 +1,78 @@
+<config>
+  <log message="Getting WiFi Parameters" />
+  <message message="Get WiFi Parameters" />
+  <get key="InternetGatewayDevice.X_AVS_EXT.LAN.DevicesCount" output="HostNumberOfEntries" />
+  <store target="lanHostsNumber" value="${#HostNumberOfEntries}" type="devProp" />
+  <store target="Clients" value="0" />
+  <foreach query="${root().LANDevice.`1`.Hosts.Host.any()}" in="true">
+    <get key="Active" output="type" ignoreFaults="true" />
+    <if expr="${#type == 'true' or #type == '1'}">
+      <store target="Clients" value="${#Clients.toInt + 1}" />
+    </if>
+  </foreach>
+  <task class="com.avsystem.ump.acs.task.diagnostics.UploadDiagnosticsTask">
+    <config TestFileLength="256000" relativeFinishTime="2" />
+    <output var="Result.TotalBytesSent" alias="TotalBytesSent" />
+    <output var="Result.BOMTime" alias="BOMTime" />
+    <output var="Result.EOMTime" alias="EOMTime" />
+  </task>
+  <get key="InternetGatewayDevice.UploadDiagnostics.BOMTime" output="BOMTime" />
+  <get key="InternetGatewayDevice.UploadDiagnostics.EOMTime" output="EOMTime" />
+  <get key="InternetGatewayDevice.UploadDiagnostics.TotalBytesSent" output="TotalBytesSent" />
+  <log message="Upload TestBytesReceived: ${#TotalBytesSent}" />
+  <log message="Upload Connection speed: ${sv.calculatedUploadConnectionSpeed} Mb/s" />
+  <store target="Upload Speed" value="${sv.calculatedUploadConnectionSpeed}" />
+  <log message="Diagnosing WiFi problem ..." />
+  <message message="Diagnosing problem ..." />
+  <store target="ChangeChannal" value="false" />
+  <store target="SetSecurity" value="false" />
+  <if expr="false">
+    <log message="Low speed detected" level="WARN" />
+    <message message="Low speed detected" level="WARN" />
+    <store target="ChangeChannal" value="true" />
+  </if>
+  <if expr="${#Security == 'NONE'}">
+    <log message="Unsecured WiFi" level="WARN" />
+    <message message="Unsecured WiFi" level="WARN" />
+    <store target="SetSecurity" value="true" />
+    <if expr="${#Clients.toInt &gt; 10}">
+      <log message="Too many clients" level="WARN" />
+      <message message="Too many clients" level="WARN" />
+    </if>
+  </if>
+  <log message="WiFi diagnostic complete" />
+  <message message="Diagnostic complete." />
+  <if expr="${#ChangeChannal.toBoolean}">
+    <set key="InternetGatewayDevice.X_AVS_EXT.WiFi.1.Channel" value="${(math.random * 12 + 1).toInt}" />
+    <log message="Applying fix: Change WiFi channel" />
+    <message message="Applying fix: Change WiFi channel" />
+  </if>
+  <log message="Clients number: ${#Clients}" />
+  <store target="connectedHostsNumber" value="${#Clients}" type="devProp" />
+  <if expr="${#SetSecurity == 'true'}">
+    <set key="InternetGatewayDevice.X_AVS_EXT.WiFi.1.Security" value="WPA2" />
+    <log message="Applying fix: Secure WiFi" />
+    <message message="Applying fix: Secure WiFi" />
+  </if>
+  <if expr="${sv.wifiScanAvailable == 'true'}">
+    <log message="Correcting WiFi channel..." />
+    <message message="Correcting WiFi channel..." />
+    <set key="${device.rootObject}.X_AVS_EXT.WiFi.1.Channel" value="${wifiOptimizationApi.getBestChannelFromDatamodel(device.id,sv.bssid1)}" />
+    <message message="Best WiFi channel selected." />
+  </if>
+  <log message="Checking DNS configuration..." />
+  <get key="${sv.activeWan}DNSServers" output="DNSServers" />
+  <store type="devProp" target="DNSServers" value="${#DNSServers}" />
+  <if expr="${#DNSServers != '8.8.8.8'}">
+    <log message="Fixing DNS configuration..." />
+    <set key="${sv.activeWan}DNSServers" value="8.8.8.8" ignoreFaults="true" />
+    <log message="DNS configuration fixed!" />
+    <get key="${sv.activeWan}DNSServers" output="DNSServers" ignoreFaults="true" />
+    <store type="devProp" target="DNSServers" value="${#DNSServers}" />
+    <finish />
+    <else>
+      <log message="DNS configuration OK!" />
+      <finish />
+    </else>
+  </if>
+</config>

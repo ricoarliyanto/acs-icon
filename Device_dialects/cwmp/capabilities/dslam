@@ -1,0 +1,6 @@
+# DSLAM capability
+# A device is able to act as a DSLAM
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.DSLAM.%force-value = "true"
+}

@@ -1,0 +1,44 @@
+<config>
+  <defaults get.fromCache="true">
+    <if expr="${sv.cmtsIdentity == 'null' or sv.cmtsIdentity == null}">
+      <finish status="ERROR" message="cmtsIdentity is missing" />
+    </if>
+    <store target="updateTimestamp" value="${date.now}" />
+    <store target="cmtsId" value="${sv.cmtsIdentity}" />
+    <store target="cmGroup" value="root.cm.${#cmtsId}" />
+    <store target="sharedGroups" value="&quot;root.snmp&quot;,&#xA;&quot;root.monitoring&quot;" />
+    <store target="sharedProperties" value="&quot;cmtsId&quot;: &quot;${#cmtsId}&quot;,&#xA;&quot;cmtsUpdateTimestamp&quot;: &quot;${#updateTimestamp}&quot;" />
+    <get key="Device.X_AVS_EXT.Line.1.CpeMACAddress" output="cmMACAddress" />
+    <get key="Device.X_AVS_EXT.Line.1.CpeIPAddress" output="cmIPAddress" />
+    <if expr="${#cmIPAddress.isIp}">
+      <else>
+        <finish status="WARNING" message="${#cmpIPAddress} is not a real IP address." />
+      </else>
+      <if expr="${#cmMACAddress.isMac}">
+        <else>
+          <finish message="${#cmMACAddress} is not a real MAC address." />
+        </else>
+        <if expr="${#cmIPAddress != '0.0.0.0'}">
+          <else>
+            <log status="WARNING" message="Line 1 is un-registered." />
+          </else>
+          <store target="cmCmtsPortEntity" value="${list(#cmtsId,#cmMACAddress).join('/')}" />
+          <store target="cmId" value="${#cmMACAddress}" />
+          <store target="cmEntity" value="&quot;blacklisted&quot;: false,&#xA;&quot;provisioningEnabled&quot;: true,&#xA;&quot;ipAddress&quot;: &quot;${#cmIPAddress}&quot;," />
+          <store target="groups" value="&quot;${#cmGroup}&quot;,${#sharedGroups}" />
+          <store target="properties" value="&quot;cmtsPortId&quot;: &quot;${#cmCmtsPortEntity}&quot;,&#xA;&quot;customerId&quot;:&quot;${sv.customerId}&quot;,&#xA;${#sharedProperties}" />
+          <store target="payloadCreate" value="{&quot;id&quot;: &quot;${#cmId}&quot;,&#xA;&quot;directGroups&quot;: [${#groups}],&#xA;&quot;properties&quot;: {${#properties}},&#xA;${#cmEntity}&quot;description&quot;: &quot;CM registered at ${#cmCmtsPortEntity}&quot;}" />
+          <log message="Creating device ${#cmId}" />
+          <restLocal url="devices" method="POST" content="${#payloadCreate}">
+            <out from="error" to="result" default="n/a" />
+          </restLocal>
+          <if expr="${#result != null or #result != 'n/a'}">
+            <log message="Updating ${#cmId}" />
+            <store target="payloadUpdate" value="{&quot;addProperties&quot;: {${#properties}},&#xA;&quot;addGroups&quot;: [${#groups}],&#xA;${#cmEntity}&quot;description&quot;: &quot;CM registered at ${#cmCmtsPortEntity}&quot;}" />
+            <restLocal url="devices/${#cmId}" method="PUT" content="${#payloadUpdate}" />
+          </if>
+        </if>
+      </if>
+    </if>
+  </defaults>
+</config>

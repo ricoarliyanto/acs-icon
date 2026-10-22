@@ -1,0 +1,2 @@
+sv.provisioningStatus.set("provisioned")
+finish(summary = "device has been provisionioned")

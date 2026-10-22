@@ -1,0 +1,6 @@
+# Localization capapbility
+# A device is able to display its geo position.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Localization.%force-value = "true"
+}

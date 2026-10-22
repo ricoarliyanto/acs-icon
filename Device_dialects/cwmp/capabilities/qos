@@ -1,0 +1,6 @@
+# QoS capability
+# A device is able to configure QoS
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.QoS.%force-value = "true"
+}

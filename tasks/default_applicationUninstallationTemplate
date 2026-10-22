@@ -1,0 +1,3 @@
+<config>
+  <uninstall UUID="${#uuid}" Version="${#currentVersion}" />
+</config>

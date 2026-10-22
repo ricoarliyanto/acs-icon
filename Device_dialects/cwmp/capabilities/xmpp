@@ -1,0 +1,6 @@
+# XMPP capability
+# A device supports XMPP
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.XMPP.%force-value = "true"
+}

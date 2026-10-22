@@ -1,0 +1,9 @@
+<config>
+  <if expr="${device.modelName == '123' and device.softwareVersion=='111'}">
+    <set />
+    <task class="com.avsystem.ump.acs.task.FirmwareUpgradeTask">
+      <config resourceId="2818" />
+    </task>
+    <task class="com.avsystem.ump.acs.task.RebootTask" />
+  </if>
+</config>

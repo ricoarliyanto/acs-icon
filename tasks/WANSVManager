@@ -1,0 +1,13 @@
+<config>
+  <store value="0" target="counter" />
+  <foreach query="${root.ATM.Link.any}" iterator="atmLink">
+    <get key="${#atmLink}LowerLayers" output="lowerLayers" />
+    <foreach iterator="channel" in="true" list="${#lowerLayers.splitBy(',')}">
+      <get key="LowerLayers" output="lowerLayer" />
+      <store value="${#counter.toInt + 1}" target="counter" />
+      <store type="devProp" target="vdmWanDslChannel${#counter}" value="${#channel}" />
+      <store type="devProp" target="vdmWanDslLine${#counter}" value="${#lowerLayer}" />
+      <store type="devProp" target="vdmAtmLink${#counter}" value="${#atmLink}" />
+    </foreach>
+  </foreach>
+</config>

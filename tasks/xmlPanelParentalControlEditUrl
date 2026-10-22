@@ -1,0 +1,8 @@
+<config>
+  <store target="button" value="${task.properties.get('buttonIdentifier').replace('X_AVS_EXT.ParentalControl', 'X_ZTE-COM_ParentalControl')}" />
+  <store target="url" value="${task.properties.get('URL')}" />
+  <store target="id" value="${task.properties.get('id')}" />
+  <log message="settings ${#button}.${#id}.URL to ${#url}" level="DEBUG" />
+  <set key="${#button}.${#id}.URL" value="${#url}" />
+  <flush />
+</config>

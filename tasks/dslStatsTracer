@@ -1,0 +1,23 @@
+<config>
+  <get key="${sv.activeWan}Stats.EthernetBytesSent" output="DslBytesSent" />
+  <get key="${sv.activeWan}Stats.EthernetBytesReceived" output="DslBytesReceived" />
+  <get key="${sv.activeWan}Stats.EthernetPacketsSent" output="DslPacketsSent" />
+  <get key="${sv.activeWan}Stats.EthernetPacketsReceived" output="DslPacketsReceived" />
+  <flush />
+  <if expr="${sv.DslBytesSent != null and sv.DslBytesSent.toInt &lt;= #DslBytesSent.toInt}">
+    <store type="history" target="DslBytesSent" value="${#DslBytesSent.toInt - sv.DslBytesSent.toInt}" />
+  </if>
+  <if expr="${sv.DslBytesReceived != null and sv.DslBytesReceived.toInt &lt;= #DslBytesReceived.toInt}">
+    <store type="history" target="DslBytesReceived" value="${#DslBytesReceived.toInt - sv.DslBytesReceived.toInt}" />
+  </if>
+  <if expr="${sv.DslPacketsSent != null and sv.DslPacketsSent.toInt &lt;= #DslPacketsSent.toInt}">
+    <store type="history" target="DslPacketsSent" value="${#DslPacketsSent.toInt - sv.DslPacketsSent.toInt}" />
+  </if>
+  <if expr="${sv.DslPacketsReceived != null and sv.DslPacketsReceived.toInt &lt;= #DslPacketsReceived.toInt}">
+    <store type="history" target="DslPacketsReceived" value="${#DslPacketsReceived.toInt - sv.DslPacketsReceived.toInt}" />
+  </if>
+  <store type="devProp" target="DslBytesSent" value="${#DslBytesSent}" />
+  <store type="devProp" target="DslBytesReceived" value="${#DslBytesReceived}" />
+  <store type="devProp" target="DslPacketsSent" value="${#DslPacketsSent}" />
+  <store type="devProp" target="DslPacketsReceived" value="${#DslPacketsReceived}" />
+</config>

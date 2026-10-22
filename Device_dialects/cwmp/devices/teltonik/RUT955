@@ -1,0 +1,197 @@
+# https://wiki.teltonika.lt/view/RUT955_TR-069
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# Set default capabilities
+include "cwmp.default"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.lte"
+
+# AVALIABLE FEATURES & SERVICES
+include "cwmp.capabilities.wifi"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.ping"
+
+include "tools.remapping"
+include "tools.patching"
+include "tools.readConverters"
+
+# FIXES
+remappingStrategy {
+  read_converter {
+    Status.Temperature = ${tools.readConverters.oneToOne.divideBy10}
+    WAN {
+      Status = ${tools.expression} {
+        expression = "${map('connected' -> 'Up').getOr(singleValue,'Down')}"
+      }
+      Stats.Downstream.Packets = ${tools.readConverters.oneToOne.bytesToPackets}
+      Stats.Upstream.Packets = ${tools.readConverters.oneToOne.bytesToPackets}
+      IP.1.Stats.Downstream.Packets = ${tools.readConverters.oneToOne.bytesToPackets}
+      IP.1.Stats.Upstream.Packets = ${tools.readConverters.oneToOne.bytesToPackets}
+      LTE.Stats.Downstream.Packets = ${tools.readConverters.oneToOne.bytesToPackets}
+      LTE.Stats.Upstream.Packets = ${tools.readConverters.oneToOne.bytesToPackets}
+    }
+    WiFi.%i {
+      Enable = ${tools.readConverters.manyToOne.areAllTrue}
+      Status = ${tools.expression} {
+        expression = "${if (value.values.map(v => v == 'Enabled' || v == 'Up').fold(true)(_ and _)) 'Up' else 'Down'}"
+      }
+      Standard = ${tools.expression} {
+        expression = "${singleValue.splitBy('').join(',')}"
+      }
+      Security = ${tools.expression} {
+        expression = """${
+          map('None' -> 'NONE',
+              'WEP-64' -> 'WEP',
+              'WEP-128' -> 'WEP',
+              'WPA-Personal' -> 'WPA',
+              'WPA2-Personal' -> 'WPA2',
+              'WPA-WPA2-Personal' -> 'WPA_WPA2',
+              'WPA-Enterprise' -> 'CUSTOM',
+              'WPA2-Enterprise' -> 'CUSTOM',
+              'WPA-WPA2-Enterprise' -> 'CUSTOM').getOr(singleValue,'CUSTOM')
+        }"""
+      }
+    }
+    Diagnostics.IPPing.Result {
+      AverageResponseTime = ${tools.expression} {
+        expression = "${math.ceil(singleValue.toLong / 100000.0).toInt}"
+      }    
+      MaximumResponseTime = ${tools.expression} {
+        expression = "${math.ceil(singleValue.toLong / 100000.0).toInt}"
+      }    
+      MinimumResponseTime = ${tools.expression} {
+        expression = "${math.ceil(singleValue.toLong / 100000.0).toInt}"
+      }    
+    }
+  }
+  write_converter {
+    WiFi.%i {
+      Standard = ${tools.expression} {
+        expression = "${value.splitBy(',').join}"
+      }
+      Security = ${tools.expression} {
+        expression = """${
+          map('NONE' -> 'None',
+              'WEP' -> 'WEP-128',
+              'WPA' -> 'WPA-Personal',
+              'WPA2' -> 'WPA2-Personal',
+              'WPA_WPA2' -> 'WPA-WPA2-Personal').getOr(value,value)
+        }"""
+      }
+    }
+  }
+  mapping {
+    root.X_AVS_EXT {
+      Model.real = root.DeviceInfo.ProductClass
+      WAN {
+        Status.real = "root.MobileInfo.ConnState"
+        # IP object is prety much empty
+        LTE {
+          ConnectTime.real = null
+          PCI.real = null
+          DLFrequency.real = null
+          ULFrequency.real = null
+          CINR0.real = null
+          CINR1.real = null
+          RSRP1.real = null
+          Power.real = null
+          State.real = "root.MobileInfo.ConnState"
+          IMEI.real = "root.MobileInfo.Modem.IMEI"
+          IMSI.real = "root.MobileInfo.IMSI"
+          CellID.real = "root.MobileInfo.CellID"
+          SINR.real = "root.MobileInfo.SINR" # value: service mode not supported
+          SignalQuality.real = "root.MobileInfo.ECIO"
+          RSSI.real = "root.MobileInfo.RSSI"
+          RSRQ.real = "root.MobileInfo.RSRQ" # value: service mode not supported
+          RSRP0.real = "root.MobileInfo.RSRP" # value: service mode not supported
+          Stats {
+            Downstream {
+              Bytes.real = "root.MobileInfo.ReceivedThisMonth"
+              Packets.real = "root.MobileInfo.ReceivedThisMonth"
+            }
+            Upstream {
+              Bytes.real = "root.MobileInfo.SentThisMonth"
+              Packets.real = "root.MobileInfo.SentThisMonth"
+            }
+          }
+        }
+        Stats {
+          Downstream {
+            Bytes.real = "root.MobileInfo.ReceivedThisMonth"
+            Packets.real = "root.MobileInfo.ReceivedThisMonth"
+          }
+          Upstream {
+            Bytes.real = "root.MobileInfo.SentThisMonth"
+            Packets.real = "root.MobileInfo.SentThisMonth"
+          }
+        }
+        IP.1.Stats {
+          Downstream {
+            Bytes.real = "root.MobileInfo.ReceivedThisMonth"
+            Packets.real = "root.MobileInfo.ReceivedThisMonth"
+          }
+          Upstream {
+            Bytes.real = "root.MobileInfo.SentThisMonth"
+            Packets.real = "root.MobileInfo.SentThisMonth"
+          }
+        }
+      }
+      WiFi.1 {
+        Enable.real = [
+          "root.LANDevice.1.WLANConfiguration.1.Enable",
+          "root.WiFi.AccessPoint.1.Enable",
+          "root.WiFi.Radio.1.Enable",
+          "root.WiFi.SSID.1.Enable"
+        ]
+        Status.real = [
+          "root.WiFi.SSID.1.Status",
+          "root.WiFi.Radio.1.Status",
+          "root.WiFi.AccessPoint.1.Status"
+        ]
+        Channel.real = "root.WiFi.Radio.1.Channel"
+        AutoChannelEnable.real = "root.WiFi.Radio.1.AutoChannelEnable"
+        PossibleChannels.real = "root.WiFi.Radio.1.ChannelsInUse"
+        Standard.real = "root.WiFi.Radio.1.OperatingStandards"
+        Password.real = "root.WiFi.AccessPoint.1.Security.KeyPassphrase"
+        Security.real = "root.WiFi.AccessPoint.1.Security.ModeEnabled"
+        WEPKey.real = "root.WiFi.AccessPoint.1.Security.WEPKey"
+      }
+      Status.Temperature.real = "root.MobileInfo.Modem.Temperature"
+      Resources.CPUUsage.real = null
+    }
+  }
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    Model.%copy-value = modelName
+    Manufacturer = ${tools.patching.readOnlyString} {
+      %force-value = "Teltonik"
+      %copy-value = manufacturer
+    }
+    WAN = ${tools.patching.readOnlyString} {
+      %force-value = "LTE"
+    }
+    Diagnostics.IPPing.DCSP {
+      %force-value = "0"
+      %redirect-outgoing-value = "properties.DSCP_outgoing_value_diag_fix"
+      %force-writable = true
+    }
+  }
+}
+
+realPatching.patching {
+  root.IPPingDiagnostics.DSCP {
+    %force-value = "0"
+    %force-writable = true
+    %redirect-outgoing-value = "properties.dscp_fix"
+  }
+}

@@ -1,0 +1,19 @@
+val message = try {
+  task.parameters.selectDynamic("radio").getOpt.filter(_.nonEmpty).fold("No changes made, no radio specified"){ radio => 
+    val ssid = task.parameters.selectDynamic("ssid").getOpt.filter(_.nonEmpty)
+    val password = task.parameters.selectDynamic("password").getOpt.filter(_.nonEmpty)
+    if(ssid.nonEmpty && password.nonEmpty) {
+      ldm.set(dmkey.root.X_AVS_EXT.WiFi(radio.toInt).SSID, ssid.get)
+      ldm.set(dmkey.root.X_AVS_EXT.WiFi(radio.toInt).Password, password.get)
+      "SSID set to: $ssid, Password set to $password on radio $radio"
+    } else "Missing parameters: SSID: $ssid, Password: $password"
+  }
+} catch { e =>
+  log.error("Workflow has encountered an error $e")
+  workflow.setStatus(status = "Error", description = "Workflow has encountered an error: $e")
+  workflow.exportVariable(name = "shouldApplyRecommendation", value = false) //sanity check to not follow up on things
+  fail("Workflow has encountered an error: $e")
+}
+
+
+workflow.setStatus("Success", "$message") 

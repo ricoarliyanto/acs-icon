@@ -1,0 +1,7 @@
+# WiMAX capability
+# A device is able to configure and manage WiMAX connection, as well as details about channel plan,
+# subscriber data and transfer statistics.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.WiMAX.%force-value = "true"
+}

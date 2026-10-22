@@ -1,0 +1,143 @@
+cwmpStrategy {
+  type: CWMP
+}
+
+cwmp {
+  # Number of milliseconds that ACS will wait for response from device before failing the session
+  messageTimeout = 90000
+  # Number of milliseconds that CWMP connector will wait for message from ACS before failing the session
+  serverMessageTimeout = 20000
+  # List of parameters for which the device will always return empty string on GPV.
+  # ACS needs to know about these so that it doesn't propagate these empty strings to database.
+  passwordParameters = [
+    "Root.ManagementServer.Password",
+    "Root.ManagementServer.ConnectionRequestPassword",
+    "Root.ManagementServer.STUNPassword"
+  ]
+  # List of parameters for which values will NOT be fetched when performing data model refresh.
+  # Applies ONLY when 'dotGpv' SV is set to false.
+  # Keys may contain the '{i}' placeholder to match arbitrary instance numbers.
+  parametersExcludedFromRefresh = []
+
+  # Controls whether GetParameterNames should be issued before GetParameterValues when fetching all values
+  # of a data model subtree. This is required to not lose information about empty objects. However, some devices may
+  # have severe limitations that disallow additional GPN to be sent. This property allows to disable it.
+  gpnBeforeGetValues = true
+
+  # Controls whether activeWan property should be set based on parameters set in Infrom
+  # If true, when device sends ExternalIPAddress change, active WAN property will be set to sent WAN connection
+  # Remember to set activeWan manually - using task or setting value
+  setActiveWanFromInform = true
+
+  # Controls if properties of `Authorize` header (used in digest based http authentiation procesess) are quoted or not.
+  # - rfc - default behavior - RFC 7616 compliant, results in unquoting stale and algorithm
+  # - quoted - RFC 7616 non-compliant - all subproperties are quoted, e.g.: `algorithm="MD5"  realm="<<ANY_REALM added space>>"`
+  # - unquoted - RFC 7616 non-compliant - all subproperties, except ones, which value contain space, are unquoted, e.g.: `algorithm=MD5  realm="<<ANY_REALM added space>>"`
+  crDigestAuthQuotationMode = rfc
+
+  marshallingSettings {
+    # Options affecting how boolean values are handled
+    booleanRepresentations {
+      # String representations of boolean values accepted by device
+      # Used for marshalling of ParameterValueStruct and SetParameterAttributesStruct
+      # When null, no particular representation is enforced.
+      nativeTrue = null
+      nativeFalse = null
+      # When true, boolean values are normalized to be always represented as 'true' or 'false' before being exposed by UMP
+      # in results of data model operations and database-stored data model.
+      # Normalization is performed:
+      # * during unmarshalling of ParameterValueStruct and SetParameterAttributesStruct
+      # * on boolean values of parameters passed by provisioning to be set on device - normalized value will be saved to
+      #   data model in database instead of raw value passed by provisioning
+      normalize = true
+    }
+
+    trimTagValues = true
+  }
+
+  # Defines maximum batch size for get parameter values.
+  gpvMaxBatchSize = 32
+  # Defines maximum batch size for set parameter values.
+  spvMaxBatchSize = 32
+
+  # Custom marshallers for CWMP SOAP tags
+  marshallers {}
+  # Custom unmarshallers for CWMP SOAP tags
+  unmarshallers {}
+
+  deviceConfigurator {
+    # Values of these parameters will be copied to specified fields in device entity when changed
+    parameterToEntityMapping {
+      "Root.DeviceInfo.ManufacturerOUI".%target: oui
+      "Root.DeviceInfo.SerialNumber".%target: serialNumber
+      "Root.DeviceInfo.ModelName".%target: modelName
+      "Root.DeviceInfo.HardwareVersion".%target: hardwareVersion
+      "Root.DeviceInfo.SoftwareVersion".%target: softwareVersion
+      "Root.DeviceInfo.Manufacturer".%target = manufacturer
+      "Root.DeviceInfo.ProductClass".%target: productClass
+      "Root.ManagementServer.Password".%target: acsPassword
+      "Root.ManagementServer.ConnectionRequestUsername".%target: properties.connectionRequestUsername
+      "Root.ManagementServer.ConnectionRequestPassword".%target: properties.connectionRequestPassword
+      "Root.ManagementServer.ConnectionRequestURL".%target: properties.connectionRequestUrl
+      "Root.ManagementServer.UDPConnectionRequestAddress".%target: properties.udpCrAddress
+    }
+    # These parameters define what is needed to fully configure device entity
+    parametersRequiredOnce = [
+      "Root.DeviceInfo.ManufacturerOUI",
+      "Root.DeviceInfo.SerialNumber",
+      "Root.DeviceInfo.ModelName",
+      "Root.DeviceInfo.HardwareVersion",
+      "Root.DeviceInfo.SoftwareVersion",
+      "Root.DeviceInfo.Manufacturer",
+      "Root.DeviceInfo.ProductClass",
+    ]
+    # Parameters fetched at the beginning of every single session
+    parametersRequiredAlways = []
+  }
+
+  # This setting allows to override behaviour of the UMP about the bootstrap event discovery. If expression evaluates to
+  # "true" session is considered as bootstrap, therefore all task marked as "Periodic restart -> Only on bootstrap" would
+  # restart. By default expression evaluates to true for all Informs containing 0 BOOTSTRAP event.
+  bootstrapDiscoveryExpression = "${inform.isBootstrap}"
+
+  # This setting allows to override behaviour of the UMP about the connection request event discovery. If expression evaluates to
+  # "true" session is considered as the connection request. By default expression evaluates to true for all Informs
+  # containing 6 CONNECTION REQUEST event.
+  crDiscoveryExpression = "${inform.isConnectionRequest}"
+
+  # This setting allows to override behaviour of the UMP about the diagnostic complete event discovery. If expression evaluates to
+  # "true" session is considered as "diagnostic complete", therefore all diagnostic tasks would go to their next step (i.e.
+  # collecting results). By default expression evaluates to true for all Informs containing 8 DIAGNOSTICS COMPLETE event.
+  diagnosticDiscoveryExpression = "${inform.isDiagnosticsComplete}"
+  protocolVersionExpression = "${'auto'}"
+  customAuthExpression = "${sv.customAuthExpression.toString ? 'true'}"
+  maxDatamodelKeysNumber = 20000
+
+  # This setting allows to specify list of important inform parameters which should be saved to datamodel.
+  # If one of parameters in inform is matched by one of regexes in the list then all parmeters in inform will be saved to
+  # datamodel even if transientNotifications = true
+  transientInformSettings {
+    importantParameters = []
+  }
+
+  # Device property used for setting parameter key in AddObject, SetParameterValues and DeleteObject requests
+  # If property does not exists parameter key will not be set
+  parameterKeyProperty = "cwmpParameterKey"
+}
+
+deviceConfiguring {
+  type: DEVICE_CONFIGURING
+  mapping = ${cwmp.deviceConfigurator.parameterToEntityMapping}
+}
+
+connectionRequestExecutor = cwmp
+
+secondaryConnectors += {type: SSH}
+
+managementProtocols = ${?managementProtocols}"cwmp,"
+
+liveDatamodelStrategies += ${cwmpStrategy}
+liveDatamodelStrategies += ${deviceConfiguring}
+
+# License pool
+licensingPoolName = "${sv.licensingPoolName}"

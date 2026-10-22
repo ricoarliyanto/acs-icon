@@ -1,0 +1,6 @@
+# CMTS Line capability
+# A device is a CMTS Line
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.CMTSLine.%force-value = "true"
+}

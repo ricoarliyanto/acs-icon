@@ -1,0 +1,1 @@
+log.info(task.parameters.test.get) 

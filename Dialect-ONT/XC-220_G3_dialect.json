@@ -1,0 +1,269 @@
+{
+  "description": "TP-Link XC-220-G3 AC1200 Wireless XPON Router Dialect",
+  "manufacturer": "TP-Link",
+  "modelName": "XC220-G3",
+  "modelNumber": "XC220-G3",
+  "productClass": "XC220-G3",
+  "manufacturerOUI": "98BA5F",
+  "serialNumber": "224C4Y1000052",
+  "hardwareVersion": "XC220-G3 v1.0 00000001",
+  "softwareVersion": "1.10.0 0.8.0 v6062.0 Build 260206 Rel.40873n",
+  "deviceType": "XPON Router",
+  "capabilities": {
+    "interfaces": ["Ethernet", "WiFi", "GPON"],
+    "connectionTypes": ["IPoE", "PPPoE", "DHCP"],
+    "diagnostics": {
+      "ping": true,
+      "traceroute": true,
+      "download": true,
+      "upload": true,
+      "udpEcho": true,
+      "ipv4Supported": true,
+      "ipv6Supported": false
+    }
+  },
+  "parameters": {
+    "Device": {
+      "DeviceInfo": {
+        "Manufacturer": {
+          "value": "TP-Link",
+          "isWritable": false,
+          "type": "xsd:string"
+        },
+        "ManufacturerOUI": {
+          "value": "98BA5F",
+          "isWritable": false,
+          "type": "xsd:string"
+        },
+        "ModelName": {
+          "value": "XC220-G3",
+          "isWritable": false,
+          "type": "xsd:string"
+        },
+        "ProductClass": {
+          "value": "XC220-G3",
+          "isWritable": false,
+          "type": "xsd:string"
+        },
+        "SerialNumber": {
+          "value": "224C4Y1000052",
+          "isWritable": false,
+          "type": "xsd:string"
+        },
+        "HardwareVersion": {
+          "value": "XC220-G3 v1.0 00000001",
+          "isWritable": false,
+          "type": "xsd:string"
+        },
+        "SoftwareVersion": {
+          "value": "1.10.0 0.8.0 v6062.0 Build 260206 Rel.40873n",
+          "isWritable": false,
+          "type": "xsd:string"
+        },
+        "UpTime": {
+          "value": "210246",
+          "isWritable": false,
+          "type": "xsd:unsignedInt"
+        },
+        "ProvisioningCode": {
+          "value": "",
+          "isWritable": true,
+          "type": "xsd:string"
+        },
+        "X_TP_MACAddress": {
+          "value": "98:BA:5F:00:02:B0",
+          "isWritable": false,
+          "type": "xsd:string"
+        },
+        "MemoryStatus": {
+          "Free": {
+            "value": "43284",
+            "isWritable": false,
+            "type": "xsd:unsignedInt"
+          },
+          "Total": {
+            "value": "112236",
+            "isWritable": false,
+            "type": "xsd:unsignedInt"
+          }
+        },
+        "ProcessStatus": {
+          "CPUUsage": {
+            "value": "1",
+            "isWritable": false,
+            "type": "xsd:unsignedInt"
+          }
+        }
+      },
+      "Ethernet": {
+        "InterfaceNumberOfEntries": {
+          "value": "3",
+          "isWritable": false,
+          "type": "xsd:unsignedInt"
+        },
+        "LinkNumberOfEntries": {
+          "value": "4",
+          "isWritable": false,
+          "type": "xsd:unsignedInt"
+        },
+        "VLANTerminationNumberOfEntries": {
+          "value": "3",
+          "isWritable": false,
+          "type": "xsd:unsignedInt"
+        }
+      },
+      "IP": {
+        "InterfaceNumberOfEntries": {
+          "value": "4",
+          "isWritable": false,
+          "type": "xsd:unsignedInt"
+        },
+        "IPv4Capable": {
+          "value": "true",
+          "isWritable": false,
+          "type": "xsd:boolean"
+        },
+        "IPv4Status": {
+          "value": "Enabled",
+          "isWritable": false,
+          "type": "xsd:string"
+        }
+      },
+      "DHCPv4": {
+        "ClientNumberOfEntries": {
+          "value": "2",
+          "isWritable": false,
+          "type": "xsd:unsignedInt"
+        },
+        "ServerEnabled": {
+          "value": "true",
+          "isWritable": true,
+          "type": "xsd:boolean"
+        }
+      },
+      "DHCPv6": {
+        "ClientNumberOfEntries": {
+          "value": "3",
+          "isWritable": false,
+          "type": "xsd:unsignedInt"
+        },
+        "ServerEnabled": {
+          "value": "true",
+          "isWritable": true,
+          "type": "xsd:boolean"
+        }
+      },
+      "Firewall": {
+        "Enable": {
+          "value": "false",
+          "isWritable": true,
+          "type": "xsd:boolean"
+        },
+        "Config": {
+          "value": "Low",
+          "isWritable": true,
+          "type": "xsd:string"
+        },
+        "ChainNumberOfEntries": {
+          "value": "4",
+          "isWritable": true,
+          "type": "xsd:unsignedInt"
+        }
+      },
+      "WiFi": {
+        "RadioNumberOfEntries": {
+          "value": "2",
+          "isWritable": false,
+          "type": "xsd:unsignedInt"
+        },
+        "SSID": {
+          "NumberOfEntries": {
+            "value": "14",
+            "isWritable": false,
+            "type": "xsd:unsignedInt"
+          }
+        }
+      }
+    }
+  },
+  "managedObjects": {
+    "ethernet_interfaces": 3,
+    "ethernet_links": 4,
+    "vlan_terminations": 3,
+    "ip_interfaces": 4,
+    "dhcpv4_clients": 2,
+    "dhcpv6_clients": 3,
+    "wifi_radios": 2,
+    "wifi_ssids": 14,
+    "firewall_chains": 4
+  },
+  "services": {
+    "IPoE": {
+      "supported": true,
+      "vlanId": 0,
+      "interface": "Device.Ethernet.VLANTermination.1."
+    },
+    "PPPoE": {
+      "supported": true,
+      "vlanId": 2923,
+      "interface": "Device.Ethernet.VLANTermination.2."
+    },
+    "IPTV": {
+      "supported": true,
+      "vlanId": 2989,
+      "interface": "Device.Ethernet.VLANTermination.3."
+    }
+  },
+  "gpon_config": {
+    "optical_interface": "Device.Optical.Interface.1.",
+    "links": [
+      {
+        "linkId": 1,
+        "vlanId": 0,
+        "serviceName": "IPoE"
+      },
+      {
+        "linkId": 2,
+        "vlanId": 2923,
+        "serviceName": "PPPoE"
+      },
+      {
+        "linkId": 3,
+        "vlanId": 2989,
+        "serviceName": "IPTV"
+      }
+    ]
+  },
+  "wifi_config": {
+    "radios": [
+      {
+        "radioId": 1,
+        "frequency": "2.4GHz",
+        "maxBitRate": 400
+      },
+      {
+        "radioId": 2,
+        "frequency": "5GHz",
+        "maxBitRate": 800
+      }
+    ],
+    "ssids": 14,
+    "encryption": ["WPA2-Personal", "WPA3-Personal"],
+    "maxConnections": 32
+  },
+  "lan_config": {
+    "bridgeInterface": "Device.Bridging.Bridge.1.",
+    "lanIPAddress": "192.168.1.1",
+    "lanSubnetMask": "255.255.255.0",
+    "dhcpServerPool": {
+      "minAddress": "192.168.1.2",
+      "maxAddress": "192.168.1.249",
+      "leaseTime": 7200
+    }
+  },
+  "provisioning": {
+    "tr069_supported": true,
+    "protocol_version": "TAUC_1.1",
+    "authentication_methods": ["HTTP Digest", "Basic Auth"]
+  }
+}

@@ -1,0 +1,52 @@
+var executed = false
+ 
+while(!executed){
+   
+  val worList = wor("speedTest").list("speedTestExection")
+   
+  device.property.speedTestLastExecTime.set(Timestamp.now().millis.toString)
+  device.property.speedTestInProgress.set("true")
+   
+  val expired = Timestamp.now().addSeconds(-120).millis
+   
+  val toRemove = worList.getOpt.getOr(Seq.empty).filter(v => v.splitBy("@")(1).toLong < expired)
+  toRemove.foreach(worList.remove(_))
+   
+  val worListValue = worList.getOpt.getOr(Seq.empty)
+ 
+  if(worListValue.headOpt.exists(_.contains(device.id))){
+    //we can execute - our turn
+    val role = if(task.property.buttonIdentifier.is("upload")) "Sender" else "Receiver"
+    ldm.setAll(
+      dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Config.AuthKey -> "q9SJc1xGwT70o9yEB4OQ7NDqBZA",
+      dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Config.Host -> "uk.speedtest.avsystem.cloud",
+      dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Config.Role -> role,
+      dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Config.Port -> "25000",
+      dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Config.ProtocolVersion -> "IPv4",
+      dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Control.Start -> "true",
+    )
+     
+    executed = true
+  } else {
+    if(!worListValue.exists(_.contains(device.id))){
+      worList.append("${device.id}@${Timestamp.now().millis}")
+    }
+    if(worList.get(0).contains(device.id)){
+      //queue was empty - we can execute
+      val role = if(task.property.buttonIdentifier.is("upload")) "Sender" else "Receiver"
+      ldm.setAll(
+        dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Config.AuthKey -> "q9SJc1xGwT70o9yEB4OQ7NDqBZA",
+        dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Config.Host -> "uk.speedtest.avsystem.cloud",
+        dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Config.Role -> role,
+        dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Config.Port -> "25000",
+        dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Config.ProtocolVersion -> "IPv4",
+        dmkey.root.`X_AVM-DE_DiagnosticTools`.IPLayerCapacity.Control.Start -> "true",
+      )
+      executed = true
+    } else {
+      //we have to wait for our turn - we schedule CR to be executed in 30 seconds
+      session.requestConnectionIn(30.seconds)
+      session.wait(false, summary = "Waiting")
+    }
+  }
+}

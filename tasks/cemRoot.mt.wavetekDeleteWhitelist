@@ -1,0 +1,10 @@
+var toSet = Seq.apply[ValueToSet]()
+
+ldm.foreach(ldm.root.X_AVS_EXT.WiFi.any(true))(key => {
+  toSet = toSet.append(ldm.valueToSet(key.MACAddressControl.Enable, "false"))
+    .append(ldm.valueToSet(key.MACAddressControl.AccessList, ""))
+})
+
+ldm.setAll(toSet)
+// just in case someone is removinng whitelist with sheduled resore
+device.property.whitelistToRestore.remove() 

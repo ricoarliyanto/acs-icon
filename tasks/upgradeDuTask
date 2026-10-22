@@ -1,0 +1,3 @@
+<config>
+  <update UUID="${#uuid}" Version="${#version}" URL="${#url}" />
+</config>

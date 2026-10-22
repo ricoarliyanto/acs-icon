@@ -1,0 +1,124 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic.dm2"
+include "cwmp.capabilities.management.dm2"
+include "cwmp.capabilities.resources.dm2"
+include "cwmp.capabilities.status.dm2"
+include "cwmp.capabilities.temperature.dm2"
+include "cwmp.capabilities.syslog.dm2"
+
+# INTERNET ACCESS
+
+include "cwmp.capabilities.ethernet.dm2"
+include "cwmp.capabilities.wan.dm2"
+
+
+# AVAILABLE FEATURES & SERVICES
+
+include "cwmp.capabilities.bridging.dm2"
+include "cwmp.capabilities.dhcp.dm2"
+include "cwmp.capabilities.dns.dm2"
+include "cwmp.capabilities.firewall.dm2"
+include "cwmp.capabilities.forwarding.dm2"
+include "cwmp.capabilities.lan.dm2"
+include "cwmp.capabilities.ntp.dm2"
+include "cwmp.capabilities.users.dm2"
+include "cwmp.capabilities.xmpp.dm2"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics.dm2"
+
+#WIFI
+include "cwmp.ext.wifi.1.dm2"
+include "cwmp.ext.wifi.3.dm2"
+include "cwmp.ext.wifi.converters.dm2"
+include "tools.patching.wifiTypes"
+
+
+# WIFI Neigborhood DM2
+include "cwmp.ext.wifi.neighborhood.dm2"
+
+include "tools.readConverters"
+
+virtualPatching.patching {
+  root.X_AVS_EXT{
+    Capabilities.WiFi.%force-value = "true"
+    Capabilities.Neighborhood.%force-value = "true"
+    WiFi.1.Neighborhood.%force-object-exists = true
+    WiFi.3.Neighborhood.%force-object-exists = true
+    WiFi.3.SupportedStandards.%force-value = "a,n,ac"
+  }
+}
+
+remappingStrategy {
+  read_converter{
+    WiFi.1 {
+      ChannelBandwidth = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+      Neighborhood.%i {
+        ChannelBandwidth = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+        BSSID = ${tools.readConverters.oneToOne.stripMAC}
+      }
+    }
+    ScanningAllowed = ${tools.readConverters.oneToOne.isZero}
+    WiFi.3 {
+      ChannelBandwidth = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+      Neighborhood.%i {
+        ChannelBandwidth = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+        BSSID = ${tools.readConverters.oneToOne.stripMAC}
+      }
+      ScanningAllowed = ${tools.readConverters.oneToOne.isZero}
+    }
+  }
+  mapping {
+    //TODO: add 2.4GHz and 5GHz split by band
+    root.X_AVS_EXT.WiFi{
+      1 {
+        Neighborhood.%i {
+          Channel.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.Channel"
+          SSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.SSID"
+          BSSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.BSSID"
+          SignalStrength.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.SignalStrength"
+          ChannelBandwidth.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.OperatingChannelBandwidth"
+          Frequency.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.Channel"
+          Standard.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.OperatingStandards"
+          Security.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.SecurityModeEnabled"
+        }
+      }
+      2 {
+        AutoChannelEnable.real="root.WiFi.Radio.2.AutoChannelEnable"
+        Band.real="root.WiFi.Radio.2.OperatingFrequencyBand"
+        Channel.real="root.WiFi.Radio.2.Channel"
+        PossibleChannels.real="root.WiFi.Radio.2.PossibleChannels"
+        Power.real="root.WiFi.Radio.2.TransmitPower"
+        RegulatoryDomain.real="root.WiFi.Radio.2.RegulatoryDomain"
+        SSID.real="root.WiFi.SSID.3.SSID"
+        Standard.real="root.WiFi.Radio.2.SupportedStandard"
+        Status.real="root.WiFi.Radio.2.Status"
+        SupportedStandards.real="root.WiFi.Radio.2.SupportedStandards"
+        TransmitPowerSupported.real="root.WiFi.Radio.2.TransmitPowerSupported"
+        Stats{
+          Downstream{
+            Bytes.real="root.WiFi.SSID.3.Stats.BytesReceived"
+            Packets.real="root.WiFi.SSID.3.Stats.PacketsReceived"
+          }
+          Upstream{
+            Bytes.real="root.WiFi.SSID.3.Stats.BytesSent"
+            Packets.real="root.WiFi.SSID.3.Stats.PacketsSent"
+          }
+        }
+        Neighborhood.%i {
+          Channel.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.Channel"
+          SSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.SSID"
+          BSSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.BSSID"
+          SignalStrength.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.SignalStrength"
+          ChannelBandwidth.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.OperatingChannelBandwidth"
+          Frequency.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.Channel"
+          Standard.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.OperatingStandards"
+          Security.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%i.SecurityModeEnabled"
+        }
+      }
+    }
+  }
+}

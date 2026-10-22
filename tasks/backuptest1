@@ -1,0 +1,7 @@
+<config>
+  <task class="com.avsystem.ump.acs.task.BackupConfigurationTask">
+    <config intervalTime="0" />
+    <output var="resourceId" alias="resourceId" />
+  </task>
+</config>
+ 

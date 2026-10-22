@@ -1,0 +1,661 @@
+/*
+This code was created to gather properties from the device and then save them to the SV.
+Then we're sending requests to /monitorings API for SV-monitoring values of last (7 days).
+We're feeding the kladri with the properties from the monitoring.
+We save the kladri output to SV and they also become monitored.
+
+Configuration set values:
+
+cemKladriHealthScoreUrl -> healthScore external endpoint
+cemKladriHealthScoreLogin, cemKladriHealthScorePassword -> external endpoint credentials
+cemHealthScoreMonitoringRange -> range of monitoring data to be fetched (in days)
+*/
+
+val DATE_NOW = Timestamp.now()
+val SAMPLING_INTERVAL = sv.cemSessionMonitoringSamplingInterval.get.toInt ? 3600 // should be the same interval as for CEM SV Monitoring
+
+val MONITORING_AMOUNT_OF_DAYS: Duration = sv.cemHealthScoreMonitoringRange.get.toInt.days ? 3.days
+val (CEM_ROOT_GROUP: GroupId, CEM_DOMAIN_NAME: String) = groups.domainRoot |> {root => (root.cem, "/${root.name}/".replace("/root/","/"))}
+val HEALTH_SCORE_KPI_GROUPS = CEM_ROOT_GROUP.kpi.healthScore.total
+val GENERATE_RANDOM_SCORE = false // if true, random values will be used
+
+val TEST_ENVIRONMENT_FLAG = sv.cemTestEnvironment.getOr("false").toBoolean ? {
+  log.warn("Test environment flag is broken")
+  false
+}
+val HEALTH_SCORE_ENDPOINT = // set on domain root.cem group
+  sv.cemKladriHealthScoreUrl.getOpt |> { url => if (url.isEmpty && TEST_ENVIRONMENT_FLAG) "https://10.186.0.34:6574/api/v0.1/healthScore".opt else url }
+val HEALTH_SCORE_CREDENTIALS = {// set on domain root.cem group 
+  (sv.cemKladriHealthScoreLogin.get, sv.cemKladriHealthScorePassword.get).opt ? if(TEST_ENVIRONMENT_FLAG) ("avsystem", "jBQ2pz7A46uB63Kl").opt else Opt.empty[(String, String)]
+}
+
+val HEALTH_SCORE_FROM_EXTERNAL_SYSTEMS = !( // Use random values if those are preffered or if Kladri adress is missing
+	GENERATE_RANDOM_SCORE ||
+	(HEALTH_SCORE_ENDPOINT.isEmpty && TEST_ENVIRONMENT_FLAG)
+)
+val SESSION_MONITORING_NAME = sv.cemSessionMonitoringName.getOr("CEM - Session ($CEM_DOMAIN_NAME)")
+val SV_MONITORING_NAME = sv.cemSVMonitoringName.getOr("CEM - SV Monitoring ($CEM_DOMAIN_NAME)")
+val DSL_TECHNOLOGY = "dsl"
+
+var additionalParameters = Seq.empty[Json]
+
+// #################### GATHERING KLADRI PROPERTIES FROM DEVICE ########################
+// ##### LAN #####
+
+var ldmLanProperties = Map.empty[String, DMKey]
+ldm.foreach(ldm.root.X_AVS_EXT.LAN.Port.any(true)) { portKey =>
+  ldmLanProperties = ldmLanProperties ++ Map(
+    "up.${portKey.name}"-> portKey.Status, // up parameter whether port is up or down
+    "duplex.${portKey.name}"-> portKey.DuplexMode, // we will also transform this to boolean
+    "currentBitrate.${portKey.name}"-> portKey.CurrentBitRate,
+    "errorsSent.${portKey.name}"-> portKey.Stats.Upstream.Errors, // cumulative
+    "errorsReceived.${portKey.name}"-> portKey.Stats.Downstream.Errors, // cumulative
+    "bytesSent.${portKey.name}"-> portKey.Stats.Upstream.Bytes, // cumulative
+    "bytesReceived.${portKey.name}" -> portKey.Stats.Downstream.Bytes, // cumulative
+  )
+}
+val DMLANPortData = ldm.getLabelled(ldmLanProperties, temporaryResults = true, ignoreFaults = true)
+
+// ###### WIFI ###### 2.4, 5 GHz
+val band24Instance = sv.cemWiFiVdmWlan24Instance.get.toInt ? 1
+val band5Instance = sv.cemWiFiVdmWlan5Instance.get.toInt ? 5
+
+val (DMWiFi24Data, DMWiFi5Data) = Seq(band24Instance, band5Instance).map { (bandInstance) =>
+  val wifiKey = dmkey.root.X_AVS_EXT.WiFi(bandInstance)
+
+  val wifiData = ldm.getLabelled(Map(
+    "errorsReceived" -> wifiKey.Stats.Downstream.Errors, //cumulative
+    "bytesReceived" -> wifiKey.Stats.Downstream.Bytes, //cumulative
+    "errorsSent" -> wifiKey.Stats.Upstream.Errors, //cumulative
+    "bytesSent" -> wifiKey.Stats.Upstream.Bytes), //cumulative
+    temporaryResults = true,
+    ignoreFaults = true
+  )
+
+  var wifiDataAdditionalProperties = Map.empty[String, DMKey]
+  ldm.foreach(wifiKey.query.AssociatedDevice.any(true)) { deviceKey =>
+    wifiDataAdditionalProperties = wifiDataAdditionalProperties ++ Map(
+      "downlinkRate.${deviceKey.name}" -> deviceKey.Stats.Downstream.LastDataRate, 
+      "uplinkRate.${deviceKey.name}" -> deviceKey.Stats.Upstream.LastDataRate,
+      "retransmissions.${deviceKey.name}" -> deviceKey.Stats.Downstream.Retransmissions, //cumulative
+      "noise.${deviceKey.name}" -> deviceKey.NoiseFloor 
+    )
+  }
+
+  val wifiAdditionalData = ldm.getLabelled(wifiDataAdditionalProperties, temporaryResults = true, ignoreFaults = true)
+
+  val wifiSumMap = wifiAdditionalData.toSeq.foldLeft(Map.empty[String, Long]){(acc, map) =>
+    val (key, value) = map
+    val splitKey = key.splitBy(".")
+    val paramName = splitKey.get(0).getOr("")
+    val currentSum = acc.getOr(paramName, 0)
+    val newValue = value.toLong ? 0
+
+    acc.update(paramName, currentSum + newValue)
+  }.map{(key, value) => 
+    if(key.contains("noise")) (key, (value.toDouble / wifiAdditionalData.filter{(key, value)=> key.splitBy(".").get(0).getOr("").contains("noise")}.size).toLong)
+    else if(key.contains("uplinkRate")) (key, (value.toDouble / wifiAdditionalData.filter{(key, value)=> key.splitBy(".").get(0).getOr("").contains("uplinkRate")}.size).toLong)
+    else if(key.contains("downlinkRate")) (key, (value.toDouble / wifiAdditionalData.filter{(key, value)=> key.splitBy(".").get(0).getOr("").contains("downlinkRate")}.size).toLong)
+    else (key, value)
+  }
+
+  wifiSumMap.map((key,value)=>(key->value.toString)) ++ wifiData
+} |> { (SeqOfWifiMaps)=> (SeqOfWifiMaps.get(0).getOr(Map.empty[String,String]), SeqOfWifiMaps.get(1).getOr(Map.empty[String,String]))}
+
+//###### HARDWARE #######
+val DMRamData = ldm.getLabelled(Map(
+  "used" -> dmkey.root.X_AVS_EXT.Resources.RAMUsed,
+  "available" -> dmkey.root.X_AVS_EXT.Resources.RAMAvailable,
+  "cpu" -> dmkey.root.X_AVS_EXT.Resources.CPUUsed),
+  temporaryResults = true,
+  ignoreFaults = true
+)
+
+// ############# WAN  #############
+// DSL
+val dslKey = dmkey.root.X_AVS_EXT.WAN.DSL
+val DMDSLData = ldm.getLabelled(Map(
+    //"showtimeCRCErrors" -> dslKey.Stats.Showtime.CRCErrors, // I can't find similiar parameter
+    "linkRetrain" -> dslKey.Stats.Showtime.LinkRetrain,
+    "upstreamSnr" -> dslKey.Stats.Upstream.NoiseMargin,
+    "downstreamSnr" -> dslKey.Stats.Downstream.NoiseMargin,
+    "upstreamMaximalRate" -> dslKey.Stats.Upstream.AllowedRate,
+    "downstreamMaximalRate" -> dslKey.Stats.Downstream.AllowedRate
+  ),
+  temporaryResults = true,
+  ignoreFaults = true
+)
+var DMAttenuationData  = ldm.getLabelled(Map(
+    "upstreamAttenuation" -> dslKey.Stats.Upstream.Attenuation,
+    "downstreamAttenuation" -> dslKey.Stats.Downstream.Attenuation
+  ),
+  temporaryResults = true,
+  ignoreFaults = true
+)
+
+// ######################### MAPPING DM PARAMETERS FOR KLADRI ##########################
+lazy val kbUnit = math.pow(1024,1)
+lazy val mbUnit = math.pow(1024,2)
+lazy val gbUnit = math.pow(1024,3)
+
+// ##### LAN #####
+val transformedLanProperties = DMLANPortData.toSeq.foldRight(Map.empty[String, Json]){(lanData, acc)=>
+  val (k, value) = lanData
+  val keyPropertyName = k.splitAtSep(".")._1
+  if(keyPropertyName == "up"){
+    if (value.uncapitalize == "up"){
+      acc + (keyPropertyName ->true.encodeJson)
+    }else if(acc.get("up").exists(_.isBoolean)){
+      acc + (keyPropertyName -> false.encodeJson)
+    }else acc
+  }else if(keyPropertyName == "duplex"){
+    if (value.uncapitalize == "full" || value.uncapitalize == "auto"){
+      acc + (keyPropertyName->true.encodeJson)
+    }else if(acc.get("duplex").exists(_.isBoolean)){
+      acc + (keyPropertyName->false.encodeJson)
+    } else acc
+  }else if(keyPropertyName == "currentBitrate"){
+      acc + (keyPropertyName -> math.max(value.toLong ? 0, acc.getOr(keyPropertyName, 0.encodeJson).asLong).encodeJson)
+  }else if(keyPropertyName.contains("bytes") || keyPropertyName.contains("errors")){
+    val previousValue = acc.getOr(keyPropertyName, 0.encodeJson).decodeAs[Long]
+    acc + (keyPropertyName->(previousValue + (value.toLong ? 0)).encodeJson) 
+  }
+  else{
+    acc
+  }  
+}.filter((_,v) => "$v" != "0")
+val (ethernetDataReceived, ethernetDataSent) = Seq(transformedLanProperties).flatMap(data => Seq("bytesReceived", "bytesSent").map(key=> data.getOr(key, 0.encodeJson))).map{value =>
+  val bytes = value.decodeAs[Long].toDouble
+  val humanReadableBytes:String = {if (bytes < kbUnit) {
+    (bytes, "bytes")
+  } else if (bytes < mbUnit) {
+      (bytes / kbUnit, "KB")
+    } else if (bytes < gbUnit) {
+      (bytes / mbUnit, "MB")
+    } else {
+      (bytes / gbUnit, "GB")
+    }} |> {(pair:(Double,String)) =>
+    val (value, unit) = pair
+    // Format to 2 decimal places by rounding manually
+    "${(math.round(value*100).toDouble/100).toString |> {value => if(value.endsWith(".0")) value.dropRight(2) else value}} $unit"
+  }
+  humanReadableBytes
+} |> {array => (array(0), array(1))}
+val ethernetJson = transformedLanProperties.encodeJson
+val storedLanProperties = transformedLanProperties.map{(key,value) =>
+  (key, value.toString)
+}.merge(Map(  
+  "dynamicUnitBytesReceived" -> ethernetDataReceived, 
+  "dynamicUnitBytesSent" -> ethernetDataSent
+))
+storedLanProperties.foreach((key, value) => device.property.selectDynamic("cemEthernet${key.capitalize}").set(value.toString))
+
+// ###### WIFI ###### 2.4, 5 GHz
+val wifi24ChannelRank = "${sv.cemCurrentChannelRank24.get.toDouble ? 0.0}"
+val wifi24NSQ = "${sv.cemWiFiScore24.get.toLong ? 0.toLong}"
+val wifi5ChannelRank = "${sv.cemCurrentChannelRank5.get.toDouble ? 0.0}"
+val wifi5NSQ = "${sv.cemWiFiScore5.get.toLong ? 0.toLong}"
+val (wifi24DataReceived, wifi24DataSent, wifi5DataReceived, wifi5DataSent) = Seq(DMWiFi24Data, DMWiFi5Data).flatMap(data => Seq("bytesReceived", "bytesSent").map(key=> data.getOr(key, "0"))).map{value =>
+  val bytes = value.toDouble
+  val humanReadableBytes:String = {if (bytes < kbUnit) {
+    (bytes, "bytes")
+  } else if (bytes < mbUnit) {
+      (bytes / kbUnit, "KB")
+    } else if (bytes < gbUnit) {
+      (bytes / mbUnit, "MB")
+    } else {
+      (bytes / gbUnit, "GB")
+    }} |> {(pair:(Double,String)) =>
+    val (value, unit) = pair
+    // Format to 2 decimal places by rounding manually
+    "${(math.round(value*100).toDouble/100).toString |> {value => if(value.endsWith(".0")) value.dropRight(2) else value}} $unit"
+  }
+  humanReadableBytes
+} |> {array => (array(0), array(1), array(2), array(3))}
+
+val transformedWifi24Data = DMWiFi24Data.merge(Map(
+  "channelRank" -> wifi24ChannelRank , 
+  "normalizedSignalQuality" -> wifi24NSQ
+))
+val transformedWifi5Data = DMWiFi5Data.merge(Map(
+  "channelRank" -> wifi5ChannelRank,
+  "normalizedSignalQuality" -> wifi5NSQ
+))
+
+val wifi24Json = transformedWifi24Data.encodeJson
+val wifi5Json = transformedWifi5Data.encodeJson
+
+val storedWifi24Data = transformedWifi24Data.merge(Map(
+  "dynamicUnitBytesReceived" -> wifi24DataReceived, 
+  "dynamicUnitBytesSent" -> wifi24DataSent
+))
+
+val storedWifi5Data = transformedWifi5Data.merge(Map(
+  "dynamicUnitBytesReceived" -> wifi5DataReceived, 
+  "dynamicUnitBytesSent" -> wifi5DataSent
+))
+
+storedWifi24Data.foreach((key, value) => device.property.selectDynamic("cemWiFi24${key.capitalize}").set(value))
+storedWifi5Data.foreach((key, value) => device.property.selectDynamic("cemWiFi5${key.capitalize}").set(value))
+
+//###### HARDWARE #######
+val ramFree: Double = DMRamData.get("available").get.toDouble ? 0.0
+val cpu: Int = DMRamData.get("cpu").get.toInt ? 0
+var temperature: Int = sv.cemTemperature.get.toInt ? 0
+val ramUsed: Long = DMRamData.get("used").get.toLong ? 0
+val ramTotal: Long = (ramUsed + DMRamData.get("available").get.toLong) ? 0
+val hardwareData :Map[String, Json] = Map(
+  "cpu" -> cpu.encodeJson,
+  "ramFree" -> ramFree.encodeJson,
+  "ramTotal" -> ramTotal.encodeJson,
+  "temperature" -> temperature.encodeJson,
+)
+val transformedHardwareData = hardwareData.filter((_,v) => "$v" != "0")
+val hardwareJson = transformedHardwareData.encodeJson
+transformedHardwareData.foreach((key, value) => device.property.selectDynamic("cemHardware${key.capitalize}").set(value.toString))
+
+//additional parameter for the healthScore UI widget
+val hardwareRam: Double = ramUsed.toDouble*100.0/ramTotal.toDouble ? 0.0
+device.property.cemHardwareRam.set("$hardwareRam")
+
+// ############# WAN  #############
+val transformedDslData = (DMDSLData ++
+  // scaling attenuation from 0.1 dB to 1 dB
+  DMAttenuationData.map((k, v) => {(k, v.toDouble./(10).toString ? "0")})
+).filter((_,v)=> v != "0")
+.+ ("technology" -> DSL_TECHNOLOGY)
+
+val wanJsonDsl = transformedDslData.encodeJson
+transformedDslData.foreach((key, value) => device.property.selectDynamic("cemWanDsl${key.capitalize}").set(value))
+
+// fwa not mapped by X_AVS_EXT YET
+/*
+val fwaKey = dmkey.root.X_AVS_EXT.WAN.FWA
+val fwaData = ldm.getLabelled(Map(
+  "technology" -> fwaKey.technology,
+  "rssi" -> fwaKey.rssi,
+  "rsrp" -> fwaKey.rsrp,
+  "upstreamMaxBitrate" -> fwaKey.upstreamMaxBitrate,
+  "downstreamMaxBitrate" -> fwaKey.downstreamMaxBitrate),
+  temporaryResults = true,
+  ignoreFaults = true
+)
+val fwaTechnology = "fwa"
+
+val transformedFwaData = (fwaData + ("technology"->fwaTechnology)).filter((key,value)=>value.toString != "0")
+val wanJsonFwa = transformedFwaData.encodeJson 
+transformedFwaData.foreach((key, value) => device.property.selectDynamic("cemWanFwa${key.capitalize}").set(value))*/
+
+// hfc not yet fully mapped by X_AVS_EXT YET
+/*
+val hfcKey = dmkey.root.X_AVS_EXT.WAN.HFC
+val hfcData = ldm.getLabelled(Map(
+"technology" -> hfcKey.technology,
+"downstreamMaxThroughput" -> hfcKey.downstreamMaxThroughput,
+"downstreamModulation" -> hfcKey.downstreamModulation,
+"upstreamMaxThroughput" -> hfcKey.upstreamMaxThroughput,
+"upstreamModulation" -> hfcKey.upstreamModulation,
+"upstreamSnr" -> hfcKey.upstreamSnr,
+"upstreamFecErrors" -> hfcKey.upstreamFecErrors),
+temporaryResults = true,
+ignoreFaults = true
+)
+val hfcTechnology = "hfc"
+
+val transformedHfcData = (hfcData + ("technology"->hfcTechnology)).filter((key,value)=>value.toString != "0")
+val wanJsonHfc = transformedHfcData.encodeJson
+transformedHfcData.foreach((key, value) => device.property.selectDynamic("cemWanHfc${key.capitalize}").set(value))*/
+
+/*
+// PON
+// later we will check for first enabled -> on and status "on"
+// there are still no information how we are using it
+val ponKey = dmkey.root.X_AVS_EXT.WAN.GPON.`1`
+val ponData = ldm.getLabelled(Map(
+  "technology" -> ponKey.Technology,
+  "receivedPower" -> ponKey.RXPower,
+  "transmittedPower" -> ponKey.TXPower),
+  temporaryResults = true,
+  ignoreFaults = true
+)
+val ponTechnology = "pon"
+
+val transformedPonData = (ponData + ("technology"->ponTechnology)).filter((key,value)=>value.toString != "0")
+val wanJsonPon = transformedPonData.encodeJson
+transformedPonData.foreach((key, value) => device.property.selectDynamic("cemWanPon${key.capitalize}").set(value))
+*/
+
+if (HEALTH_SCORE_ENDPOINT.isEmpty && !TEST_ENVIRONMENT_FLAG) {
+ fail("ERROR", "'cemKladriHealthScoreUrl' SV is missing")
+}
+
+val parametersJson = Map(
+  "timestamp" -> DATE_NOW.encodeJson,
+  "ethernet" -> ethernetJson,
+  "hardware" ->  hardwareJson,
+  "wifi24" -> wifi24Json,
+  "wifi5" -> wifi5Json,
+  "wan" -> wanJsonDsl
+)
+
+log.debug(parametersJson)
+
+val filteredParameters = parametersJson.map{(el, v)=> 
+  if(v.isObject){
+    el->v.decodeAs[Map[String, Json]].filter((str, json)=>json.toString != "0").encodeJson
+  } else el->v
+}.encodeJson
+
+additionalParameters += filteredParameters
+
+log.debug(filteredParameters)
+
+// ############# MONITORING DATA FROM LAST 7 DAYS #############
+
+var sessionMonitoringDataDBCursor = http.localRest("monitoringData/samples/${SESSION_MONITORING_NAME.urlEncodeUTF8}/${device.id}", 
+  uriParameters = Seq("fromDate" -> "${DATE_NOW - MONITORING_AMOUNT_OF_DAYS}", "toDate" -> "$DATE_NOW", "exactId" -> "true")
+).tryAndFold(
+  e => {
+    fail("ERROR", "Failed to get monitoring data: ${e.toString.replace("\n", "")}")
+  },
+  response => {
+    if (response.isError) {
+      fail("ERROR", "Failed to get monitoring data: ${response.body.error.asString}")
+    }
+    else {
+      val monitoringDataDBCursor = response.body.decodeAs[Int]
+      log.debug("Session monitoring data is in cursor: $monitoringDataDBCursor")
+      monitoringDataDBCursor.opt
+    }
+  }
+)
+
+var sessionMonitoringData = Seq.empty[Json]
+
+do {
+  val sessionMonitoringDataSamples = http.localRest("monitoringData/moreSamples", 
+    uriParameters = Seq("cursor" -> "${sessionMonitoringDataDBCursor.get}", "count" -> "3000")
+  ).tryAndFold(
+    e => {
+      fail("ERROR", "Failed to get monitoring data: ${e.toString.replace("\n", "")}")
+    },
+    response => {
+      if (response.isError) {
+        fail("ERROR", "Failed to get monitoring data: ${response.body.error.asString}")
+      }
+      else {
+        val responseObject = response.body.decodeAs[Map[String, Json]]
+        sessionMonitoringDataDBCursor = if (responseObject.get("nextCursor").get.isNull) {
+          Opt.empty[Int]
+        } else {
+          responseObject.get("nextCursor").get.decodeAs[Int].opt
+        }
+        val monitoringData = responseObject.get("batch").getOr(fail("ERROR", "JSON is missing batch"))
+        monitoringData.asArray
+      }
+    }
+  )
+  sessionMonitoringData = sessionMonitoringData.concat(sessionMonitoringDataSamples)
+} while (sessionMonitoringDataDBCursor.isDefined)
+
+var arrangedRebootSwitch = false
+var arrangedFactoryResetSwitch = false
+
+val (scheduledRebootsJson, unscheduledRebootsJson)
+  = sessionMonitoringData.foldLeft(Map("scheduledReboots" -> Seq.empty[String], "unscheduledReboots" -> Seq.empty[String]))((acc, dataPoint) => {
+    val sessionTypes = dataPoint.numericResources.asObject.keySet
+    if (sessionTypes.contains("ArrangedReboot")){
+      arrangedRebootSwitch = true
+      acc
+    } else if (sessionTypes.contains("ArrangedFactoryReset")) {
+      arrangedFactoryResetSwitch = true
+      acc
+    } else if (sessionTypes.containsAll(Set("FactoryReset", "Reboot"))) {
+      if (arrangedFactoryResetSwitch) {
+        arrangedFactoryResetSwitch = false
+        // Scheduled reboots are reboots triggered by UMP, for example by running the "Restart device" recommnedation.
+        // Currently klAdrI doesn't differentiate between scheduled and unscheduled reboots, meaning that
+        // a scheduled reboot would negatively impact the `Connection Stability` health score as much as an
+        // unscheduled reboot. That would mean that the "Restart device" CEM recommendation would be doing
+        // the opposite of its intended goal, which is improving the device's health score.
+        acc/*.update("scheduledReboots", acc.get("scheduledReboots").get.append(dataPoint.date.asString))*/
+      } else {        
+        acc.update("unscheduledReboots", acc.get("unscheduledReboots").get.append(dataPoint.date.asString))
+      }
+    } else if (sessionTypes.contains("Reboot")) {
+      if (arrangedRebootSwitch) {
+        arrangedRebootSwitch = false
+        acc/*.update("scheduledReboots", acc.get("scheduledReboots").get.append(dataPoint.date.asString))*/
+      } else {        
+        acc.update("unscheduledReboots", acc.get("unscheduledReboots").get.append(dataPoint.date.asString))
+      }
+    } else {
+      acc
+    }
+  }) |> {dataMap => {
+    (dataMap.apply("scheduledReboots").encodeJson, dataMap.apply("unscheduledReboots").encodeJson)
+  }}
+
+var monitoringDataDBCursor = http.localRest("monitoringData/samples/${SV_MONITORING_NAME.urlEncodeUTF8}/${device.id}", 
+  uriParameters = Seq("fromDate" -> "${DATE_NOW - MONITORING_AMOUNT_OF_DAYS}", "toDate" -> "$DATE_NOW", "exactId" -> "true")
+).tryAndFold(
+  e => {
+    fail("ERROR", "Failed to get monitoring data: ${e.toString.replace("\n", "")}")
+  },
+  response => {
+    if (response.isError) {
+      fail("ERROR", "Failed to get monitoring data: ${response.body.error.asString}")
+    }
+    else {
+      val monitoringDataDBCursor = response.body.decodeAs[Int]
+      log.debug("Monitoring data is in cursor: $monitoringDataDBCursor")
+      monitoringDataDBCursor.opt
+    }
+  }
+)
+
+var healthScoreParametersMonitoringData = Seq.empty[Json]
+
+do {
+  val healthScoreParametersMonitoringDataSamples = http.localRest("monitoringData/moreSamples", 
+    uriParameters = Seq("cursor" -> "${monitoringDataDBCursor.get}", "count" -> "3000")
+  ).tryAndFold(
+    e => {
+      fail("ERROR", "Failed to get monitoring data: ${e.toString.replace("\n", "")}")
+    },
+    response => {
+      if (response.isError) {
+        fail("ERROR", "Failed to get monitoring data: ${response.body.error.asString}")
+      }
+      else {
+        val responseObject = response.body.decodeAs[Map[String, Json]]
+        monitoringDataDBCursor = if (responseObject.get("nextCursor").get.isNull) {
+          Opt.empty[Int]
+        } else {
+          responseObject.get("nextCursor").get.decodeAs[Int].opt
+        }
+        val monitoringData = responseObject.get("batch").getOr(fail("ERROR", "JSON is missing batch"))
+        monitoringData.asArray
+      }
+    }
+  )
+  healthScoreParametersMonitoringData = healthScoreParametersMonitoringData.concat(healthScoreParametersMonitoringDataSamples)
+} while (monitoringDataDBCursor.isDefined)
+
+// Preparing the parameters JSON for Kladri
+val parametersList = healthScoreParametersMonitoringData.map { dataPoint =>
+  val timestamp = dataPoint.asObject.getOr("date", "".encodeJson).asString
+  val numericalData = dataPoint.asObject.getOr("numericResources", Map.empty[String, Double].encodeJson).decodeAs[Map[String, Double]]
+  val boolData = dataPoint.asObject.getOr("booleanResources", Map.empty[String, Boolean].encodeJson).decodeAs[Map[String, Boolean]]
+  // Filter ethernet data
+  val ethernetJson = Map(
+    // Required Fields
+    "up" -> boolData.getOr("Ethernet Status", false).encodeJson,
+    "duplex" -> boolData.getOr("Ethernet Duplex", false).encodeJson
+  ).merge(
+    Map(
+      "currentBitrate"-> "Ethernet Current Bitrate", 
+      "errorsSent" -> "Ethernet Errors Sent",
+      "bytesSent" -> "Ethernet Bytes Sent",
+      "bytesReceived" -> "Ethernet Bytes Received"
+    ).map((key, param) => (key, numericalData.get(param))).filter((key,optValue)=>
+      optValue.flatMap(_.toLong.tryAsOpt).nonEmpty
+    ).map(
+      (key, optValue) => (key, optValue.get.toLong.encodeJson)
+    )
+  ).encodeJson
+  
+  // Filter hardware data
+  val hardwareJson = Map(
+    "cpu" -> "Hardware CPU",
+    "ramFree" -> "Hardware RAM Free",
+    "ramTotal" -> "Hardware RAM Total",
+    "temperature" -> "Hardware Temperature"
+  ).map((key, param) => (key, numericalData.get(param))).filter((key,optValue)=>
+    optValue.flatMap(_.toLong.tryAsOpt).nonEmpty
+  ).map(
+    (key, optValue) => (key, optValue.get.toLong.encodeJson)
+  ).encodeJson
+
+  // Filter WiFi 2.4 GHz data
+  val wifi24Json = Map(
+    "errorsSent" -> "Wi-Fi 2.4GHz Errors Sent",
+    "errorsReceived" -> "Wi-Fi 2.4GHz Errors Received",
+    "bytesSent" -> "Wi-Fi 2.4GHz Bytes Sent",
+    "bytesReceived" -> "Wi-Fi 2.4GHz Bytes Received",
+    "normalizedSignalQuality" -> "Wi-Fi Score for 2.4GHz",
+    "retransmissions" -> "Wi-Fi 2.4GHz Avg Retransmissions",
+    "uplinkRate" -> "Wi-Fi 2.4GHz Avg Upstream Last DataRate",
+    "downlinkRate" -> "Wi-Fi 2.4GHz Avg Downstream Last DataRate",
+    "noise" -> "Wi-Fi 2.4GHz Avg Noise",
+    "channelRank" -> "Wi-Fi 2.4GHz ChannelRank"
+  ).map((key, param) => (key, numericalData.get(param))).filter((key,optValue)=>
+    optValue.flatMap(_.toLong.tryAsOpt).nonEmpty
+  ).map(
+    (key, optValue) => (key, optValue.get.toLong.encodeJson)
+  ).encodeJson
+
+  // Filter WiFi 5 GHz data
+  val wifi5Json = Map(
+    "errorsSent" -> "Wi-Fi 5GHz Errors Sent",
+    "errorsReceived" -> "Wi-Fi 5GHz Errors Received",
+    "bytesSent" -> "Wi-Fi 5GHz Bytes Sent",
+    "bytesReceived" -> "Wi-Fi 5GHz Bytes Received",
+    "normalizedSignalQuality" -> "Wi-Fi Score for 5GHz",
+    "retransmissions" -> "Wi-Fi 5GHz Avg Retransmissions",
+    "uplinkRate" -> "Wi-Fi 5GHz Avg Upstream Last DataRate",
+    "downlinkRate" -> "Wi-Fi 5GHz Avg Downstream Last DataRate",
+    "noise" -> "Wi-Fi 5GHz Avg Noise",
+    "channelRank" -> "Wi-Fi 5GHz ChannelRank"
+  ).map((key, param) => (key, numericalData.get(param))).filter((key,optValue)=>
+    optValue.flatMap(_.toLong.tryAsOpt).nonEmpty
+  ).map(
+    (key, optValue) => (key, optValue.get.toLong.encodeJson)
+  ).encodeJson
+
+  // Filter WAN data
+  val wanJsonDsl = Map(
+    // Required Fields
+    "technology" -> DSL_TECHNOLOGY.encodeJson
+  ).merge(
+    Map(
+      "upstreamAttenuation" -> "WAN DSL Upstream Attenuation",
+      "downstreamAttenuation" -> "WAN DSL Downstream Attenuation",
+      "upstreamCrcErrors" -> "WAN DSL Upstream CRC Errors",
+      "downstreamCrcErrors" -> "WAN DSL Downstream CRC Errors",
+      "linkRetrain" -> "WAN DSL Link Retrain",
+      "upstreamSnr" -> "WAN DSL Upstream SNR",
+      "downstreamSnr" -> "WAN DSL Downstream SNR",
+      "upstreamMaximalRate" -> "WAN DSL Upstream Maximal Rate",
+      "downstreamMaximalRate" -> "WAN DSL Downstream Maximal Rate"
+  ).map((key, param) => (key, numericalData.get(param))).filter((key,optValue)=>
+      optValue.flatMap(_.toLong.tryAsOpt).nonEmpty
+    ).map(
+      (key, optValue) => (key, optValue.get.toLong.encodeJson)
+    )
+  ).encodeJson
+	
+  Map(
+  "timestamp" -> timestamp.encodeJson,
+    "ethernet" -> ethernetJson,
+    "hardware" -> hardwareJson,
+    "wifi24" -> wifi24Json,
+    "wifi5" -> wifi5Json,
+    "wan" -> wanJsonDsl
+  ).encodeJson
+}.concat(additionalParameters).encodeJson
+
+log.debug(parametersList)
+
+val kladriInputParams = Map(
+  "now" -> "$DATE_NOW".encodeJson,
+  "identity" -> device.id.encodeJson,
+  "samplingInterval" -> SAMPLING_INTERVAL.encodeJson,
+  "scheduledReboots" -> scheduledRebootsJson,
+  "unscheduledReboots" -> unscheduledRebootsJson,
+  "parameters" -> parametersList
+).encodeJson
+log.debug(kladriInputParams)
+
+log.debug(HEALTH_SCORE_FROM_EXTERNAL_SYSTEMS)
+// we're fetching health score from external system or we're using random values if external system is not defined for now
+val healthScoreOutputJson = if(HEALTH_SCORE_FROM_EXTERNAL_SYSTEMS){
+  val healthScoreOutput = http.rest(
+    HEALTH_SCORE_ENDPOINT.get,
+    tlsHostnameVerification = false,
+    credentials = HEALTH_SCORE_CREDENTIALS,
+    method = "POST",
+    content = kladriInputParams
+  ).tryAndFold(
+    e=> {
+      fail("ERROR", msg = e.toString)
+    },
+    res=>res.body
+  )
+  healthScoreOutput
+}else{
+  Seq.range(0,7).map(_=>(math.random()*100).toInt.encodeJson) |> { score =>
+    Map(
+      "totalScore" ->  score.get(0),
+      "subscores" -> Map(
+      	"internetConnection" ->  score.get(1),
+        "wiFi" ->  score.get(2),
+        "ethernet" ->  score.get(3),
+        "accessNetworkTechnology" ->  score.get(4),
+        "hardwarePerformance" ->  score.get(5),
+        "connectionStability" ->  score.get(6)
+      ).encodeJson
+    ).encodeJson
+  }
+}
+
+device.property.cemHealthScore.set(healthScoreOutputJson.toString)
+log.debug(healthScoreOutputJson)
+
+var (healthScoreTotal:Int, healthScoreSubscores: Seq[(String, Int)]) = 
+healthScoreOutputJson.decodeAs[Json].asObject |> {
+  obj => (obj.get("subscores").get.decodeAs[Map[String, Json]].toSeq ? Seq.empty).prepend(("totalScore",obj.get("totalScore").get)).map(
+    (key,value) => (key, if(value.isNull) 100 else value.asInt)
+  )
+} |> { scoreSeq => (scoreSeq.head._2, scoreSeq.drop(1)) }
+
+device.property.cemHealthScoreTotalScore.set(healthScoreTotal.toString)
+healthScoreSubscores.foreach{(key, value)=>
+  device.property.selectDynamic("cemHealthScoreSubscores${key.capitalize}").set(value.toString)
+}
+
+val healthScoreKPIGroup =
+if (healthScoreTotal <= 30) {
+  HEALTH_SCORE_KPI_GROUPS.poor
+} else if (healthScoreTotal <= 60) {
+  HEALTH_SCORE_KPI_GROUPS.fair
+} else {
+  HEALTH_SCORE_KPI_GROUPS.good
+}
+
+if(device.directGroups.find(directGroup=>directGroup == healthScoreKPIGroup).isEmpty){
+  device.leaveGroup(HEALTH_SCORE_KPI_GROUPS, leaveSubgroups = true)
+  device.joinGroup(healthScoreKPIGroup)
+}
+
+device.property.cemHealthTimeOfLastRun.set(DATE_NOW.millis.toString) 

@@ -1,0 +1,6 @@
+# Parental Control capability
+# A device supports parental controls
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.ParentalControl.%force-value = "true"
+}

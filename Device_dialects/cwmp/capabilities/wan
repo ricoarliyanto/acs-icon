@@ -1,0 +1,59 @@
+include "capabilities.wan"
+include "cwmp.ext.wan"
+include "cwmp.ext.wan.ip"
+include "cwmp.ext.wan.common"
+include "cwmp.ext.wan.upstream"
+include "cwmp.ext.wan.downstream"
+
+# Available implementations:
+# include "cwmp.ext.wan.ppp.connection" # use WANPPPConnection instead of WANIPConnection as activeWan
+
+remappingStrategy.mapping {
+  root.X_AVS_EXT.WAN.IP {
+    realObject = "${sv.vdmWan1.parseJson.interfaceKey.asString.parentKey.toParameterKey ? sv.activeWan.parentKey.toParameterKey}"
+    1 {
+      interfaceKey = "${sv.vdmWan1.parseJson.interfaceKey.asString.toParameterKey ? sv.activeWan.toParameterKey}" // fallback to activeWan, for comatibiliy priori 24.01, new vdmWan1 has priority
+      LowerLayerType.real = "${sv.vdmWan1.parseJson.interfaceKey.asString.keySlice(0,2)}.WANCommonInterfaceConfig.WANAccessType"
+    }
+    2 {
+      interfaceKey = "${sv.vdmWan2.parseJson.interfaceKey.asString.toParameterKey}"
+      LowerLayerType.real = "${sv.vdmWan2.parseJson.interfaceKey.asString.keySlice(0,2)}.WANCommonInterfaceConfig.WANAccessType"
+    }
+    3 {
+      interfaceKey = "${sv.vdmWan3.parseJson.interfaceKey.asString.toParameterKey}"
+      LowerLayerType.real = "${sv.vdmWan3.parseJson.interfaceKey.asString.keySlice(0,2)}.WANCommonInterfaceConfig.WANAccessType"
+    }
+    4 {
+      interfaceKey = "${sv.vdmWan4.parseJson.interfaceKey.asString.toParameterKey}"
+      LowerLayerType.real = "${sv.vdmWan4.parseJson.interfaceKey.asString.keySlice(0,2)}.WANCommonInterfaceConfig.WANAccessType"
+    }
+    5 {
+      interfaceKey = "${sv.vdmWan5.parseJson.interfaceKey.asString.toParameterKey}"
+      LowerLayerType.real = "${sv.vdmWan5.parseJson.interfaceKey.asString.keySlice(0,2)}.WANCommonInterfaceConfig.WANAccessType"
+    }
+    6 {
+      interfaceKey = "${sv.vdmWan6.parseJson.interfaceKey.asString.toParameterKey}"
+      LowerLayerType.real = "${sv.vdmWan6.parseJson.interfaceKey.asString.keySlice(0,2)}.WANCommonInterfaceConfig.WANAccessType"
+    }
+    7 {
+      interfaceKey = "${sv.vdmWan7.parseJson.interfaceKey.asString.toParameterKey}"
+      LowerLayerType.real = "${sv.vdmWan7.parseJson.interfaceKey.asString.keySlice(0,2)}.WANCommonInterfaceConfig.WANAccessType"
+    }
+    8 {
+      interfaceKey = "${sv.vdmWan8.parseJson.interfaceKey.asString.toParameterKey}"
+      LowerLayerType.real = "${sv.vdmWan8.parseJson.interfaceKey.asString.keySlice(0,2)}.WANCommonInterfaceConfig.WANAccessType"
+    }
+    inst = """${
+      map(
+        "1" -> sv.vdmWan1,
+        "2" -> sv.vdmWan2,
+        "3" -> sv.vdmWan3,
+        "4" -> sv.vdmWan4,
+        "5" -> sv.vdmWan5,
+        "6" -> sv.vdmWan6,
+        "7" -> sv.vdmWan7,
+        "8" -> sv.vdmWan8
+      ).filter(e => e.value != null).keySet.toList.sorted.map(key => device.rootObject + "X_AVS_EXT.WAN.IP." + key + ".")
+    }"""
+  }
+}

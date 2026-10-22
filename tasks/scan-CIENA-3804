@@ -1,0 +1,16 @@
+<config>
+  <set key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.X_PT_Neighborscan" value="1" />
+  <set key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.X_PT_Neighborscan" value="1" />
+  <task class="com.avsystem.ump.acs.task.ScheduleInformTask">
+    <config delaySeconds="15" />
+  </task>
+  <wait blocking="true" />
+  <if expr="${inform.mScheduleInform}">
+    <task class="com.avsystem.ump.acs.task.GetValuesTask">
+      <config>
+        <parameter name="InternetGatewayDevice.X_AVS_EXT.WiFiNeighborhood." />
+      </config>
+    </task>
+  </if>
+  <finish blocking="true" />
+</config>

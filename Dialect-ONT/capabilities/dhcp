@@ -1,0 +1,6 @@
+# DHCP capabilitiy
+# A device is able to run a DHCP server, assign static addresses and send custom options.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.DHCP.%force-value = "true"
+}

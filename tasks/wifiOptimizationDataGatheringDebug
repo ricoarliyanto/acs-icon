@@ -1,0 +1,838 @@
+val START_TIME = Timestamp.now()
+
+val DATA_PARAMETER_PREFIX = "demoChannelScore24" // change this if you want to start from clean, i have no idea how to remove data from this namespace
+log.debug("Starting WiFi optimization data gathering task")
+
+//////////////////////////////////////////////////////////////
+//SVs
+//////////////////////////////////////////////////////////////
+
+val MIN_SCORE_DIFF = sv.WO_MIN_SCORE_DIFF.getOr("10").toDouble |> {x => if (x>1) {x.round.toDouble / 255} else {x}}
+val MIN_TIME_DIFF = sv.WO_MIN_TIME_DIFF.getOr("55").toInt.minutes
+val OBSERVATION_WINDOW = sv.WO_OBSERVATION_WINDOW.getOr("360").toInt.minutes
+
+val ALGO_NOISE_WEIGHT = sv.WO_ALGO_NOISE_WEIGHT.getOr("2").toInt // Default taken from doc
+val ALGO_UTILIZATION_WEIGHT = sv.WO_ALGO_UTILIZATION_WEIGHT.getOr("2").toInt // Default taken from doc
+val ALGO_N_RSSI_WEIGHT = sv.WO_ALGO_N_RSSI_WEIGHT.getOr("1").toInt // Default taken from doc
+
+// New SV flags for controlling data source behavior, set this up this on the root group of the domain
+val USE_NEIGHBORING_WIFI_DIAGNOSTIC = sv.WO_USE_NEIGHBORING_WIFI_DIAGNOSTIC.getOr("true").toBoolean
+val USE_CHANNEL_SCAN_REQUEST = sv.WO_USE_CHANNEL_SCAN_REQUEST.getOr("true").toBoolean
+
+log.debug("Configuration: MIN_SCORE_DIFF=$MIN_SCORE_DIFF, MIN_TIME_DIFF=$MIN_TIME_DIFF, OBSERVATION_WINDOW=$OBSERVATION_WINDOW")
+log.debug("Algorithm weights: NOISE=$ALGO_NOISE_WEIGHT, UTILIZATION=$ALGO_UTILIZATION_WEIGHT, RSSI=$ALGO_N_RSSI_WEIGHT")
+log.debug("Data sources: USE_NEIGHBORING_WIFI_DIAGNOSTIC=$USE_NEIGHBORING_WIFI_DIAGNOSTIC, USE_CHANNEL_SCAN_REQUEST=$USE_CHANNEL_SCAN_REQUEST")
+
+val enableSwitching = true
+
+val switchTimes =  Map("2.4" -> sv.WO_LAST_SWITCH_TIME_24.get.toTimestamp.tryAsOpt, "5" -> sv.WO_LAST_SWITCH_TIME_5.get.toTimestamp.tryAsOpt)
+log.debug("Switch times: 2.4GHz=${switchTimes("2.4")}, 5GHz=${switchTimes("5")}")
+//////////////////////////////////////////////////////////////
+
+// getting historical channel scores from SV, not using monitoring because frequency is variable and not using WORs because they poorly scale
+// Object definition:
+/* 
+	[ 
+    {
+      "timestamp": Int,
+      "band24": [
+        {
+          "channel": Int,
+          "channelScore": Double
+        }, ...
+      ],
+      "band5": [
+        {
+          "channel": Int,
+          "channelScore": Double
+        }, ...
+      ],		
+      "band6": [
+        {
+          "channel": Int,
+          "channelScore": Double
+        }, ...
+      ]
+    }, ...
+	]
+*/
+var historicalChannelScores = sv.selectDynamic("WO_HISTORICAL_CHANNEL_SCORES").getOr("[]").parseJson.asArray
+var currentChannelScores = Map(
+  "timestamp" -> Timestamp.now().millis.encodeJson,
+  "band24" -> Seq.empty[Map[String, Json]].encodeJson,
+  "band5" -> Seq.empty[Map[String, Json]].encodeJson,
+  "band6" -> Seq.empty[Map[String, Json]].encodeJson
+)
+
+var rawLog = ""
+var allDMResults = Map.empty[DMKey, String] // collected results to be logged in provisioning history
+
+val status = try {
+  val (band24Instance, band5Instance) = (
+    sv.cemWiFiVdmWlan24Instance.getOr("1").toInt,
+    sv.cemWiFiVdmWlan5Instance.getOr("5").toInt
+  )
+  val (currentChannel24, currentChannel5) = (
+    ldm.get(dmkey.root.X_AVS_EXT.WiFi(band24Instance).Channel).tryAsOpt, 
+    ldm.get(dmkey.root.X_AVS_EXT.WiFi(band5Instance).Channel).tryAsOpt
+  ) 
+
+  //Possible channels are comma separated list of channels
+  val (possibleChannels24, possibleChannels5) = (
+    ldm.get(dmkey.root.X_AVS_EXT.WiFi(band24Instance).PossibleChannels).tryAsOpt.getOr(""),
+    ldm.get(dmkey.root.X_AVS_EXT.WiFi(band5Instance).PossibleChannels).tryAsOpt.getOr("")
+  )
+
+  log.debug("WiFi instances: 2.4GHz=$band24Instance, 5GHz=$band5Instance")
+  log.debug("Current channels: 2.4GHz=${currentChannel24.getOr("unknown")}, 5GHz=${currentChannel5.getOr("unknown")}")
+
+  val operatingClassToBand = (Seq("81", "83", "84").map(opClass => ((opClass, "2.4"))) ++ 
+    Seq.range(112, 131).map(_.toString).map(opClass => ((opClass, "5")))).toMap
+
+  val bandInstances = Map("2.4" -> band24Instance, "5" -> band5Instance)
+  val currentChannels = Map("2.4" -> currentChannel24, "5" -> currentChannel5)
+  var channelsMap = Map("2.4" -> Map.empty[String, Map[String, String]], "5" -> Map.empty[String, Map[String, String]], "6" -> Map.empty[String, Map[String, String]])
+  var neighboringBSSMap = Map("2.4" -> Map.empty[String, Seq[Map[String, String]]], "5" -> Map.empty[String, Seq[Map[String, String]]], "6" -> Map.empty[String, Seq[Map[String, String]]])
+
+  log.debug("Starting data collection process")
+	
+  if(USE_NEIGHBORING_WIFI_DIAGNOSTIC){
+    log.debug("Starting NeighboringWiFiDiagnostic data collection")
+    try {
+      // Run the neighborhood diagnostic
+      dmkey.root.X_AVS_EXT.Diagnostics.Neighborhood.Run.set("1")
+      var state = dmkey.root.X_AVS_EXT.Diagnostics.Neighborhood.State.get()
+      log.debug("Initial diagnostic state: $state")
+
+      val taskStart = Timestamp.now()
+      do {
+        session.wait(false)
+        state = dmkey.root.X_AVS_EXT.Diagnostics.Neighborhood.State.get()
+        log.debug("Diagnostic state during execution: $state")
+        if (inform.diagnosticsComplete && state.contains("Requested")) {
+          dmkey.root.X_AVS_EXT.Diagnostics.Neighborhood.Run.set("1")
+        }
+      } while(!inform.diagnosticsComplete && (Timestamp.now().since(taskStart) < 2.minutes))
+
+      if(!inform.diagnosticsComplete){
+        rawLog = rawLog + "Timeout while waiting for diagnostic to finish\n"
+        log.warn("Timeout while waiting for diagnostic to finish")
+        rawLog += "WiFi Neighborhood diagnostic incomplete"
+      }
+
+      state = dmkey.root.X_AVS_EXT.Diagnostics.Neighborhood.State.get()
+      log.debug("Final diagnostic state: $state")
+            
+      //Process the neighborhood data
+      log.debug("Processing neighborhood diagnostic results")
+      ldm.root.X_AVS_EXT.WiFiNeighborhood.any.keys.foreach{ key => 
+        try {
+          val bssid = ldm.get(key.BSSID).tryAsOpt.getOr("")
+          val channel = ldm.get(key.Channel).tryAsOpt.getOr("")
+          val ssid = ldm.get(key.SSID).tryAsOpt.getOr("Unknown")
+          val signalStrength = ldm.get(key.SignalStrength).tryAsOpt.getOr("0")
+          val noiseFloor = ldm.get(key.NoiseFloor).tryAsOpt.getOr("-255")
+          val frequency = ldm.get(key.Frequency).tryAsOpt.getOr("")
+          val bandwidth = ldm.get(key.ChannelBandwidth).tryAsOpt.getOr("")
+          val bandDM = ldm.get(key.Band).tryAsOpt.getOr("")
+
+          log.debug("Processing neighbor: BSSID=$bssid, Channel=$channel, SSID=$ssid, Signal=$signalStrength, NoiseFloor=$noiseFloor")
+          
+          if (channel.nonEmpty && signalStrength.nonEmpty) {
+            val band = bandDM.findMatch("(\\d+(\\.\\d+)?)[Gg]?").get.group(1)
+            val channelStr = channel.toString
+            
+            log.debug("Determined band: $band for channel: $channelStr")
+            
+            // Initialize channel if not exists
+            if (!channelsMap.get(band).get.contains(channelStr)) {
+              channelsMap = channelsMap.update(band, channelsMap.get(band).get.update(channelStr, Map.empty[String, String]))
+            }
+            
+            // Each WiFiNeighborhood entry is a neighbor - store for channel aggregation
+            val signalStrengthDbm = signalStrength.toString.toInt.tryAsOpt.getOr(-100)
+            val noiseFloorDbm = noiseFloor.toString.toInt.tryAsOpt.getOr(-255)
+            
+            log.debug("Processing neighbor: BSSID=$bssid, Channel=$channelStr, SignalStrength=$signalStrengthDbm dBm, NoiseFloor=$noiseFloorDbm dBm")
+            
+            // Store neighbor data for channel aggregation (each WiFiNeighborhood entry is one neighbor)
+            neighboringBSSMap = neighboringBSSMap.update(band, {
+              neighboringBSSMap.get(band).get.update(channelStr, {
+                neighboringBSSMap.get(band).get.getOr(channelStr, Seq.empty[Map[String, String]]).append(Map(
+                  "signalStrength" -> signalStrengthDbm.toString,
+                  "noiseFloor" -> noiseFloorDbm.toString,
+                  "bssid" -> bssid,
+                  "ssid" -> ssid
+                ))
+              })
+            })
+          }
+        } catch { e=>
+            rawLog = rawLog + "Error processing neighborhood data: ${e.message}\n"
+            log.warn("Error processing neighborhood data: ${e.message}")
+            log.debug("Exception details: ${e.toString}")
+        }
+      }
+      
+      // Now process aggregated neighbor data per channel using ChannelScanRequest algorithm
+      log.debug("Processing aggregated neighbor data per channel")
+      neighboringBSSMap.foreach((band, channelMap) => {
+        channelMap.foreach((channel, neighbors) => {
+          if (neighbors.nonEmpty) {
+            log.debug("Processing channel $channel in band $band with ${neighbors.size} neighbors")
+            
+            // Step 1: Calculate NormalisedSignalStrength using ChannelScanRequest algorithm
+            // Signal Strength convert to power in dBm Pi=(SignalStrengthi/2)-110
+            // Pi convert from dBm to milliwatts mWi=10^(Pi/10)
+            // Sum up the mWi values mWtot=sum(mWi)
+            val mWtot = neighbors.foldLeft(0.0)((acc, neighbor) => {
+              val signalStrengthDbm = neighbor.get("signalStrength").get.toInt.tryAsOpt.getOr(-255)
+              val pi = signalStrengthDbm.toDouble // already in dBm
+              val mWi = math.pow(10, (pi/10)) // convert from dBm to milliwatts
+              acc + mWi
+            })
+            
+            // Convert the total power back to dBm Ptot=10*log10(mWtot)
+            // Since RCPI saturates at 220 for P≥ 0dBm we normalize the result as SignalStrengthtot = min(220, 2 x (Ptot +110))
+            val signalStrengthTot = if (mWtot == 0) 0.0 else {
+              val pTot = 10 * math.log10(mWtot)
+              math.min(220.0, 2 * (pTot + 110))
+            }
+            
+            // Normalise SignalStrengthtot: NormalisedSignalStrength = 255 - SignalStrengthtot
+            val nRSSI = math.max(0.0, math.min(255.0, ((255 - signalStrengthTot) * 100).round.toDouble / 100))
+            
+            // Step 2: Calculate average noise floor and normalize to 0..255 where -110dBm≈255 (best) and -50dBm≈0 (worst)
+            val avgNoiseFloorDbm = neighbors.map(_.get("noiseFloor").get.toInt.tryAsOpt.getOr(-100)).sum.toDouble / neighbors.size
+            
+            // Linear mapping: -110 -> 255, -50 -> 0
+            val nNoise = math.max(0.0, math.min(255.0, (((-avgNoiseFloorDbm) - 50.0) / 60.0) * 255.0))
+            
+            // Step 3: Set utilization to 0 (not available in NeighboringWiFiDiagnostic)
+            val nUtilization = 0.0
+            
+            // Step 4: Calculate ChannelScore using ChannelScanRequest formula (without utilization weight since it's 0)
+            // ChannelScore = (WeightNoise*NormalisedNoise + WeightSignalStrength*NormalisedSignalStrength) / ((WeightNoise + WeightSignalStrength)*255)
+            val channelScore = (ALGO_NOISE_WEIGHT*nNoise + ALGO_N_RSSI_WEIGHT*nRSSI) / ((ALGO_NOISE_WEIGHT + ALGO_N_RSSI_WEIGHT) * 255.0)
+            
+            log.debug("Channel $channel final calculation: avgNoiseFloorDbm=$avgNoiseFloorDbm, nNoise=$nNoise, signalStrengthTot=$signalStrengthTot, nRSSI=$nRSSI, channelScore=$channelScore")
+            
+            // Update current channel scores
+            currentChannelScores = currentChannelScores.update("band${band.replace(".", "")}", {
+              currentChannelScores.get("band${band.replace(".", "")}").get.asArray.append(Map(
+                "channel" -> channel.toInt.encodeJson,
+                "channelScore" -> channelScore.encodeJson
+              ).encodeJson).encodeJson
+            })
+            
+            // Update channels map
+            val channelStats = Map(
+              "noise" -> nNoise.toString,
+              "utilization" -> nUtilization.toString,
+              "signalStrength" -> nRSSI.toString,
+              "source" -> "NeighboringWiFiDiagnostic",
+              "channelScore" -> channelScore.toString
+            )
+            
+            channelsMap = channelsMap.update(band, {
+              channelsMap.get(band).get.update(channel, channelStats)
+            })
+          }
+        })
+      })
+      
+      // Distribute >20MHz F0 center channels to 20MHz channels for 5 GHz band
+      val f0to20_80 = Map(
+        "42" -> Seq("36","40","44","48"),
+        "58" -> Seq("52","56","60","64"),
+        "106" -> Seq("100","104","108","112"),
+        "122" -> Seq("116","120","124","128"),
+        "138" -> Seq("132","136","140","144"),
+        "155" -> Seq("149","153","157","161"),
+      )
+      val f0to20_160 = Map(
+        "50" -> Seq("36","40","44","48","52","56","60","64"),
+        "114" -> Seq("100","104","108","112","116","120","124","128"),
+      )
+      val f0to20_40 = Map(
+        "38" -> Seq("36","40"),
+        "46" -> Seq("44","48"),
+        "54" -> Seq("52","56"),
+        "62" -> Seq("60","64"),
+        "102" -> Seq("100","104"),
+        "110" -> Seq("108","112"),
+        "118" -> Seq("116","120"),
+        "126" -> Seq("124","128"),
+        "134" -> Seq("132","136"),
+        "142" -> Seq("140","144"),
+        "151" -> Seq("149","153"),
+        "159" -> Seq("157","161"),
+      )
+      val f0to20 = f0to20_80 ++ f0to20_160 ++ f0to20_40
+      
+      if (channelsMap.contains("5")) {
+        val ch5 = channelsMap.get("5").get
+        f0to20.foreach((wide, subs) => {
+          if (ch5.contains(wide)) {
+            val wideStats = ch5.get(wide).get
+            subs.foreach(subCh => {
+              if (!ch5.contains(subCh)) {
+                val copiedStats = wideStats.update("source", "NeighboringWiFiDiagnosticExpanded").update("expandedFrom", wide)
+                channelsMap = channelsMap.update("5", channelsMap.get("5").get.update(subCh, copiedStats))
+                // also append expanded channel score to currentChannelScores band5
+                val expandedScore = copiedStats.get("channelScore").get.toDouble
+                currentChannelScores = currentChannelScores.update("band5", {
+                  currentChannelScores.get("band5").get.asArray.append(Map(
+                    "channel" -> subCh.toInt.encodeJson,
+                    "channelScore" -> expandedScore.encodeJson
+                  ).encodeJson).encodeJson
+                })
+                log.debug("Expanded 5GHz F0 channel $wide to 20MHz channel $subCh with copied stats and score")
+              }
+            })
+          }
+        })
+      }
+      
+      rawLog = rawLog + "Successfully collected data from NeighboringWiFiDiagnostic\n"
+      log.info("Successfully collected data from NeighboringWiFiDiagnostic")
+      log.debug("Collected ${ldm.root.X_AVS_EXT.WiFiNeighborhood.any.keys.size} neighbor entries")
+
+      // Remove wider 5GHz center channels after expansion, keep only 20MHz equivalents
+      log.debug("Removing non-20MHz 5GHz center channels after expansion")
+      val wideCenters = f0to20.keySet
+      if (channelsMap.contains("5")) {
+        channelsMap = channelsMap.update("5", channelsMap.get("5").get.filter((ch, _) => !wideCenters.contains(ch)))
+      }
+      currentChannelScores = currentChannelScores.update("band5", {
+        currentChannelScores.get("band5").get.asArray
+          .filter(rec => !wideCenters.contains(rec.asObject.get("channel").get.asInt.toString))
+          .encodeJson
+      })
+      
+    } catch { e=>
+        rawLog = rawLog + "Error in NeighboringWiFiDiagnostic: ${e.message}\n"
+        log.warn("Error in NeighboringWiFiDiagnostic: ${e.message}")
+        log.debug("Exception details: ${e.toString}")
+    }
+  }
+  
+  if (USE_CHANNEL_SCAN_REQUEST) {
+    try {
+      log.debug("Starting ChannelScanRequest data collection")
+      val ssidBandMap = ldm.root.WiFi.DataElements.Network.SSID.any.keys.map( ssidKey => {
+      val band = ldm.get(ssidKey.Band)
+      val ssid = ldm.get(ssidKey.SSID)
+      (ssid, band)
+      }).toMap	
+
+      log.debug("Found ${ssidBandMap.size} SSID-band mappings")
+
+      ldm.root.WiFi.DataElements.Network.Device.any.keys.foreach( deviceKey => {
+      val instance = deviceKey.split.lastOpt.flatMap(_.toIntOpt).get
+      log.debug("Processing WiFi device instance: $instance")
+
+      ldm.root.WiFi.DataElements.Network.Device.apply(instance).Radio.any.keys.foreach( radioKey => {
+        log.debug("Processing radio: $radioKey")
+
+        // schedule scan on all radio interfaces and get results
+        radioKey.`ChannelScanRequest()`.operation(argumentsMap = Map("DFSDwellTime" -> "100",
+          "DwellTime" -> "50",
+          "HomeTime" -> "150",
+          "ScanType" -> "0"))
+
+        log.debug("Channel scan request initiated")
+
+        radioKey.query.ScanCapability.OpClassChannels.any.keys.foreach(key => {
+          val (channelList, opClass) = ldm.getAll(Seq(key.ChannelList, key.OperatingClass, key.OpClass), ignoreFaults = true) |> {(results) => {
+            allDMResults = allDMResults.merge(results)
+            (results.get(key.ChannelList).get.splitBy(",").map(_.replace(" ", "")), results.get(key.OpClass).getOr(results.get(key.OperatingClass).get))
+          }}
+
+          log.debug("Operating class $opClass supports channels: ${channelList.join(", ")}")
+
+          operatingClassToBand.get(opClass).getOr({
+            rawLog = rawLog + "Couldn't determine band width for radio ${radioKey}. Assuming it is 6 GHz.\n"
+            log.warn("Couldn't determine band width for radio ${radioKey}. Assuming it is 6 GHz.")
+            "6"
+          }) |> ( band =>
+            channelList.foreach(channel => {
+              if (!channelsMap.get(band).get.contains(channel)) {
+                channelsMap = channelsMap.update(band, channelsMap.get(band).get.update(channel, Map.empty[String, String]))
+              }
+            })
+          )
+        })
+
+        log.debug("Processing scan results")
+        radioKey.query.ScanResult.any.keys.foreach( scanResultKey => {
+          scanResultKey.query.OpClassScan.any.keys.foreach( opClassScanKey => {
+            val opClass = ldm.get(opClassScanKey.OperatingClass)
+            log.debug("Processing scan result for operating class: $opClass")
+
+            operatingClassToBand.get(opClass).getOr({
+              rawLog = rawLog + "Couldn't determine band width for radio ${radioKey}. Assuming it is 6 GHz.\n"
+              log.warn("Couldn't determine band width for radio ${radioKey}. Assuming it is 6 GHz.")
+              "6"
+            }) |> ( band => {
+              log.debug("Processing band: $band")
+              opClassScanKey.query.ChannelScan.any.keys.foreach( channelScanKey => {
+                val dmResults = ldm.getAll(
+                  Seq(channelScanKey.Channel, channelScanKey.Noise, channelScanKey.Utilization).concat(
+                    channelScanKey.query.NeighborBSS.any.keys.flatMap(neighborBSSKey => {
+                      Seq(neighborBSSKey.SSID, neighborBSSKey.BSSID, neighborBSSKey.SignalStrength)
+                    })
+                  ),
+                  ignoreFaults = true
+                )
+
+                log.debug("Channel scan results for ${dmResults.get(channelScanKey.Channel)}: noise=${dmResults.get(channelScanKey.Noise)}, utilization=${dmResults.get(channelScanKey.Utilization)}")
+
+                allDMResults = allDMResults.merge(dmResults)
+                val channelOpt = dmResults.get(channelScanKey.Channel)
+                if (channelOpt.isDefined && !channelsMap.get(band).get.keySet.contains(channelOpt.get)) {
+                  rawLog = rawLog + "Channel ${channelOpt.get} is not covered by operation class for the ${radioKey} radio.\n"
+                  log.warn("Channel ${channelOpt.get} is not covered by operation class for the ${radioKey} radio.")
+                } else if (channelOpt.isDefined) {
+                  val channel = channelOpt.get
+
+                  log.debug("Processing channel: $channel")
+
+                  if (!channelsMap.get(band).get.get(channel).get.isEmpty){
+                    rawLog = rawLog + "Conflicting channels on band $band. Channel number $channel. Keys: $channelScanKey and ${channelsMap.get(band).get.get(channel).get("channelScanKey")}\n"
+                    log.warn("Conflicting channels on band $band. Channel number $channel. Keys: $channelScanKey and ${channelsMap.get(band).get.get(channel).get("channelScanKey")}")
+                  }
+
+                  val noise = dmResults.get(channelScanKey.Noise).get.toInt.tryAsOpt.getOr(255)
+                  val nNoise = math.max((((255 - ((noise * 22) / 7.toDouble)) * 100).round.toDouble / 100),  0)
+
+                  val utilization = dmResults.get(channelScanKey.Utilization).get.toInt.tryAsOpt.getOr(255)  
+                  val nUtilization = 255 - utilization
+
+                  log.debug("Channel $channel metrics: raw noise=$noise, normalized noise=$nNoise, raw utilization=$utilization, normalized utilization=$nUtilization")
+
+                  // RSSI (Radio Signal Strength Indicator)
+                  val signalStrength = channelScanKey.query.NeighborBSS.any.keys.foldLeft(0.toDouble)((acc, neighborBSSKey) => {
+                    dmResults.get(neighborBSSKey.SignalStrength).get.toInt.tryAsOpt.fold(
+                      acc
+                    )( signalStrength => {
+                      neighboringBSSMap = neighboringBSSMap.update(band, {
+                        neighboringBSSMap.get(band).get.update(channel, {
+                          neighboringBSSMap.get(band).get.getOr(channel, Seq.empty[Map[String, String]]).append(Map(
+                            "signalStrength" -> signalStrength.toString.opt,
+                            "bssid" -> dmResults.get(neighborBSSKey.BSSID),
+                            "ssid" -> dmResults.get(neighborBSSKey.SSID)
+                          ).filter((_, v) => v.isDefined).map((k, v) => (k, v.get)))
+                        })
+                      })
+                      val p = (signalStrength.toDouble/2) - 110 // convert to power in dBm
+                      val mW = math.pow(10, (p/10))
+                      acc + mW // sum of mW
+                    })
+                  }) |> {(mWTot) => {
+                    if (mWTot == 0) { // no entries -> assume the best
+                      0.toDouble
+                    } else {
+                      val pTot = 10 * math.log10(mWTot) // convert back to power in dBm
+                      math.min(220.toDouble, 2 * (pTot + 110)) // normalize the result
+                    }
+                  }}
+                  val nRSSI = math.max(0.0, math.min(255.0, ((255 - signalStrength) * 100).round.toDouble / 100))
+
+                  log.debug("Channel $channel RSSI calculation: raw signal strength=$signalStrength, normalized RSSI=$nRSSI")
+
+                  val channelScore = ((ALGO_NOISE_WEIGHT*nNoise + ALGO_UTILIZATION_WEIGHT*nUtilization + nRSSI*ALGO_N_RSSI_WEIGHT)/((ALGO_NOISE_WEIGHT+ALGO_UTILIZATION_WEIGHT+ALGO_N_RSSI_WEIGHT) * 255).toDouble * 100).round.toDouble / 100
+
+                  log.debug("Channel $channel final score: $channelScore (noise=$nNoise, utilization=$nUtilization, RSSI=$nRSSI)")
+
+                 currentChannelScores = currentChannelScores.update("band${band.replace(".", "")}", {
+                    currentChannelScores.get("band${band.replace(".", "")}").get.asArray.append(Map(
+                      "channel" -> channel.toInt.encodeJson,
+                      "channelScore" -> channelScore.encodeJson
+                    ).encodeJson).encodeJson
+                  })
+
+                  val channelStats = Map(
+                    "noise" -> nNoise.toString,
+                    "utilization" -> nUtilization.toString,
+                    "signalStrength" -> nRSSI.toString,
+                    "channelScanKey" -> channelScanKey.toString,
+                    "channelScore" -> channelScore.toString
+                  )
+
+                  channelsMap = channelsMap.update(band, {
+                    channelsMap.get(band).get.update(channel, channelStats)
+                  })
+                  }
+                })  
+              })
+            })
+          })    
+        })
+      })
+    } catch { e=> 
+    	rawLog += e.toString
+    } 
+  }
+  
+  log.debug("Data collection completed, processing results")
+  log.debug("Channels map size: 2.4GHz=${channelsMap("2.4").size}, 5GHz=${channelsMap("5").size}, 6GHz=${channelsMap("6").size}")
+
+  // update historical channel scores: append current channel scores and remove all scores with timestamp < now - observation window
+  log.debug("Updating historical channel scores")
+  historicalChannelScores = historicalChannelScores.append(currentChannelScores.encodeJson)
+  historicalChannelScores = historicalChannelScores.filter((scoresRecord) => {
+    (scoresRecord.timestamp.asLong >= (START_TIME - OBSERVATION_WINDOW).millis) ? false
+  })
+  
+  log.debug("Historical scores after filtering: ${historicalChannelScores.size} records")
+  
+  var currentChannelSamplesMap = Map.empty[SampleParameter, SampleValue] 
+  var samplesMap = Map.empty[SampleParameter, SampleValue] 
+  var boundSamplesMap = Map.empty[SampleParameter, SampleValue]
+  var channelSwitchLineStartSamplesMap = Map.empty[SampleParameter, SampleValue]
+  var channelSwitchLineEndSamplesMap = Map.empty[SampleParameter, SampleValue]
+
+  var channelsSwitched = Seq.empty[(String, String)]
+
+  val scoreTypes = Seq(("NoiseScore", "noise"), ("UtilizationScore", "utilization"), ("SignalStrengthScore", "signalStrength"), ("ChannelScore", "channelScore"))
+
+  log.debug("Processing channels for monitoring samples")
+  channelsMap.foreach((band, channels) => {
+    log.debug("Processing band $band with ${channels.size} channels")
+
+    // Use exactly the channels we measured; do not fabricate current channel stats
+    var updatedChannels = channels
+
+    var dataParameterAllPrefixes = Seq.empty[String]
+    val sortedChannels = updatedChannels.toSeq.sortBy[Int]((channel, channelStats) => {
+      channel.toInt
+    })
+
+    log.debug("Sorted channels for band $band: ${sortedChannels.map(_._1).join(", ")}")
+
+    val meanChannelScores = historicalChannelScores.foldLeft((Map.empty[String, Json]))((acc, scoresRecord) => {
+      val channelsRecord = scoresRecord.asObject.get("band${band.replace(".", "")}").get.asArray
+			channelsRecord.foldLeft(acc)((subAcc, channelRecord) => {
+        val channel = channelRecord.channel.asInt.toString
+        val channelScore = channelRecord.channelScore.asDouble
+        subAcc.update(channel, 
+          subAcc.get(channel).fold(
+            Json.object("meanChannelScore" -> channelScore.encodeJson, "nScores" -> 1.encodeJson)
+          )(channelRecord => {
+            val prevMeanScore = channelRecord.meanChannelScore.asDouble
+            val prevNScores = channelRecord.nScores.asInt
+            val newMeanScore = ((prevMeanScore * prevNScores) + channelScore) / (prevNScores + 1).toDouble
+            Json.object("meanChannelScore" -> newMeanScore.encodeJson, "nScores" -> (prevNScores + 1).encodeJson)
+          })
+        )
+      })
+    }).map((channel, meanScoresJson) => {
+      (channel, meanScoresJson.meanChannelScore.asDouble)
+    })
+    
+    // Ensure current channel has a mean score even if not in historical data
+    var updatedMeanChannelScores = meanChannelScores
+    currentChannels.get(band).foreach(currentChannelOpt => {
+      val currentChannelStr = currentChannelOpt.get
+    })
+    
+    log.debug("Mean channel scores for band $band: ${updatedMeanChannelScores.toSeq.map{ (ch, score) => "$ch=$score"}.join(", ")}")
+    log.debug(updatedChannels)
+    log.debug(currentChannels)
+    val currentChannelOpt = updatedChannels.filter((channel, channelStats) => channel == currentChannels.get(band).get.get).toSeq.head.tryAsOpt
+    var bestChannelOpt = updatedMeanChannelScores.toSeq.sortBy[Double]((channel, meanChannelScore) => {meanChannelScore}).last.tryAsOpt
+
+    log.debug("Band $band: current channel=${currentChannelOpt.map(_._1).getOr("unknown")}, best channel=${bestChannelOpt.map(_._1).getOr("unknown")}")
+
+    log.debug("This is best channel on the 5ghz but now we will filter with the possible channels")
+    val possibleChannels = if (band == "5") possibleChannels5 else possibleChannels24
+    val possibleChannelsSet = possibleChannels.splitBy(",").map(_.replace(" ","")).filter(_.nonEmpty).toSet
+    bestChannelOpt = updatedMeanChannelScores.toSeq.
+                              sortBy[Double]((channel, meanChannelScore) => {meanChannelScore}).
+                              filter((channel, meanChannelScore) =>{possibleChannelsSet.nonEmpty && possibleChannelsSet.contains(channel)}).
+                              last.tryAsOpt
+    log.debug("This is best channel on the 5ghz considering the possibleChannels ${bestChannelOpt.map(_._1).getOr("unknown")}")
+
+    val dataParameterNameBand = "Band${band.replace(".", "")}"
+
+    val channelGroups = if (band == "5") {
+      // Define fixed 5GHz channel groups based on regulatory bands
+      val fixedGroups = Seq(
+        Seq.range(36, 49, 4),
+        Seq.range(52, 65, 4),
+        Seq.range(100, 113, 4),
+        Seq.range(116, 129, 4),
+        Seq.range(132, 145, 4),
+        Seq.range(149, 162, 4)
+      )
+      
+      // For each fixed group, find matching channels from sortedChannels
+      fixedGroups.map(groupChannels => {
+        groupChannels.flatMap(channelNum => {
+          sortedChannels.find(_._1 == channelNum.toString)
+        })
+      }).filter(_.nonEmpty) // Only include groups that have at least one channel
+    } else {
+			Seq.range(0, sortedChannels.length, 5).map(idx => {
+       sortedChannels.slice(idx, idx + 5) 
+      })
+    }
+    
+    log.debug("Band $band channel groups: ${channelGroups.map(_.map(_._1).join("[", ",", "]")).join(", ")}")
+    
+    channelGroups.indexed.foreach((idx, channelGroup) => {
+      val channelRange = if (band == "5") {
+        // Map group index to the actual channel ranges
+        val ranges = Seq("36-48", "52-64", "100-112", "116-128", "132-144", "149-161")
+        if (idx < ranges.length) ranges(idx) else "Group${idx+1}"
+      } else {
+        "Group${idx+1}"
+      }
+      
+      log.debug("Processing channel group ${idx+1} ($channelRange) for band $band: ${channelGroup.map(_._1).join(", ")}")
+      
+      // log.info(channelGroup)
+      val dataParameterNameChannelGroup = "ChannelGroup${idx+1}"
+      // demoChannelScore{i}Band{j}ChannelGroup{k}
+      val dataParameterNameFullPrefix = "${DATA_PARAMETER_PREFIX}${dataParameterNameBand}${dataParameterNameChannelGroup}"
+      dataParameterAllPrefixes = dataParameterAllPrefixes.append(dataParameterNameFullPrefix)
+      
+      log.debug("Data parameter prefix: $dataParameterNameFullPrefix")
+      
+      val sampleMap = channelGroup.foldLeft(
+        Map.empty[SampleParameter, SampleValue] 
+      )((acc, channel) => {
+        acc.merge(
+          Map(
+            (cem.data.parameter("${dataParameterNameFullPrefix}NoiseScore" , "Channel ${channel._1}", "${channel._1}ChannelScore") -> cem.data.numericalSample(channel._2.get("noise").get.toDouble)),
+            (cem.data.parameter("${dataParameterNameFullPrefix}UtilizationScore" , "Channel ${channel._1}", "${channel._1}ChannelScore") -> cem.data.numericalSample(channel._2.get("utilization").get.toDouble)),
+            (cem.data.parameter("${dataParameterNameFullPrefix}SignalStrengthScore" , "Channel ${channel._1}", "${channel._1}ChannelScore") -> cem.data.numericalSample(channel._2.get("signalStrength").get.toDouble)),
+            (cem.data.parameter("${dataParameterNameFullPrefix}ChannelScore" , "Channel ${channel._1}", "${channel._1}ChannelScore") -> cem.data.numericalSample(channel._2.get("channelScore").get.toDouble)),
+          ).tryAsOpt.getOr(Map.empty)
+        )
+      })
+
+      val boundSample = Map(
+        (cem.data.parameter("${dataParameterNameFullPrefix}NoiseScore" , "Min Value", "minValue") -> cem.data.numericalSample(0)),
+        (cem.data.parameter("${dataParameterNameFullPrefix}NoiseScore" , "Max Value", "maxValue") -> cem.data.numericalSample(255)),
+        (cem.data.parameter("${dataParameterNameFullPrefix}UtilizationScore" , "Min Value", "minValue") -> cem.data.numericalSample(0)),
+        (cem.data.parameter("${dataParameterNameFullPrefix}UtilizationScore" , "Max Value", "maxValue") -> cem.data.numericalSample(255)),
+        (cem.data.parameter("${dataParameterNameFullPrefix}SignalStrengthScore" , "Min Value", "minValue") -> cem.data.numericalSample(0)),
+        (cem.data.parameter("${dataParameterNameFullPrefix}SignalStrengthScore" , "Max Value", "maxValue") -> cem.data.numericalSample(255)),
+        (cem.data.parameter("${dataParameterNameFullPrefix}ChannelScore" , "Min Value", "minValue") -> cem.data.numericalSample(0)),
+        (cem.data.parameter("${dataParameterNameFullPrefix}ChannelScore" , "Max Value", "maxValue") -> cem.data.numericalSample(1)),
+      )
+			
+      val currentChannelSample = if(currentChannelOpt.isDefined) {
+        Map(
+        (cem.data.parameter("${dataParameterNameFullPrefix}NoiseScore" , "Current Channel", "currentChannelScore") -> cem.data.numericalSample(currentChannelOpt.get._2.get("noise").get.toDouble)),
+        (cem.data.parameter("${dataParameterNameFullPrefix}UtilizationScore" , "Current Channel", "currentChannelScore") -> cem.data.numericalSample(currentChannelOpt.get._2.get("utilization").get.toDouble)),
+        (cem.data.parameter("${dataParameterNameFullPrefix}SignalStrengthScore" , "Current Channel", "currentChannelScore") -> cem.data.numericalSample(currentChannelOpt.get._2.get("signalStrength").get.toDouble)),
+        (cem.data.parameter("${dataParameterNameFullPrefix}ChannelScore" , "Current Channel", "currentChannelScore") -> cem.data.numericalSample(currentChannelOpt.get._2.get("channelScore").get.toDouble)),
+      	)
+       }
+       else { Map.empty[SampleParameter, SampleValue] }
+
+      boundSamplesMap = boundSamplesMap.merge(boundSample)
+      samplesMap = samplesMap.merge(sampleMap)
+      currentChannelSamplesMap = currentChannelSamplesMap.merge(currentChannelSample)
+      
+    })
+
+    val neighborSamples = sortedChannels.map((k, v) => k).foldLeft(Map.empty[SampleParameter, SampleValue])((acc, channel) => {
+      val newAcc = if (neighboringBSSMap.get(band).get.keySet.contains(channel)) {
+        neighboringBSSMap.get(band).get.get(channel).get.foldLeft(acc)((acc2, neighboringBSS) => {
+          val ssid = neighboringBSS.get("ssid").getOr("Unknown Mac")
+          val bssid = neighboringBSS.get("bssid").getOr("(unknown)")
+          val signalStrength = neighboringBSS.get("signalStrength").get.toInt.tryAsOpt.getOr(255)
+          val p = (signalStrength.toDouble/2) - 110 // convert to power in dBm
+          val mW = math.pow(10, (p/10)) 
+          val signalStrengthInDBM = ((10 * math.log10(mW)) * 100).round.toDouble / 100
+          val neighborsParameter = "${DATA_PARAMETER_PREFIX}NeighborsBand${band.replace(".", "")}Channel${channel}"
+          acc2.update(
+            cem.data.parameter(neighborsParameter, "${ssid.replace("_", " ")} - $bssid", bssid.replace(":", "").replace(" ", "")),
+            cem.data.numericalSample(signalStrengthInDBM)
+          )
+        })
+      } else acc
+      newAcc
+    })
+  
+    log.debug("Collected ${neighborSamples.size} neighbor samples for band $band")
+    
+    cem.forDevice.monitoring.collectSample("", START_TIME,
+      samples = neighborSamples
+    )
+    
+    val currentChannelParameterName = "${DATA_PARAMETER_PREFIX}CurrentChannelBand${band.replace(".", "")}"
+    if (currentChannelOpt.isDefined) {
+      val currentChannel = currentChannelOpt.get
+      
+      log.debug("Setting current channel SV for band $band: ${currentChannel._1}")
+      
+      // set current channel SV if it is not set
+      sv.selectDynamic("WO_CURRENT_CHANNEL_${band.replace(".", "")}").tryAsOpt.foreach(svRef => {
+        svRef.set(currentChannel._1.toString)
+      })
+
+      currentChannelSamplesMap = currentChannelSamplesMap.merge(Map((
+        cem.data.parameter(currentChannelParameterName, "Current Channel", "currentChannel${band.replace(".", "")}"),
+        cem.data.numericalSample(currentChannel._1.toInt)
+      )))
+    }
+    
+    if (enableSwitching && bestChannelOpt.isDefined && switchTimes.contains(band)) {
+      log.debug("Evaluating channel switching for band $band")
+      val bestChannel = bestChannelOpt.get
+      val bestChannelMeanScore = bestChannel._2
+      val switchChannels = currentChannelOpt.fold(true)(currentChannel => {
+        val currentChannelMeanScore = updatedMeanChannelScores.get(currentChannel._1).get
+        val shouldSwitch = (bestChannelMeanScore - currentChannelMeanScore > MIN_SCORE_DIFF && bestChannel._1 != currentChannel._1)
+        log.debug("Channel switch evaluation: current score=$currentChannelMeanScore, best score=$bestChannelMeanScore, difference=${bestChannelMeanScore - currentChannelMeanScore}, should switch=$shouldSwitch")
+        shouldSwitch
+      })
+
+      if (switchChannels && !sortedChannels.isEmpty) {
+        log.debug("Channel switch condition met for band $band")
+        val lastSwitchTime = switchTimes(band)
+        if (lastSwitchTime.isEmpty || START_TIME - lastSwitchTime.get >= MIN_TIME_DIFF) {
+          val currentChannelStr = currentChannelOpt.map(_._1.toString).getOr("unknown")
+          log.debug("Time threshold met for band $band, switching from $currentChannelStr to ${bestChannel._1}")
+          
+          if (bandInstances.contains(band)) {
+            ldm.set(dmkey.root.X_AVS_EXT.WiFi(bandInstances.get(band).get).Channel, bestChannel._1)
+            //usp.set(
+            //  Seq(
+            //    usp.UspUpdateObject(
+            //      "${dmkey.root.X_AVS_EXT.WiFi(bandInstances.get(band).get)}.",
+            //      Seq(
+            //        usp.UspUpdateParameterSettings("Channel", bestChannel._1, required = true),
+            //      )
+            //    ),
+            //  ),
+            //  allowPartial = false,
+            //)
+          } else {
+            log.warn("Band instance not found for band $band, cannot perform channel switch")
+          }
+          channelsSwitched = channelsSwitched.append((currentChannelStr, bestChannel._1))
+          
+          log.debug("Channel switch executed for band $band")
+          
+          sv.selectDynamic("WO_PREVIOUS_CHANNEL_${band.replace(".", "")}").set(currentChannelStr)
+          sv.selectDynamic("WO_CURRENT_CHANNEL_${band.replace(".", "")}").set(bestChannel._1.toString)
+          sv.selectDynamic("WO_LAST_SWITCH_TIME_${band.replace(".", "")}").set(START_TIME.toString)
+          
+          val channelSwitchParameterTitle = "Channel Switch Attempt from $currentChannelStr to ${bestChannel._1}"
+          val allScoreParameterNames = scoreTypes.flatMap((scoreTypeParameterSuffix, _) => {
+            dataParameterAllPrefixes.map(parameterPrefix => "$parameterPrefix$scoreTypeParameterSuffix")
+          })
+          val channelSwitchParameterId = Timestamp.now().millis.toHexString
+          
+          log.debug("Creating channel switch visualization with ID: $channelSwitchParameterId")
+          
+          channelSwitchLineStartSamplesMap = channelSwitchLineStartSamplesMap.merge(allScoreParameterNames.map(parameterName => {(
+            cem.data.parameter(parameterName, channelSwitchParameterTitle, channelSwitchParameterId),
+            cem.data.numericalSample(if (parameterName.endsWith("ChannelScore")) 1 else 255)
+          )}).toMap)
+          channelSwitchLineEndSamplesMap = channelSwitchLineEndSamplesMap.merge(allScoreParameterNames.map(parameterName => {(
+            cem.data.parameter(parameterName, channelSwitchParameterTitle, channelSwitchParameterId),
+            cem.data.numericalSample(0)
+          )}).toMap)
+          // the start of the line for the current channel graph should start at the max channel number, not 255 as that causes unreadable graphs
+          channelSwitchLineStartSamplesMap = channelSwitchLineStartSamplesMap.update(
+            cem.data.parameter(currentChannelParameterName, channelSwitchParameterTitle, channelSwitchParameterId),
+            cem.data.numericalSample(sortedChannels.last._1.toDouble) // highest possible channel number
+          )
+          channelSwitchLineEndSamplesMap = channelSwitchLineEndSamplesMap.update(
+            cem.data.parameter(currentChannelParameterName, channelSwitchParameterTitle, channelSwitchParameterId),
+            cem.data.numericalSample(0)
+          )
+        } else {
+          log.debug("Time threshold not met for band $band. Last switch: $lastSwitchTime, required interval: $MIN_TIME_DIFF")
+        }
+      } else {
+        log.debug("Channel switch condition not met for band $band")
+      }
+    } else if (enableSwitching && bestChannelOpt.isDefined && !switchTimes.contains(band)) {
+      log.debug("Channel switching not supported for band $band (no switch time configuration)")
+    }
+  })
+  
+  if (!channelsSwitched.isEmpty) {
+  	log.debug("Channels switched: ${channelsSwitched.map((o, n) => "From $o to $n").join(", ")}")
+  	rawLog = "Channels switched: ${channelsSwitched.map((o, n) => "From $o to $n")}\n" + rawLog
+  }
+
+  log.debug("Collecting monitoring samples")
+  cem.forDevice.monitoring.collectSample("", START_TIME,
+    samples = channelSwitchLineStartSamplesMap
+  )
+
+  cem.forDevice.monitoring.collectSample("", START_TIME.addMillis(1),
+    samples = channelSwitchLineEndSamplesMap
+  )
+
+  cem.forDevice.monitoring.collectSample("", START_TIME,
+    samples = boundSamplesMap
+  )
+  cem.forDevice.monitoring.collectSample("", START_TIME,
+    samples = samplesMap
+  )
+  cem.forDevice.monitoring.collectSample("", START_TIME,
+    samples = currentChannelSamplesMap
+  )
+  
+  log.debug("Monitoring samples collected successfully")
+  
+  val provHistoryParameters: Map[String, String] = channelsMap.toSeq.flatMap((band, channels) => {
+    channels.toSeq.filter(!_._2.isEmpty).flatMap((channel, channelStats) => {
+      channelStats.toSeq.flatMap((k, v) => {
+        ("band${band.replace(".", "")}.channel$channel.$k", v)
+      })
+    })
+  }).toMap
+
+  log.debug("Provisioning history parameters prepared: ${provHistoryParameters.size} entries")
+
+  sv.selectDynamic("WO_HISTORICAL_CHANNEL_SCORES").set(historicalChannelScores.encodeJsonString)
+  log.debug("Historical channel scores updated in SV")
+
+  rawLog = "Gathered data for device ${device.id} on ${START_TIME}.\n" + rawLog
+  log.debug("Task completed successfully")
+  "Success"
+} catch { e => {
+  log.debug("Task failed with exception: ${e.toString}")
+  log.debug("Exception stack trace: ${e.toString}")
+  rawLog = rawLog + "${e.message}\n"
+  rawLog = "Task failed for ${device.id} on ${START_TIME}.\n" + rawLog
+  "Error"
+}}
+
+log.debug("Final task status: $status")
+
+val provHistoryParameters = Map(
+	"ChannelOptimization Done" -> if (status == "Error") "Failed" else "Done",
+  "ChannelOptimization Hold By Time Threshold" -> MIN_TIME_DIFF.toString,
+  "ChannelOptimization Hold By Value Threshold" -> MIN_SCORE_DIFF.toString,
+    "ChannelOptimization Use NeighboringWiFiDiagnostic" -> USE_NEIGHBORING_WIFI_DIAGNOSTIC.toString,
+  "ChannelOptimization Use ChannelScanRequest" -> USE_CHANNEL_SCAN_REQUEST.toString,
+) ++ allDMResults.map((k, v) =>(k.toString, v))
+
+log.debug("Adding provisioning history entry with ${provHistoryParameters.size} parameters")
+
+provisioningHistory.add(
+	identity = device.id,
+  operationId = task.id,
+  status = status,
+  description = rawLog,
+  startTime = START_TIME,
+  endTime = Timestamp.now(),
+  provisioningAction = "wifiOptimisationDataGathering",
+  parameters = provHistoryParameters
+)
+
+log.debug("Provisioning history entry added, finishing task")
+
+finish(status = if (status == "Error") "ERROR" else "SUCCESS", summary = rawLog)

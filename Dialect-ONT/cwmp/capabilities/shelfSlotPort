@@ -1,0 +1,6 @@
+# ShelfSlotPort capability
+# A line terminating device has interfaces organized into shelves, slots, and ports
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.ShelfSlotPort.%force-value = "true"
+}

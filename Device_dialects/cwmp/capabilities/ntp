@@ -1,0 +1,6 @@
+# NTP capability
+# A device is able to configure NTP
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.NTP.%force-value = "true"
+}

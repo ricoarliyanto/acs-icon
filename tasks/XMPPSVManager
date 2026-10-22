@@ -1,0 +1,15 @@
+<config>
+  <find query="${root.XMPP.any}" output="activeXmpp" />
+  <comment text="Storing data for activeXmppConnection" />
+  <if expr="${#activeXmpp != null}">
+    <find query="${root.XMPP.Connection.any}" output="activeXmppConnection" />
+    <if expr="${#activeXmppConnection != null}">
+      <store type="devProp" target="activeXmppConnection" value="${#activeXmppConnection}" />
+      <else>
+        <add parentKey="Root.XMPP.Connection." output="xmppInstance" />
+        <store type="devProp" target="activeXmppConnection" value="${#activeXmpp}${#xmppInstance}." />
+      </else>
+    </if>
+  </if>
+  <log message="sv.activeXmppConnection =  ${#activeXmppConnection}" level="DEBUG" />
+</config>

@@ -1,0 +1,21 @@
+try {
+  Seq(
+    "bulkDataCemSta", "bulkDataCemHealth", "bulkDataCemWiFi", 
+    "bulkDataCemWanUsageClass", "bulkDataCemLan", "bulkDataCemTemperature", 
+    "bulkDataCemCable", "bulkDataCemGeneric", "bulkDataCemDeliveredMeshes", 
+    "bulkDataCemWiFiMesh", "bulkDataCemChannelRank", "bulkDataCemRecommendMeshUpsell", 
+    "bulkDataMcPopulate"
+  ).foreach(device.property.selectDynamic(_).set("false"))
+  
+  val valuesMap = if (bulkData.hasData) {
+     bulkData.getData.head.values.toMap
+  } else {
+    device.property.bulkDataReportSV.getOpt.flatMap(_.decodeJson[Map[String, String]].tryAsOpt).getOr(Map.empty)
+  }
+  
+  log.info("Received report with timestamp ${Timestamp.now()}")
+  device.property.bulkDataReportSV.set(valuesMap.encodeJsonString) //Raw output for testing so far
+  workflow.setStatus(status = "Success", description = "received: ${valuesMap.encodeJson.renderPretty()}")
+} catch { e => 
+  log.error(e)
+} 

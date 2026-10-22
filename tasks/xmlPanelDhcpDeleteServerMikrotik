@@ -1,0 +1,8 @@
+<config>
+  <store target="cliCommand" value="/ip dhcp-server remove [/ip dhcp-server find where interface=${task.property.Interface} lease-time=${task.property.LeaseTime} name=${task.property.Name}]" />
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <getParameters key="Device.X_AVS_EXT.DHCP.Server." />
+</config>

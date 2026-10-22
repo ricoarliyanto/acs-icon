@@ -1,0 +1,15 @@
+<config>
+  <getParameters key="Device.X_AVS_EXT.SNMP." />
+  <get key="Device.X_AVS_EXT.SNMP.Enabled" output="state" fromCache="true" />
+  <if expr="${#state.toBoolean}">
+    <store target="cliCommand" value="/snmp set enabled=no" />
+    <else>
+      <store target="cliCommand" value="/snmp set enabled=yes" />
+    </else>
+  </if>
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <getParameters key="Device.X_AVS_EXT.SNMP." />
+</config>

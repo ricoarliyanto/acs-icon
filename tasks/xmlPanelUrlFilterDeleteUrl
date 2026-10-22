@@ -1,0 +1,7 @@
+<config>
+  <store target="button" value="${task.properties.get('buttonIdentifier')}" />
+  <store target="id" value="${task.properties.get('id')}" />
+  <log message="removing ${#button}.${#id}" level="DEBUG" />
+  <delete key="${#button}.${#id}" />
+  <flush />
+</config>

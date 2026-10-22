@@ -1,0 +1,6 @@
+# VoIP capability
+# A device is able to configure, manage and monitor VoIP.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.VoIP.%force-value = "true"
+}

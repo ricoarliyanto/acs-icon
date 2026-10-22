@@ -1,0 +1,6 @@
+# USB capability
+# A device is able to have USB devices connected
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.USB.%force-value = "true"
+}

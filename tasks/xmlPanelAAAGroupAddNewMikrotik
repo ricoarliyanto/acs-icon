@@ -1,0 +1,27 @@
+<config>
+  <store target="policies" value="${''}" />
+  <store target="name" value="${task.property.Name}" />
+  <foreach list="${task.properties.keySet.filter(key =&gt; key.charAt(0).isUpper and key !='Name' )}">
+    <log message="${#i}" level="ERROR" />
+    <if expr="${task.properties(#i)=='true'}">
+      <store target="policies" value="${#policies+','+#i.toLowerCase()}" />
+    </if>
+  </foreach>
+  <store target="policies" value="${#policies.substring(1)}" />
+  <if expr="${task.properties.containsKey('nextInstance')}">
+    <comment text="We are adding new AAA group" />
+    <store target="cliCommand" value="/user group add name=${#name} policy=${#policies}" />
+    <else>
+      <comment text="We are editing existing AAA group" />
+      <store target="cliCommand" value="/user group set ${task.properties('id')}  name=${#name}  policy=${#policies}" />
+    </else>
+  </if>
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <if expr="${#output.contains('Invalid input detected')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <getParameters key="Device.X_AVS_EXT.AAA.Groups." />
+</config>

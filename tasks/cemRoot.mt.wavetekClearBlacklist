@@ -1,0 +1,6 @@
+val whitelistToRestore = device.property.whitelistToRestore.getOpt
+whitelistToRestore.foreach(whitelist => {
+  val whitelistTaskTemplate = sv.cemWhitelist.getOr("cemRoot.mt.wavetekWhitelist")
+  session.spawnTask(whitelistTaskTemplate, Map("whitelist" -> whitelist))
+  device.property.whitelistToRestore.remove()
+})

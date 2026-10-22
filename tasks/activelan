@@ -1,0 +1,25 @@
+<config>
+  <!-- Task activelan untuk mengaktifkan atau menonaktifkan LAN 1, 2, 3, dan 4 -->
+  <!-- Parameter masukan (input): -->
+  <!-- #lan_port   : Nomor port LAN yang ingin diubah (contoh: 1, 2, 3, atau 4) -->
+  <!-- #lan_status : Status yang diinginkan ('true' untuk Enable, 'false' untuk Disable) -->
+
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('huawei')}">
+     <set key="InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.${#lan_port}.Enable" value="${#lan_status}" type="xsd:boolean" ignoreFaults="true" />
+  </if>
+
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('zte')}">
+     <set key="InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.${#lan_port}.Enable" value="${#lan_status}" type="xsd:boolean" ignoreFaults="true" />
+  </if>
+
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('fiberhome')}">
+     <set key="InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.${#lan_port}.Enable" value="${#lan_status}" type="xsd:boolean" ignoreFaults="true" />
+  </if>
+
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('raisecom')}">
+     <set key="InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.${#lan_port}.Enable" value="${#lan_status}" type="xsd:boolean" ignoreFaults="true" />
+  </if>
+
+  <!-- Jika path untuk beberapa merek selain di atas berbeda, Anda bisa menambahkan blok if baru. -->
+  <!-- Namun untuk path standar TR-069, sebagian besar OLT menggunakan pola di atas. -->
+</config>

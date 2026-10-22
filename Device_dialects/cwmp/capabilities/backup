@@ -1,0 +1,6 @@
+# Configuration Backup capability
+# A device is able to backup its configuration
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Backup.%force-value = "true"
+}

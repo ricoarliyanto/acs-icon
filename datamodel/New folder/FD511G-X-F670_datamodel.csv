@@ -1,0 +1,979 @@
+NAME;TYPE;VALUE;WRITABLE;ACTIVE_NOTIFICATION
+InternetGatewayDevice;;;;
+InternetGatewayDevice.DeviceSummary;xsd:string;InternetGatewayDevice:1.4[](Baseline:1, EthernetLAN:1, WiFiLAN:1, Time:1, IPPing:1, DeviceAssociation:1);false;
+InternetGatewayDevice.LANDeviceNumberOfEntries;xsd:unsignedInt;1;false;
+InternetGatewayDevice.WANDeviceNumberOfEntries;xsd:unsignedInt;1;false;
+InternetGatewayDevice.X_GC_EXT.;;;;
+InternetGatewayDevice.X_GC_EXT.X_GC_DMZ.;;;;
+InternetGatewayDevice.X_GC_EXT.X_GC_DMZ.IPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.X_GC_BPDU.;;;;
+InternetGatewayDevice.X_GC_EXT.X_GC_BPDU.bpduenable;xsd:boolean;true;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.;;;;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.6.;;;;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.6.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.6.EndIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.6.Interface;xsd:string;WAN;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.6.Policy;xsd:string;Discard;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.6.Protocol;xsd:string;IPv4;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.6.ServiceList;xsd:string;SSH;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.6.StartIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.6.ipv6prefix;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.5.;;;;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.5.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.5.EndIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.5.Interface;xsd:string;WAN;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.5.Policy;xsd:string;Discard;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.5.Protocol;xsd:string;IPv4;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.5.ServiceList;xsd:string;HTTP;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.5.StartIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.5.ipv6prefix;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.4.;;;;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.4.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.4.EndIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.4.Interface;xsd:string;WAN;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.4.Policy;xsd:string;Discard;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.4.Protocol;xsd:string;IPv4;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.4.ServiceList;xsd:string;TELNET;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.4.StartIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.4.ipv6prefix;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.3.;;;;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.3.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.3.EndIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.3.Interface;xsd:string;LAN;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.3.Policy;xsd:string;Discard;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.3.Protocol;xsd:string;IPv4;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.3.ServiceList;xsd:string;SSH;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.3.StartIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.3.ipv6prefix;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.2.;;;;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.2.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.2.EndIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.2.Interface;xsd:string;LAN;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.2.Policy;xsd:string;Permit;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.2.Protocol;xsd:string;IPv4;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.2.ServiceList;xsd:string;HTTP;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.2.StartIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.2.ipv6prefix;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.1.;;;;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.1.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.1.EndIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.1.Interface;xsd:string;LAN;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.1.Policy;xsd:string;Discard;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.1.Protocol;xsd:string;IPv4;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.1.ServiceList;xsd:string;TELNET;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.1.StartIPAddress;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.ServiceControl.1.ipv6prefix;xsd:string;;true;
+InternetGatewayDevice.X_GC_EXT.RemoteManagement.;;;;
+InternetGatewayDevice.X_GC_EXT.RemoteManagement.DefaultConnection;xsd:string;NONE;true;
+InternetGatewayDevice.X_GC_EXT.RemoteManagement.SSH.;;;;
+InternetGatewayDevice.X_GC_EXT.RemoteManagement.SSH.SSHEnable;xsd:boolean;true;false;
+InternetGatewayDevice.X_GC_EXT.RemoteManagement.SSH.ServerPort;xsd:unsignedInt;22;true;
+InternetGatewayDevice.X_GC_EXT.RemoteManagement.HTTP.;;;;
+InternetGatewayDevice.X_GC_EXT.RemoteManagement.HTTP.ServerPort;xsd:unsignedInt;80;true;
+InternetGatewayDevice.X_GC_EXT.MacFilter.;;;;
+InternetGatewayDevice.X_GC_EXT.MacFilter.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_GC_EXT.MacFilter.Policy;xsd:string;Exclude;true;
+InternetGatewayDevice.X_GC_EXT.Firewall.;;;;
+InternetGatewayDevice.X_GC_EXT.Firewall.AntiHackingEnable;xsd:boolean;true;true;
+InternetGatewayDevice.X_GC_EXT.Firewall.BypassTriangleRoute;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_GC_EXT.Firewall.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_GC_EXT.Firewall.Level;xsd:string;Custom;true;
+InternetGatewayDevice.X_GC_EXT.Firewall.MaxSessionNumber;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_GC_EXT.Firewall.ipfilter_enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_CT-COM_Security.;;;true;
+InternetGatewayDevice.X_CT-COM_Security.AclNumberOfEntries;xsd:unsignedInt;188;false;
+InternetGatewayDevice.X_CT-COM_Security.ACL.;;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.6.;;;false;
+InternetGatewayDevice.X_CT-COM_Security.ACL.6.Enable;xsd:boolean;false;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.6.EndIP;xsd:string;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.6.Interface;xsd:string;WAN;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.6.Mode;xsd:string;Discard;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.6.Servics;xsd:string;SSH;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.6.StartIP;xsd:string;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.5.;;;false;
+InternetGatewayDevice.X_CT-COM_Security.ACL.5.Enable;xsd:boolean;false;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.5.EndIP;xsd:string;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.5.Interface;xsd:string;WAN;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.5.Mode;xsd:string;Discard;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.5.Servics;xsd:string;WEB;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.5.StartIP;xsd:string;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.4.;;;false;
+InternetGatewayDevice.X_CT-COM_Security.ACL.4.Enable;xsd:boolean;false;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.4.EndIP;xsd:string;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.4.Interface;xsd:string;WAN;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.4.Mode;xsd:string;Discard;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.4.Servics;xsd:string;TELNET;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.4.StartIP;xsd:string;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.3.;;;false;
+InternetGatewayDevice.X_CT-COM_Security.ACL.3.Enable;xsd:boolean;false;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.3.EndIP;xsd:string;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.3.Interface;xsd:string;LAN;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.3.Mode;xsd:string;Discard;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.3.Servics;xsd:string;SSH;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.3.StartIP;xsd:string;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.2.;;;false;
+InternetGatewayDevice.X_CT-COM_Security.ACL.2.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.2.EndIP;xsd:string;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.2.Interface;xsd:string;LAN;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.2.Mode;xsd:string;Permit;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.2.Servics;xsd:string;WEB;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.2.StartIP;xsd:string;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.1.;;;false;
+InternetGatewayDevice.X_CT-COM_Security.ACL.1.Enable;xsd:boolean;false;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.1.EndIP;xsd:string;;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.1.Interface;xsd:string;LAN;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.1.Mode;xsd:string;Discard;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.1.Servics;xsd:string;TELNET;true;
+InternetGatewayDevice.X_CT-COM_Security.ACL.1.StartIP;xsd:string;;true;
+InternetGatewayDevice.X_CMS_Services.;;;true;
+InternetGatewayDevice.X_CMS_Services.CatvOfCapabilities;xsd:string;0;false;
+InternetGatewayDevice.X_CMS_Services.CatvService.;;;false;
+InternetGatewayDevice.X_CMS_Services.CatvService.Enable;xsd:boolean;false;true;
+InternetGatewayDevice.X_CMS_Services.CatvService.Status;xsd:string;Error;false;
+InternetGatewayDevice.X_CMS_PrivateNode.;;;true;
+InternetGatewayDevice.X_CMS_PrivateNode.catv_config;xsd:string;"{
+}";false;
+InternetGatewayDevice.X_CMS_PrivateNode.catv_status;xsd:string;"{
+	""catv_status"":	0
+}";false;
+InternetGatewayDevice.X_CMS_PrivateNode.dev_connect;xsd:string;"{
+	""lan_num"":	0,
+	""lan_link"":	1,
+	""internet_link"":	0
+}";false;
+InternetGatewayDevice.X_CMS_PrivateNode.dev_info;xsd:string;"{
+	""manu_factory"":	""HWTC"",
+	""model"":	""FD511G-X-F670"",
+	""sn"":	""D011-2501017327"",
+	""hardware_version"":	""F670.1B"",
+	""software_version"":	""V3.2.8"",
+	""boot_version"":	""V1.2.3"",
+	""pon_mac"":	""50:5B:1D:DA:05:0C"",
+	""pon_mode"":	""GPON"",
+	""gpon_sn"":	""485754431347EBAC"",
+	""gpon_sn_password"":	""20230728"",
+	""build_info"":	""Build.1357.240520"",
+	""uptime"":	""2138"",
+	""CPU_Usage"":	22,
+	""Memory_Usage"":	48,
+	""wanstatus"":	{
+		""wan_IpProtocol"":	0,
+		""Ip_addr"":	""10.23.221.229/15"",
+		""Gateway"":	""10.22.0.1"",
+		""Dns"":	""0.0.0.0"",
+		""ipv6_addr"":	"""",
+		""ipv6_Gateway"":	"""",
+		""ipv6_Dns"":	"""",
+		""ipv6_Prefix"":	""""
+	}
+}";false;
+InternetGatewayDevice.X_CMS_PrivateNode.dev_statistics;xsd:string;"{
+	""statistics"":	[{
+			""ifname"":	""pon"",
+			""up_rate"":	0,
+			""down_rate"":	0
+		}]
+}";false;
+InternetGatewayDevice.X_CMS_PrivateNode.dev_status;xsd:string;"{
+	""led_status"":	{
+		""power"":	""on"",
+		""pon"":	""on"",
+		""los"":	""off"",
+		""lan"":	[""on""]
+	}
+}";false;
+InternetGatewayDevice.X_CMS_PrivateNode.lan_terminal_conn_inform;xsd:string;"{
+	""client_list"":	[],
+	""total"":	0
+}";false;
+InternetGatewayDevice.X_CMS_PrivateNode.pon_info;xsd:string;"{
+	""pon_mode"":	""GPON"",
+	""ponState"":	1,
+	""onu_state"":	5,
+	""rxPower"":	""-18.07 dBm"",
+	""txPower"":	""1.69 dBm"",
+	""voltage"":	""3.30 V"",
+	""biasCurrent"":	""13.40 mA"",
+	""temp"":	""38"",
+	""pon_mac"":	""50:5B:1D:DA:05:0C"",
+	""gpon_sn"":	""485754431347EBAC"",
+	""loid"":	""485754431347EBAC""
+}";false;
+InternetGatewayDevice.X_CMS_PrivateNode.public_info;xsd:string;"{
+	""language"":	""en"",
+	""languages"":	[""en""],
+	""lang_change_button_display"":	0,
+	""onu_theme"":	""#8274EA"",
+	""custom_logo"":	""/img/custom_logo.png"",
+	""url"":	""www.cdatatec.com.cn"",
+	""model"":	""FD511G-X-F670"",
+	""welcomeInfo"":	"""",
+	""hardware_version"":	""F670.1B"",
+	""software_version"":	""V3.2.8"",
+	""custom_css"":	""/style/custom.css"",
+	""guide_pages"":	[5, 1, 2],
+	""copyright_inform"":	""2009-2023 Shenzhen C-Data Technology Co.,Ltd"",
+	""custom_banner"":	"""",
+	""upgrade_max_file_size"":	5046272,
+	""restore_max_file_size"":	400000,
+	""reboot_time"":	70,
+	""build_info"":	""Build.1357.240520"",
+	""rx_power_extreme_1"":	""-50"",
+	""rx_power_warning_1"":	""-29"",
+	""rx_power_normal_1"":	""-28"",
+	""rx_power_normal_2"":	""-7"",
+	""rx_power_warning_2"":	""-3"",
+	""rx_power_extreme_2"":	""10"",
+	""lan_ip"":	{
+		""default"":	""192.168.101.1"",
+		""current"":	""192.168.101.1""
+	},
+	""home_page_slogan"":	"""",
+	""device_type"":	2
+}";false;
+InternetGatewayDevice.X_CMS_PrivateNode.terminal_conn_inform;xsd:string;"{
+	""lan"":	[],
+	""total"":	0
+}";false;
+InternetGatewayDevice.X_CMS_PrivateNode.wan_capability;xsd:string;"{
+	""waninfos"":	{
+		""wannum_max"":	2,
+		""enable_vlan"":	0,
+		""vlanId"":	"""",
+		""802_1_mark"":	0,
+		""service_type"":	0,
+		""port_binding"":	[0],
+		""connection_types"":	[1, 2],
+		""connection_type"":	0,
+		""mtu"":	0,
+		""ip_protocol"":	0,
+		""enable_napt"":	0,
+		""ppp"":	{
+			""username"":	"""",
+			""password"":	"""",
+			""type"":	0,
+			""idle_time"":	"""",
+			""authentication"":	0,
+			""ac_name"":	"""",
+			""service_name"":	""""
+		},
+		""ipv4"":	{
+			""dhcp_enable"":	0,
+			""enable_napt"":	0,
+			""ip_address"":	"""",
+			""subnet_mask"":	"""",
+			""gateway"":	"""",
+			""request_dns"":	0,
+			""dns"":	["""", """"]
+		},
+		""ipv6"":	{
+			""address_mode"":	0,
+			""request_options"":	0,
+			""ip_address"":	"""",
+			""ipv6_prefixlen"":	"""",
+			""gateway"":	"""",
+			""dhcp_request_dns"":	0,
+			""static_request_dns"":	1,
+			""dns"":	["""", """"]
+		}
+	}
+}";false;
+InternetGatewayDevice.X_CMS_PrivateNode.wan_confignew;xsd:string;"{
+	""valid_port_binding_list"":	[0],
+	""binded_port_list"":	[],
+	""binded_port_name"":	[""LAN1""],
+	""wan"":	[{
+			""deletable"":	1,
+			""hidden"":	0,
+			""interface"":	""1_INTERNET_B_VID_2928"",
+			""service_type"":	0,
+			""connection_type"":	2,
+			""mac"":	"""",
+			""port_binding"":	[],
+			""vlanId"":	2928,
+			""802_1_mark"":	0,
+			""enable_vlan"":	1
+		}, {
+			""deletable"":	1,
+			""hidden"":	0,
+			""interface"":	""2_TR069_INTERNET_R_VID_2989"",
+			""service_type"":	1,
+			""ip_protocol"":	1,
+			""connection_type"":	3,
+			""enable_napt"":	1,
+			""mtu"":	1500,
+			""defaultgwenable"":	1,
+			""mac"":	""50:5B:1D:DA:05:0D"",
+			""ipv4"":	{
+				""dhcp_enable"":	1,
+				""ip_address"":	""10.23.221.229"",
+				""subnet_mask"":	""255.254.0.0"",
+				""gateway"":	""10.22.0.1"",
+				""ipv4_status"":	""up"",
+				""dns"":	[""0.0.0.0""],
+				""request_dns"":	1
+			},
+			""port_binding"":	[],
+			""vlanId"":	2989,
+			""802_1_mark"":	5,
+			""enable_vlan"":	1
+		}]
+}";true;
+InternetGatewayDevice.X_AVS_EXT.;;;;
+InternetGatewayDevice.X_AVS_EXT.HardwareVersion;xsd:string;F670.1B;false;
+InternetGatewayDevice.X_AVS_EXT.MAC;xsd:string;505B1DDA050D;false;
+InternetGatewayDevice.X_AVS_EXT.Manufacturer;xsd:string;HWTC;false;
+InternetGatewayDevice.X_AVS_EXT.Model;xsd:string;FD511G-X-F670;false;
+InternetGatewayDevice.X_AVS_EXT.OUI;xsd:string;D011;false;
+InternetGatewayDevice.X_AVS_EXT.ProductClass;xsd:string;FD511G-X-F670;false;
+InternetGatewayDevice.X_AVS_EXT.Serial;xsd:string;485754431347EBAC;false;
+InternetGatewayDevice.X_AVS_EXT.SoftwareVersion;xsd:string;V3.2.8;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.;;;;
+InternetGatewayDevice.X_AVS_EXT.WAN.LastConnectionError;xsd:string;NONE;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.MACAddress;xsd:string;50:5b:1d:da:05:0d;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.MTU;xsd:unsignedInt;1500;true;
+InternetGatewayDevice.X_AVS_EXT.WAN.NATEnabled;xsd:boolean;true;true;
+InternetGatewayDevice.X_AVS_EXT.WAN.Name;xsd:string;3_TR069_R_VID_2989;true;
+InternetGatewayDevice.X_AVS_EXT.WAN.UpTime;xsd:unsignedInt;15;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.;;;;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.;;;;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.ConnectionType;xsd:string;IP_Routed;true;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.DNSEnable;xsd:boolean;true;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.DNSServers;xsd:string;0.0.0.0;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.DefaultGateway;xsd:string;10.22.0.1;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.LastChange;xsd:unsignedInt;15;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.Name;xsd:string;3_TR069_R_VID_2989;true;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.Protocol;;IPv4;;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.Status;xsd:string;Up;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.Stats.;;;;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.Stats.Upstream.;;;;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.Stats.Upstream.Bytes;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.Stats.Upstream.Packets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.Stats.Downstream.;;;;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.Stats.Downstream.Bytes;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.Stats.Downstream.Packets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.IPv6Prefix.;;;;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.IPv6.;;;;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.IPv4.;;;;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.IPv4.1.;;;;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.IPv4.1.Address;xsd:string;10.23.221.229;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.IPv4.1.AddressingType;xsd:string;DHCP;true;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.IPv4.1.DefaultGateway;xsd:string;10.22.0.1;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.IPv4.1.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.IPv4.1.Status;xsd:string;Enabled;false;
+InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.IPv4.1.SubnetMask;xsd:string;255.254.0.0;false;
+InternetGatewayDevice.X_AVS_EXT.Status.;;;;
+InternetGatewayDevice.X_AVS_EXT.Status.DeviceLog;xsd:string;;false;
+InternetGatewayDevice.X_AVS_EXT.Status.UpTime;xsd:unsignedInt;284719;false;
+InternetGatewayDevice.X_AVS_EXT.Resources.;;;;
+InternetGatewayDevice.X_AVS_EXT.Resources.CPUUsed;xsd:int;21;false;
+InternetGatewayDevice.X_AVS_EXT.Resources.RAMAvailable;xsd:int;23940;false;
+InternetGatewayDevice.X_AVS_EXT.Resources.RAMFree;xsd:int;12380;false;
+InternetGatewayDevice.X_AVS_EXT.Resources.RAMUsed;xsd:unsignedInt;11560;false;
+InternetGatewayDevice.X_AVS_EXT.Resources.RAMUsedPercent;xsd:unsignedInt;48;false;
+InternetGatewayDevice.X_AVS_EXT.Management.;;;;
+InternetGatewayDevice.X_AVS_EXT.Management.Domain;xsd:string;/;;
+InternetGatewayDevice.X_AVS_EXT.Management.Protocols;xsd:string;cwmp;;
+InternetGatewayDevice.X_AVS_EXT.Management.Stun.;;;;
+InternetGatewayDevice.X_AVS_EXT.Management.Stun.Enable;xsd:boolean;false;true;
+InternetGatewayDevice.X_AVS_EXT.Management.Stun.Password;;;true;
+InternetGatewayDevice.X_AVS_EXT.Management.Stun.ServerAddress;xsd:string;;true;
+InternetGatewayDevice.X_AVS_EXT.Management.Stun.ServerPort;xsd:unsignedInt;3478;true;
+InternetGatewayDevice.X_AVS_EXT.Management.Stun.UDPCRAddress;xsd:string;0.0.0.0:35259;false;
+InternetGatewayDevice.X_AVS_EXT.Management.Stun.Username;xsd:string;;true;
+InternetGatewayDevice.X_AVS_EXT.Management.Periodic.;;;;
+InternetGatewayDevice.X_AVS_EXT.Management.Periodic.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_AVS_EXT.Management.Periodic.Interval;xsd:unsignedInt;3600;true;
+InternetGatewayDevice.X_AVS_EXT.Management.Periodic.Phase;xsd:dateTime;2026-01-10T06:12:59Z;true;
+InternetGatewayDevice.X_AVS_EXT.Management.Control.;;;;
+InternetGatewayDevice.X_AVS_EXT.Management.Control.Password;xsd:string;e0841337;true;
+InternetGatewayDevice.X_AVS_EXT.Management.Control.URL;xsd:string;http://10.23.221.229:7547/sUeTlIhOlLhW;false;
+InternetGatewayDevice.X_AVS_EXT.Management.Control.Username;xsd:string;485754431347EBAC;true;
+InternetGatewayDevice.X_AVS_EXT.Management.ACS.;;;;
+InternetGatewayDevice.X_AVS_EXT.Management.ACS.Password;;;true;
+InternetGatewayDevice.X_AVS_EXT.Management.ACS.URL;xsd:string;http://192.168.30.5:5000/acs/;true;
+InternetGatewayDevice.X_AVS_EXT.Management.ACS.Username;xsd:string;plniconplus;true;
+InternetGatewayDevice.X_AVS_EXT.LAN.;;;;
+InternetGatewayDevice.X_AVS_EXT.LAN.DevicesCount;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.;;;;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Upstream.;;;;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Upstream.BroadcastPackets;xsd:unsignedInt;25599;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Upstream.Bytes;xsd:unsignedInt;-894222309;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Upstream.DiscardPackets;xsd:unsignedInt;9837568;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Upstream.Errors;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Upstream.MulticastPackets;xsd:unsignedInt;325;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Upstream.Packets;xsd:unsignedInt;25915417;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Upstream.UnicastPackets;xsd:unsignedInt;25889493;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Downstream.;;;;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Downstream.BroadcastPackets;xsd:unsignedInt;17;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Downstream.Bytes;xsd:unsignedInt;-253696005;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Downstream.DiscardPackets;xsd:unsignedInt;26678269;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Downstream.Errors;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Downstream.MulticastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Downstream.Packets;xsd:unsignedInt;22632837;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Stats.Downstream.UnicastPackets;xsd:unsignedInt;22632820;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.;;;;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.;;;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.CurrentBitRate;xsd:string;1000;true;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.DuplexMode;xsd:string;Full;true;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Enabled;xsd:boolean;true;true;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.MACAddress;xsd:string;50:5b:1d:da:05:0c;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.MaxBitRate;xsd:string;1000;true;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Name;xsd:string;LAN1;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Status;xsd:string;Up;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.;;;;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Upstream.;;;;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Upstream.BroadcastPackets;xsd:unsignedInt;25599;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Upstream.Bytes;xsd:unsignedInt;-894222309;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Upstream.DiscardPackets;xsd:unsignedInt;9837568;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Upstream.Errors;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Upstream.MulticastPackets;xsd:unsignedInt;325;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Upstream.Packets;xsd:unsignedInt;25915417;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Upstream.UnicastPackets;xsd:unsignedInt;25889493;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Downstream.;;;;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Downstream.BroadcastPackets;xsd:unsignedInt;17;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Downstream.Bytes;xsd:unsignedInt;-253696005;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Downstream.DiscardPackets;xsd:unsignedInt;26678269;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Downstream.Errors;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Downstream.MulticastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Downstream.Packets;xsd:unsignedInt;22632837;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.Port.1.Stats.Downstream.UnicastPackets;xsd:unsignedInt;22632820;false;
+InternetGatewayDevice.X_AVS_EXT.LAN.IP.;;;;
+InternetGatewayDevice.X_AVS_EXT.LAN.IP.1.;;;;
+InternetGatewayDevice.X_AVS_EXT.LAN.IP.1.IPv4.;;;;
+InternetGatewayDevice.X_AVS_EXT.LAN.IP.1.IPv4.1.;;;true;
+InternetGatewayDevice.X_AVS_EXT.LAN.IP.1.IPv4.1.Address;xsd:string;192.168.101.1;true;
+InternetGatewayDevice.X_AVS_EXT.LAN.IP.1.IPv4.1.AddressingType;xsd:string;Static;true;
+InternetGatewayDevice.X_AVS_EXT.LAN.IP.1.IPv4.1.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.X_AVS_EXT.LAN.IP.1.IPv4.1.SubnetMask;xsd:string;255.255.255.0;true;
+InternetGatewayDevice.X_AVS_EXT.LAN.Devices.;;;false;
+InternetGatewayDevice.X_AVS_EXT.Forwarding.;;;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.;;;;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.;;;;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.DSCP;xsd:unsignedInt;0;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.EthernetPriority;xsd:unsignedInt;0;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.Interface;xsd:string;;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.Run;executable;-;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.State;xsd:string;None;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.TestFileLength;xsd:unsignedInt;0;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.UploadURL;xsd:string;;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.Result.;;;;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.Result.BOMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.Result.EOMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.Result.ROMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.Result.TCPOpenRequestTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.Result.TCPOpenResponseTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Upload.Result.TotalBytesSent;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.;;;;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.DSCP;xsd:unsignedInt;0;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.DataBlockSize;xsd:unsignedInt;56;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.Host;xsd:string;;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.Interface;xsd:string;;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.MaxHopCount;xsd:unsignedInt;30;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.NumberOfTries;xsd:unsignedInt;1;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.Run;executable;-;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.State;xsd:string;None;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.Timeout;xsd:unsignedInt;10000;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.Result.;;;;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.TraceRoute.Result.ResponseTime;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.;;;;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.DSCP;xsd:unsignedInt;0;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.DataBlockSize;xsd:unsignedInt;64;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.Host;xsd:string;8.8.8.8;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.Interface;xsd:string;;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.NumberOfRepetitions;xsd:unsignedInt;6;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.Run;executable;-;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.State;xsd:string;Error_CannotResolveHostName;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.Timeout;xsd:unsignedInt;1000;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.Result.;;;;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.Result.AverageResponseTime;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.Result.FailureCount;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.Result.MaximumResponseTime;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.Result.MinimumResponseTime;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.IPPing.Result.SuccessCount;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.;;;;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.DSCP;xsd:unsignedInt;0;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.DownloadURL;xsd:string;http://157.10.160.88/10MB.bin;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.EthernetPriority;xsd:unsignedInt;0;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Interface;xsd:string;InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Run;executable;-;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.State;xsd:string;Requested;true;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Result.;;;;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Result.BOMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Result.EOMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Result.ROMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Result.TCPOpenRequestTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Result.TCPOpenResponseTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Result.TestBytesReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.Diagnostics.Download.Result.TotalBytesReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.X_AVS_EXT.DHCP.;;;;
+InternetGatewayDevice.X_AVS_EXT.DHCP.DNSServersList;xsd:string;;true;
+InternetGatewayDevice.X_AVS_EXT.DHCP.DomainName;xsd:string;;true;
+InternetGatewayDevice.X_AVS_EXT.DHCP.Enable;xsd:boolean;false;true;
+InternetGatewayDevice.X_AVS_EXT.DHCP.Gateway;xsd:string;192.168.101.1;true;
+InternetGatewayDevice.X_AVS_EXT.DHCP.LeaseTime;xsd:int;86400;true;
+InternetGatewayDevice.X_AVS_EXT.DHCP.MaxAddress;xsd:string;192.168.101.250;true;
+InternetGatewayDevice.X_AVS_EXT.DHCP.MinAddress;xsd:string;192.168.101.2;true;
+InternetGatewayDevice.X_AVS_EXT.DHCP.Relay;xsd:boolean;false;false;
+InternetGatewayDevice.X_AVS_EXT.DHCP.SubnetMask;xsd:string;255.255.255.0;true;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.;;;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Alarm;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Applications;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Backup;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Bridging;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.CMTS;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.CMTSLine;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.CaptivePortal;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.ChannelWiFiDiagnostic;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.DHCP;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.DNS;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.DSL;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.DSLAM;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.DSLAMLine;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Diagnostics;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Ethernet;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Femtocell;;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Firewall;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.FirstUseDate;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Forwarding;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.GPON;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Generic;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.HFC;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.IPTV;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.IPTVRich;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Interfaces;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.LAN;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.LTE;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Localization;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.MACFiltering;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.MTA;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Management;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Mesh;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.NTP;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Neighborhood;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.PLC;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.PPP;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.ParentalControl;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Ping;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.PortStatistics;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Process;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.QoS;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Radius;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Reboot;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Resources;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Restore;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Routing;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Schedule;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.ShelfSlotPort;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Status;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Storage;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Syslog;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Temperature;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.UDPEcho;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.UKE;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.USB;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.Users;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.VLAN;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.VoIP;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.WAN;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.WiFi;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.WiFiBandSteering;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.WiFiMaxClients;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.WiFiSsidIsolation;xsd:boolean;false;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.XMPP;xsd:boolean;true;;
+InternetGatewayDevice.X_AVS_EXT.Capabilities.eRouter;xsd:boolean;false;;
+InternetGatewayDevice.WANDevice.;;;true;
+InternetGatewayDevice.WANDevice.1.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionNumberOfEntries;xsd:unsignedInt;2;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_WANIndex;xsd:string;"""1.1;Bridged;2928;INTERNET"",""2.1;DHCP_Routed;2989;TR069,INTERNET""";false;
+InternetGatewayDevice.WANDevice.1.X_WANIndex;xsd:string;"""1.1;Bridged;2928;INTERNET"",""2.1;DHCP_Routed;2989;TR069,INTERNET""";false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.;;;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.BiasCurrent;xsd:int;13650;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.CpuUsage;xsd:unsignedInt;36.09%;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.MemUsage;xsd:unsignedInt;48.00%;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower;xsd:string;-18.07;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Status;xsd:string;Up;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.SupplyVottage;xsd:int;3297700;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.TXPower;xsd:string;1.77;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.TransceiverTemperature;xsd:int;38;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.;;;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesReceived;xsd:unsignedInt;-506664708;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesSent;xsd:unsignedInt;-187137137;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.DropPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.FECError;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.HECError;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsReceived;xsd:unsignedInt;29693032;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsSent;xsd:unsignedInt;22305044;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RBroadcastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RMulticastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RUnicastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RpausePackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SBroadcastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SMulticastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SUnicastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SpausePackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.X_CMS_Statistics.;;;false;
+InternetGatewayDevice.WANDevice.1.X_CMS_Statistics.DownstreamRate;xsd:string;0.000000;false;
+InternetGatewayDevice.WANDevice.1.X_CMS_Statistics.UpstreamRate;xsd:string;0.000000;false;
+InternetGatewayDevice.WANDevice.1.X_CMS_Statistics.ifname;xsd:string;pon;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.;;;true;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Status;xsd:string;Unregistered and Unauthorized;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Stats.;;;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Stats.BytesReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Stats.BytesSent;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Stats.PacketsReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Stats.PacketsSent;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Stats.RBroadcastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Stats.RMulticastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Stats.RUnicastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Stats.SBroadcastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Stats.SMulticastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANEthernetInterfaceConfig.Stats.SUnicastPackets;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnectionNumberOfEntries;xsd:unsignedInt;1;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnectionNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.X_CT-COM_WANGponLinkConfig.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.X_CT-COM_WANGponLinkConfig.802-1pMark;xsd:int;5;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.X_CT-COM_WANGponLinkConfig.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.X_CT-COM_WANGponLinkConfig.Mode;xsd:int;2;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.X_CT-COM_WANGponLinkConfig.VLANIDMark;xsd:unsignedInt;2989;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANPPPConnection.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.AddressingType;xsd:string;DHCP;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.AutoDisconnectTime;xsd:unsignedInt;0;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.ConnectionStatus;xsd:string;Connected;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.ConnectionType;xsd:string;IP_Routed;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.DNSEnabled;xsd:boolean;true;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.DNSServers;xsd:string;0.0.0.0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.DefaultGateway;xsd:string;10.22.0.1;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.ExternalIPAddress;xsd:string;10.23.221.229;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.LastConnectionError;xsd:string;NONE;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.MACAddress;xsd:string;50:5b:1d:da:05:0d;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.MaxMTUSize;xsd:unsignedInt;1500;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.NATEnabled;xsd:boolean;true;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Name;xsd:string;3_TR069_R_VID_2989;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.RemoteIPAddress;xsd:string;10.22.0.1;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Reset;xsd:boolean;false;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.SubnetMask;xsd:string;255.254.0.0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.TransportType;xsd:string;DHCP;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Uptime;xsd:unsignedInt;15;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.X_CT-COM_IPMode;xsd:int;1;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.X_CT-COM_LanInterface;xsd:string;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.X_CT-COM_ServiceList;xsd:string;TR069,INTERNET;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.X_GC_802-1p;xsd:unsignedInt;5;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.X_GC_VLANID;xsd:unsignedInt;2989;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Stats.;;;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Stats.EthernetBytesReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Stats.EthernetBytesSent;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Stats.EthernetPacketsReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Stats.EthernetPacketsSent;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.PortMapping.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnectionNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnectionNumberOfEntries;xsd:unsignedInt;1;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_CT-COM_WANGponLinkConfig.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_CT-COM_WANGponLinkConfig.802-1pMark;xsd:int;0;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_CT-COM_WANGponLinkConfig.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_CT-COM_WANGponLinkConfig.Mode;xsd:int;2;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.X_CT-COM_WANGponLinkConfig.VLANIDMark;xsd:unsignedInt;2928;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.AutoDisconnectTime;xsd:unsignedInt;0;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionStatus;xsd:string;Unconfigured;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionTrigger;xsd:string;AlwaysOn;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionType;xsd:string;PPPoE_Bridged;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DNSEnabled;xsd:boolean;true;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DNSServers;xsd:string;;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress;xsd:string;0.0.0.0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.IdleDisconnectTime;xsd:unsignedInt;0;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.LastConnectionError;xsd:string;NONE;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.MACAddress;xsd:string;00:00:00:00:00:00;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.MaxMRUSize;xsd:unsignedInt;1492;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.NATEnabled;xsd:boolean;false;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Name;xsd:string;IPoEConnection1;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.PPPAuthenticationProtocol;xsd:string;-1227348924;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.PPPoEACName;xsd:string;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.PPPoEServiceName;xsd:string;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Password;xsd:string;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.RemoteIPAddress;xsd:string;0.0.0.0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.TransportType;xsd:string;PPPoE;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Uptime;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username;xsd:string;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.X_CT-COM_IPMode;xsd:int;3;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.X_CT-COM_LanInterface;xsd:string;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.X_CT-COM_ServiceList;xsd:string;INTERNET;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.X_GC_802-1p;xsd:unsignedInt;0;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.X_GC_VLANID;xsd:unsignedInt;2928;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.;;;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesSent;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetDiscardPacketsReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetErrorsReceived;xsd:boolean;false;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetPacketsReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetPacketsSent;xsd:unsignedInt;0;false;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.PortMapping.;;;true;
+InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.;;;true;
+InternetGatewayDevice.UploadDiagnostics.;;;true;
+InternetGatewayDevice.UploadDiagnostics.BOMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.UploadDiagnostics.DSCP;xsd:unsignedInt;0;true;
+InternetGatewayDevice.UploadDiagnostics.DiagnosticsState;xsd:string;None;true;
+InternetGatewayDevice.UploadDiagnostics.EOMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.UploadDiagnostics.EthernetPriority;xsd:unsignedInt;0;true;
+InternetGatewayDevice.UploadDiagnostics.Interface;xsd:string;;true;
+InternetGatewayDevice.UploadDiagnostics.ROMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.UploadDiagnostics.TCPOpenRequestTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.UploadDiagnostics.TCPOpenResponseTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.UploadDiagnostics.TestFileLength;xsd:unsignedInt;0;true;
+InternetGatewayDevice.UploadDiagnostics.TotalBytesSent;xsd:unsignedInt;0;false;
+InternetGatewayDevice.UploadDiagnostics.UploadURL;xsd:string;;true;
+InternetGatewayDevice.TraceRouteDiagnostics.;;;true;
+InternetGatewayDevice.TraceRouteDiagnostics.DSCP;xsd:unsignedInt;0;true;
+InternetGatewayDevice.TraceRouteDiagnostics.DataBlockSize;xsd:unsignedInt;56;true;
+InternetGatewayDevice.TraceRouteDiagnostics.DiagnosticsState;xsd:string;None;true;
+InternetGatewayDevice.TraceRouteDiagnostics.HopsNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.TraceRouteDiagnostics.Host;xsd:string;;true;
+InternetGatewayDevice.TraceRouteDiagnostics.Interface;xsd:string;;true;
+InternetGatewayDevice.TraceRouteDiagnostics.MaxHopCount;xsd:unsignedInt;30;true;
+InternetGatewayDevice.TraceRouteDiagnostics.Mode;xsd:string;ICMP;true;
+InternetGatewayDevice.TraceRouteDiagnostics.NumberOfTries;xsd:unsignedInt;1;true;
+InternetGatewayDevice.TraceRouteDiagnostics.ResponseTime;xsd:unsignedInt;0;false;
+InternetGatewayDevice.TraceRouteDiagnostics.Timeout;xsd:unsignedInt;10000;true;
+InternetGatewayDevice.TraceRouteDiagnostics.X_CMS_Protocol;xsd:string;IPv4;true;
+InternetGatewayDevice.TraceRouteDiagnostics.X_CMS_RouteHopsResponse;xsd:string;;false;
+InternetGatewayDevice.TraceRouteDiagnostics.RouteHops.;;;false;
+InternetGatewayDevice.TraceRouteDiagnostics.RouteHops.i.;;;;
+InternetGatewayDevice.TraceRouteDiagnostics.RouteHops.i.HopErrorCode;;;false;
+InternetGatewayDevice.TraceRouteDiagnostics.RouteHops.i.HopHost;;;false;
+InternetGatewayDevice.TraceRouteDiagnostics.RouteHops.i.HopHostAddress;;;false;
+InternetGatewayDevice.TraceRouteDiagnostics.RouteHops.i.HopRTTimes;;;false;
+InternetGatewayDevice.Services.;;;;
+InternetGatewayDevice.Services.X_GC_IGMPCfg.;;;;
+InternetGatewayDevice.Services.X_GC_IGMPCfg.IgmpFastLeaveEnable;xsd:boolean;false;true;
+InternetGatewayDevice.Services.X_GC_IGMPCfg.OltIgmpUntag;xsd:boolean;false;true;
+InternetGatewayDevice.Services.X_GC_IGMPCfg.groupMemberAgingTime;xsd:unsignedInt;300;true;
+InternetGatewayDevice.Services.X_CT-COM_IPTV.;;;;
+InternetGatewayDevice.Services.X_CT-COM_IPTV.ProxyEnable;xsd:boolean;false;true;
+InternetGatewayDevice.Services.X_CT-COM_IPTV.STBNumber;xsd:unsignedInt;256;true;
+InternetGatewayDevice.Services.X_CT-COM_IPTV.SnoopingEnable;xsd:boolean;true;true;
+InternetGatewayDevice.ManagementServer.;;;true;
+InternetGatewayDevice.ManagementServer.ConnectionRequestPassword;xsd:string;e0841337;true;
+InternetGatewayDevice.ManagementServer.ConnectionRequestURL;xsd:string;http://10.23.221.229:7547/sUeTlIhOlLhW;false;
+InternetGatewayDevice.ManagementServer.ConnectionRequestUsername;xsd:string;485754431347EBAC;true;
+InternetGatewayDevice.ManagementServer.DefaultActiveNotificationThrottle;xsd:unsignedInt;;true;
+InternetGatewayDevice.ManagementServer.DownloadProgressURL;xsd:string;;false;
+InternetGatewayDevice.ManagementServer.EnableCWMP;xsd:boolean;true;true;
+InternetGatewayDevice.ManagementServer.KickURL;xsd:string;;false;
+InternetGatewayDevice.ManagementServer.ManageableDeviceNotificationLimit;xsd:unsignedInt;0;true;
+InternetGatewayDevice.ManagementServer.ManageableDeviceNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.ManagementServer.NATDetected;xsd:boolean;true;false;
+InternetGatewayDevice.ManagementServer.ParameterKey;xsd:string;n/a;false;
+InternetGatewayDevice.ManagementServer.Password;;;true;
+InternetGatewayDevice.ManagementServer.PeriodicInformEnable;xsd:boolean;true;true;
+InternetGatewayDevice.ManagementServer.PeriodicInformInterval;xsd:unsignedInt;3600;true;
+InternetGatewayDevice.ManagementServer.PeriodicInformTime;xsd:dateTime;2026-01-10T06:12:59Z;true;
+InternetGatewayDevice.ManagementServer.STUNEnable;xsd:boolean;false;true;
+InternetGatewayDevice.ManagementServer.STUNMaximumKeepAlivePeriod;xsd:unsignedInt;-1;true;
+InternetGatewayDevice.ManagementServer.STUNMinimumKeepAlivePeriod;xsd:unsignedInt;60;true;
+InternetGatewayDevice.ManagementServer.STUNPassword;;;true;
+InternetGatewayDevice.ManagementServer.STUNServerAddress;xsd:string;;true;
+InternetGatewayDevice.ManagementServer.STUNServerPort;xsd:unsignedInt;3478;true;
+InternetGatewayDevice.ManagementServer.STUNUsername;xsd:string;;true;
+InternetGatewayDevice.ManagementServer.UDPConnectionRequestAddress;xsd:string;0.0.0.0:35259;false;
+InternetGatewayDevice.ManagementServer.UDPConnectionRequestAddressNotificationLimit;xsd:unsignedInt;0;true;
+InternetGatewayDevice.ManagementServer.URL;xsd:string;http://192.168.30.5:5000/acs/;true;
+InternetGatewayDevice.ManagementServer.UpgradesManaged;xsd:boolean;false;true;
+InternetGatewayDevice.ManagementServer.Username;xsd:string;plniconplus;true;
+InternetGatewayDevice.ManagementServer.mac;xsd:string;50:5b:1d:da:05:0c;false;
+InternetGatewayDevice.ManagementServer.ManageableDevice.;;;false;
+InternetGatewayDevice.Layer3Forwarding.;;;true;
+InternetGatewayDevice.Layer3Forwarding.DefaultConnectionService;xsd:string;InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1;true;
+InternetGatewayDevice.Layer3Forwarding.ForwardNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.Layer3Forwarding.Forwarding.;;;true;
+InternetGatewayDevice.Layer2Bridging.;;;true;
+InternetGatewayDevice.Layer2Bridging.AvailableInterfaceNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.Layer2Bridging.BridgeNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.Layer2Bridging.FilterNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.Layer2Bridging.MarkingNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.Layer2Bridging.MaxBridgeEntries;xsd:unsignedInt;2;false;
+InternetGatewayDevice.Layer2Bridging.MaxFilterEntries;xsd:unsignedInt;16;false;
+InternetGatewayDevice.Layer2Bridging.MaxMarkingEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.Layer2Bridging.Marking.;;;true;
+InternetGatewayDevice.Layer2Bridging.Filter.;;;true;
+InternetGatewayDevice.Layer2Bridging.Bridge.;;;true;
+InternetGatewayDevice.Layer2Bridging.AvailableInterface.;;;true;
+InternetGatewayDevice.LANInterfaces.;;;true;
+InternetGatewayDevice.LANDevice.;;;true;
+InternetGatewayDevice.LANDevice.1.;;;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceNumberOfEntries;xsd:unsignedInt;1;false;
+InternetGatewayDevice.LANDevice.1.X_CT-COM_RouterAdvertisement.;;;false;
+InternetGatewayDevice.LANDevice.1.X_CT-COM_RouterAdvertisement.AdvManagedFlag;xsd:boolean;false;true;
+InternetGatewayDevice.LANDevice.1.X_CT-COM_RouterAdvertisement.AdvOtherConfigFlag;xsd:boolean;true;true;
+InternetGatewayDevice.LANDevice.1.X_CT-COM_RouterAdvertisement.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.LANDevice.1.X_CT-COM_RouterAdvertisement.MaxRtrAdvInterval;xsd:unsignedInt;600;true;
+InternetGatewayDevice.LANDevice.1.X_CT-COM_RouterAdvertisement.MinRtrAdvInterval;xsd:unsignedInt;198;true;
+InternetGatewayDevice.LANDevice.1.X_CT-COM_IPv6Config.;;;false;
+InternetGatewayDevice.LANDevice.1.X_CT-COM_IPv6Config.DomainName;xsd:string;;true;
+InternetGatewayDevice.LANDevice.1.X_CT-COM_IPv6Config.IPv6DNSConfigType;xsd:string;HGWProxy;true;
+InternetGatewayDevice.LANDevice.1.X_CT-COM_IPv6Config.IPv6DNSServers;xsd:string;fe80::1;true;
+InternetGatewayDevice.LANDevice.1.X_CT-COM_IPv6Config.IPv6DNSWANConnection;xsd:string;;true;
+InternetGatewayDevice.LANDevice.1.X_CMS_IPv6RouterAdvertisement.;;;false;
+InternetGatewayDevice.LANDevice.1.X_CMS_IPv6RouterAdvertisement.LeaseTime;xsd:unsignedInt;86400;true;
+InternetGatewayDevice.LANDevice.1.X_CMS_IPv6RouterAdvertisement.MaxInterfaceID;xsd:string;100;true;
+InternetGatewayDevice.LANDevice.1.X_CMS_IPv6RouterAdvertisement.MinInterfaceID;xsd:string;1;true;
+InternetGatewayDevice.LANDevice.1.X_CMS_IPv6RouterAdvertisement.PrefixFromWan;xsd:string;;false;
+InternetGatewayDevice.LANDevice.1.X_CMS_IPv6RouterAdvertisement.PrefixManagedConfig;xsd:string;3ffe:501:ffff:100::;true;
+InternetGatewayDevice.LANDevice.1.X_CMS_IPv6RouterAdvertisement.PrefixManagedConfigLen;xsd:unsignedInt;64;true;
+InternetGatewayDevice.LANDevice.1.X_CMS_IPv6RouterAdvertisement.PrefixManagedConfigType;xsd:unsignedInt;0;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.;;;false;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.AllowedMACAddresses;xsd:string;;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.AssociatedConnection;xsd:string;;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPLeaseTime;xsd:int;86400;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPRelay;xsd:boolean;false;false;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerConfigurable;xsd:boolean;true;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DHCPServerEnable;xsd:boolean;false;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DNSServers;xsd:string;;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.DomainName;xsd:string;;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterfaceNumberOfEntries;xsd:unsignedInt;1;false;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPRouters;xsd:string;192.168.101.1;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MACAddress;xsd:string;00:00:00:00:00:00;false;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MaxAddress;xsd:string;192.168.101.250;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.MinAddress;xsd:string;192.168.101.2;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.PassthroughLease;xsd:unsignedInt;600;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.PassthroughMACAddress;xsd:string;;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.ReservedAddress;xsd:string;;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.SubnetMask;xsd:string;255.255.255.0;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.UseAllocatedWAN;xsd:string;Normal;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.X_CMS_DnsOption;xsd:unsignedInt;1;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.;;;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.;;;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceAddressingType;xsd:string;Static;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress;xsd:string;192.168.101.1;true;
+InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceSubnetMask;xsd:string;255.255.255.0;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.;;;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.;;;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.DuplexMode;xsd:string;Full;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Enable;xsd:boolean;true;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.MACAddress;xsd:string;50:5b:1d:da:05:0c;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.MACAddressControlEnabled;xsd:boolean;true;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.MaxBitRate;xsd:string;1000;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Name;xsd:string;LAN1;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Status;xsd:string;Up;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_CMS_LoopStatus;xsd:unsignedInt;0;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_GC_DS_RateLimit;xsd:unsignedInt;0;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_GC_FlowControl;xsd:boolean;false;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_GC_Ingress_RateLimit;xsd:unsignedInt;0;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_GC_MAC_AgingTime;xsd:unsignedInt;300;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_GC_MAC_LearningLimit;xsd:unsignedInt;0;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_GC_Sync_DuplexMode;xsd:string;full;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_GC_Sync_MaxBitRate;xsd:string;1000Mbps;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_GC_VLAN_Mode;xsd:string;tag;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_GC_VLAN_PVID;xsd:unsignedInt;2928;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_GC_VLAN_Trunk.;;;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.X_GC_VLAN_Translation.;;;true;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.;;;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.BroadcastPacketsReceived;xsd:unsignedInt;17;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.BroadcastPacketsSent;xsd:unsignedInt;25599;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.BytesReceived;xsd:unsignedInt;-253696005;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.BytesSent;xsd:unsignedInt;-894222309;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.DiscardPacketsReceived;xsd:unsignedInt;26678269;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.DiscardPacketsSent;xsd:unsignedInt;9837568;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.ErrorsReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.ErrorsSent;xsd:unsignedInt;0;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.MulticastPacketsReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.MulticastPacketsSent;xsd:unsignedInt;325;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.PacketsReceived;xsd:unsignedInt;22632837;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.PacketsSent;xsd:unsignedInt;25915417;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.UnicastPacketsReceived;xsd:unsignedInt;22632820;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.UnicastPacketsSent;xsd:unsignedInt;25889493;false;
+InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.Stats.UnknownPacketsReceived;;;false;
+InternetGatewayDevice.LANDevice.1.Hosts.;;;false;
+InternetGatewayDevice.LANDevice.1.Hosts.HostNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.LANDevice.1.Hosts.Host.;;;false;
+InternetGatewayDevice.IPPingDiagnostics.;;;true;
+InternetGatewayDevice.IPPingDiagnostics.AverageResponseTime;xsd:unsignedInt;0;false;
+InternetGatewayDevice.IPPingDiagnostics.DSCP;xsd:unsignedInt;0;true;
+InternetGatewayDevice.IPPingDiagnostics.DataBlockSize;xsd:unsignedInt;64;true;
+InternetGatewayDevice.IPPingDiagnostics.DiagnosticsState;xsd:string;Error_CannotResolveHostName;true;
+InternetGatewayDevice.IPPingDiagnostics.FailureCount;xsd:unsignedInt;0;false;
+InternetGatewayDevice.IPPingDiagnostics.Host;xsd:string;8.8.8.8;true;
+InternetGatewayDevice.IPPingDiagnostics.Interface;xsd:string;;true;
+InternetGatewayDevice.IPPingDiagnostics.MaximumResponseTime;xsd:unsignedInt;0;false;
+InternetGatewayDevice.IPPingDiagnostics.MinimumResponseTime;xsd:unsignedInt;0;false;
+InternetGatewayDevice.IPPingDiagnostics.NumberOfRepetitions;xsd:unsignedInt;6;true;
+InternetGatewayDevice.IPPingDiagnostics.SuccessCount;xsd:unsignedInt;0;false;
+InternetGatewayDevice.IPPingDiagnostics.Timeout;xsd:unsignedInt;1000;true;
+InternetGatewayDevice.IPPingDiagnostics.X_CMS_PingResponse;xsd:string;"PING 8.8.8.8 (8.8.8.8): 64 data bytes
+ /n 
+ /n --- 8.8.8.8 ping statistics ---
+ /n 6 packets transmitted, 0 packets received, 100% packet loss";false;
+InternetGatewayDevice.DownloadDiagnostics.;;;true;
+InternetGatewayDevice.DownloadDiagnostics.BOMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.DownloadDiagnostics.DSCP;xsd:unsignedInt;0;true;
+InternetGatewayDevice.DownloadDiagnostics.DiagnosticsState;xsd:string;Requested;true;
+InternetGatewayDevice.DownloadDiagnostics.DownloadURL;xsd:string;http://157.10.160.88/10MB.bin;true;
+InternetGatewayDevice.DownloadDiagnostics.EOMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.DownloadDiagnostics.EthernetPriority;xsd:unsignedInt;0;true;
+InternetGatewayDevice.DownloadDiagnostics.Interface;xsd:string;InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.;true;
+InternetGatewayDevice.DownloadDiagnostics.ROMTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.DownloadDiagnostics.TCPOpenRequestTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.DownloadDiagnostics.TCPOpenResponseTime;xsd:dateTime;0000-00-00T00:00:00;false;
+InternetGatewayDevice.DownloadDiagnostics.TestBytesReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.DownloadDiagnostics.TotalBytesReceived;xsd:unsignedInt;0;false;
+InternetGatewayDevice.DeviceInfo.;;;true;
+InternetGatewayDevice.DeviceInfo.AdditionalHardwareVersion;xsd:string;;false;
+InternetGatewayDevice.DeviceInfo.AdditionalSoftwareVersion;xsd:string;;false;
+InternetGatewayDevice.DeviceInfo.Description;xsd:string;System Description;false;
+InternetGatewayDevice.DeviceInfo.DeviceLog;xsd:string;;false;
+InternetGatewayDevice.DeviceInfo.EnabledOptions;xsd:string;;false;
+InternetGatewayDevice.DeviceInfo.FirstUseDate;xsd:dateTime;;false;
+InternetGatewayDevice.DeviceInfo.HardwareVersion;xsd:string;F670.1B;false;
+InternetGatewayDevice.DeviceInfo.Manufacturer;xsd:string;HWTC;false;
+InternetGatewayDevice.DeviceInfo.ManufacturerOUI;xsd:string;D011;false;
+InternetGatewayDevice.DeviceInfo.ModelName;xsd:string;FD511G-X-F670;false;
+InternetGatewayDevice.DeviceInfo.ModemFirmwareVersion;xsd:string;;false;
+InternetGatewayDevice.DeviceInfo.ProductClass;xsd:string;FD511G-X-F670;false;
+InternetGatewayDevice.DeviceInfo.ProvisioningCode;xsd:string;TLCO.GRP2;true;
+InternetGatewayDevice.DeviceInfo.SerialNumber;xsd:string;485754431347EBAC;false;
+InternetGatewayDevice.DeviceInfo.SoftwareVersion;xsd:string;V3.2.8;false;
+InternetGatewayDevice.DeviceInfo.SpecVersion;xsd:string;1.0;false;
+InternetGatewayDevice.DeviceInfo.UpTime;xsd:unsignedInt;284719;false;
+InternetGatewayDevice.DeviceInfo.VendorConfigFileNumberOfEntries;xsd:unsignedInt;;false;
+InternetGatewayDevice.DeviceInfo.X_CMS_BuildInfo;xsd:string;Build.1357.240520;false;
+InternetGatewayDevice.DeviceInfo.X_CMS_CPUUsage;xsd:string;21;false;
+InternetGatewayDevice.DeviceInfo.X_CMS_MemUsage;xsd:string;48;false;
+InternetGatewayDevice.DeviceInfo.XponInterface.;;;true;
+InternetGatewayDevice.DeviceInfo.XponInterface.BiasCurrent;xsd:string;13.55 mA;false;
+InternetGatewayDevice.DeviceInfo.XponInterface.RXPower;xsd:string;-18.07 dBm;false;
+InternetGatewayDevice.DeviceInfo.XponInterface.Status;xsd:string;UP;false;
+InternetGatewayDevice.DeviceInfo.XponInterface.SupplyVottage;xsd:string;3.30 V;false;
+InternetGatewayDevice.DeviceInfo.XponInterface.TXPower;xsd:string;1.74 dBm;false;
+InternetGatewayDevice.DeviceInfo.XponInterface.TransceiverTemperature;xsd:string;38;false;
+InternetGatewayDevice.DeviceInfo.XponInterface.X_CMS_PonMode;xsd:string;GPON;false;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_TeleComAccount.;;;false;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_TeleComAccount.Password;xsd:string;adminisp;false;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_TeleComAccount.Username;xsd:string;adminisp;false;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.;;;true;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.TelnetEnable;xsd:boolean;true;true;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.TelnetPassword;xsd:string;db51f886;true;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.TelnetPort;xsd:int;23;true;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_ServiceManage.TelnetUsername;xsd:string;manu;true;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_Monitor.;;;true;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_Monitor.Enable;xsd:boolean;false;true;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_Monitor.MonitorNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_Monitor.MonitorConfig.;;;true;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_Alarm.;;;true;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_Alarm.AlarmNumber;xsd:string;;false;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_Alarm.AlarmNumberOfEntries;xsd:unsignedInt;0;false;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_Alarm.Enable;xsd:boolean;false;true;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_Alarm.EventTime;xsd:unsignedInt;;false;
+InternetGatewayDevice.DeviceInfo.X_CT-COM_Alarm.AlarmConfig.;;;true;
+InternetGatewayDevice.DeviceInfo.ProcessStatus.;;;true;
+InternetGatewayDevice.DeviceInfo.ProcessStatus.CPUUsage;xsd:int;21;false;
+InternetGatewayDevice.DeviceInfo.MemoryStatus.;;;true;
+InternetGatewayDevice.DeviceInfo.MemoryStatus.Free;xsd:int;12380;false;
+InternetGatewayDevice.DeviceInfo.MemoryStatus.Total;xsd:int;23940;false;

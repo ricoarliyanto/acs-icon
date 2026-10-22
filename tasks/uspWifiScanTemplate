@@ -1,0 +1,11 @@
+dmkey.root.WiFi.`NeighboringWiFiDiagnostic()`.operation()
+val taskStart = Timestamp.now()
+do {
+  session.wait(false)
+} while(!inform.diagnosticsComplete && (Timestamp.now().since(taskStart) < 2.minutes))
+
+if(!inform.diagnosticsComplete){
+  finish(status = "ERROR", summary = "Timeout while waiting for diagnostic to finish")
+} else {
+  dmkey.root.X_AVS_EXT.WiFiNeighborhood.getObject()
+} 

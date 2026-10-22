@@ -1,0 +1,6 @@
+# Process capability
+# A device exposes process information
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Process.%force-value = "true"
+}

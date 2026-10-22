@@ -1,0 +1,5 @@
+<config>
+  <store target="templateVersion" value="1.0" />
+  <store target="deviceTypeGroup" value="${device.deviceTypeGroup}" />
+  <store target="rootObject" value="${device.rootObject}" />
+</config>

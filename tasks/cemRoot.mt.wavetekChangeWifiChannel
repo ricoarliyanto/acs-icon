@@ -1,0 +1,26 @@
+val (band24Instance, band5Instance) = (sv.cemWiFiVdmWlan24Instance.getOr("1").toInt, sv.cemWiFiVdmWlan5Instance.getOr("5").toInt)
+
+val isSucharDevice = sv.dialectName.getOr("").contains("cwmp.devices.avsystem.suchar")
+
+val channel24 = task.parameters.selectDynamic("channel24").getOpt.filter(_.nonEmpty).fold(Opt.empty[String]){ch=>
+  if(!Seq.range(1,13).contains(ch.toInt)) fail("WiFi Channel 2.4Ghz should be in the range (1-12). Your channel is $ch")
+  ch
+}
+val channel5 = task.parameters.selectDynamic("channel5").getOpt.filter(_.nonEmpty).fold(Opt.empty[String]){ch=>
+  if(!((Seq.range(32,145, 4)++Seq.range(149,178,4)).contains(ch.toInt))) fail("WiFi Channel 5Ghz should be in the range (32-144, 149-177). Your channel is $ch")
+  ch
+}
+
+val message24 = task.parameters.selectDynamic("channel24").getOpt.filter(_.nonEmpty).fold("2.4 GHz: No changes to channel"){ channel24 =>
+  if(!isSucharDevice)ldm.set(dmkey.root.X_AVS_EXT.WiFi(band24Instance).Channel, channel24)
+  "2.4 GHz: Channel changed to $channel24"
+}
+val message5 = task.parameters.selectDynamic("channel5").getOpt.filter(_.nonEmpty).fold("5 GHz: No changes to channel"){ channel5 =>
+  if(!isSucharDevice)ldm.set(dmkey.root.X_AVS_EXT.WiFi(band5Instance).Channel, channel5)
+  "5 GHz: Channel changed to $channel5"
+}
+
+session.spawnTask(templateName = taskTemplates.cemRoot.mt.wavetekRefreshWiFi)
+session.requestConnectionIn(3.seconds)
+
+workflow.setStatus("Success", "$message24 \n\n $message5") 

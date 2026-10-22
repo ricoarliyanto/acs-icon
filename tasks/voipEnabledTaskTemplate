@@ -1,0 +1,8 @@
+<config>
+  <if expr="${sv.voipEnabledValue == 'true' or sv.voipEnabledValue == null}">
+    <set key="${sv.voipProfileRoot}Enable" value="Enabled" type="xsd:string" ignoreFaults="true" />
+    <else>
+      <set key="${sv.voipProfileRoot}Enable" value="Disabled" type="xsd:string" ignoreFaults="true" />
+    </else>
+  </if>
+</config>

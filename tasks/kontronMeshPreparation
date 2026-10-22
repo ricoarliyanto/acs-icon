@@ -1,0 +1,28 @@
+var result = Map[String, Map[String, String]]()
+
+var i = 1
+ldm.foreach(ldm.root.X_INNBOX_WiFiMesh.X_INNBOX_Node.any) { node =>
+  val active  = node.Active.get()
+  val ipAddress  = node.IPAddress.get()
+  val macAddress  = node.MACAddress.get()
+  val signalStrength  = node.RSSIValue.get()
+  //val interface = node.Interface.get().toDMKey
+  //val band = if(interface.Channel.get().toInt <= 13) "2.4GHz" else "5GHz"
+  //val ssid = interface.SSID.get() 
+  //result += (node.name -> Map("band" -> band, "ssid" -> ssid))
+  result += (node.name -> Map(
+    "band" -> "5GHz", 
+    "ssid" -> "M_mreza",
+    "active" -> active,
+    "ipAddress" -> ipAddress,
+    "macAddress" -> macAddress,
+    "signalStrength" -> signalStrength))
+  device.property.apply("meshDevice${i}").set(node.toString)
+  i+=1
+} 
+device.property.meshInterfaces.set(result.encodeJsonString)
+
+ldm.getAll(
+  dmkey.root.LANDevice,
+  dmkey.root.WANDevice,
+)

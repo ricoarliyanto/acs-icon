@@ -1,0 +1,6 @@
+# IPTV STB capability
+# A device is able to expose advanced parameters for IPTV monitoring.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.IPTVRich.%force-value = "true"
+}

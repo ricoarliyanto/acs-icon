@@ -1,0 +1,6 @@
+# Management capability
+# A device has management capabilities
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Management.%force-value = "true"
+}

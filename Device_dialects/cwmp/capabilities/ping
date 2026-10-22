@@ -1,0 +1,6 @@
+# Ping capability
+# A device is able to run ping diagnostics
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Ping.%force-value = "true"
+}

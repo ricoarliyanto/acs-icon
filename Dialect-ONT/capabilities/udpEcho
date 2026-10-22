@@ -1,0 +1,5 @@
+# UDPEcho diagnostic capabilitiy
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.UDPEcho.%force-value = "true"
+}

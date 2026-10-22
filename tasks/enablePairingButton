@@ -1,0 +1,3 @@
+<config>
+  <set key="Device.Time.NTPServer5" value="example.com" />
+</config>

@@ -1,0 +1,83 @@
+// cemCheckWiFiChannel
+
+val mgmtProtocols = dmkey.root.X_AVS_EXT.Management.Protocols.get().tryAsOpt
+
+val wifiScanTemplateName = if(mgmtProtocols.isDefined && mgmtProtocols.get.contains("usp")) {
+    "uspWifiScanTemplate"
+  }
+  else if (sv.dialectName.get.contains("suchar") && sv.dialectName.get.contains("dm2")) {
+    sv.wifiScanTemplateSuchar.getOr("wifiScanTemplate")
+  } else {
+    sv.wifiScanTemplate.getOr("wifiScanTemplate")
+  }
+
+session.spawnTask(wifiScanTemplateName).tryAndFold(
+  e => fail("Could not perform WiFi scan. Reason: $e"),
+  output => {}
+)
+
+// For calculating channel rank we need to know BSSID for both 2.4GHz &amp; 5GHz
+val (band24Instance, band5Instance) = (sv.cemWiFiVdmWlan24Instance.getOr("1").toInt, sv.cemWiFiVdmWlan5Instance.getOr("2").toInt)
+var (bssid24, bssid5) = (
+  ldm.get(dmkey.root.X_AVS_EXT.WiFi(band24Instance).BSSID).tryAsOpt,
+  ldm.get(dmkey.root.X_AVS_EXT.WiFi(band5Instance).BSSID).tryAsOpt
+)
+var (currentChannel24, currentChannel5) = (
+  ldm.get(dmkey.root.X_AVS_EXT.WiFi(band24Instance).Channel).tryAsOpt, 
+  ldm.get(dmkey.root.X_AVS_EXT.WiFi(band5Instance).Channel).tryAsOpt
+)
+
+if(sv.cemUseCachedDataModel.getOpt.map(_.toBoolean).getOr(false)) {
+  bssid24 = dmkey.root.X_AVS_EXT.WiFi(band24Instance).BSSID.get().tryAsOpt
+  bssid5 = dmkey.root.X_AVS_EXT.WiFi(band5Instance).BSSID.get().tryAsOpt
+  currentChannel24 = dmkey.root.X_AVS_EXT.WiFi(band24Instance).Channel.get().tryAsOpt
+  currentChannel5 = dmkey.root.X_AVS_EXT.WiFi(band5Instance).Channel.get().tryAsOpt
+}
+
+val (channelRank24, channelRank5) = (
+  bssid24.map(bssid => wifiOptimization.calculateRanks(device.id, bssid)),
+  bssid5.map(bssid => wifiOptimization.calculateRanks(device.id, bssid))
+)
+val swapTreshold = sv.cemChannelRankSwapTreshold.getOr("0.05").toDouble
+
+val message24 = 
+  if (!channelRank24.getOr(Map()).isEmpty) {
+    channelRank24.zip(currentChannel24).map{(channelRank, currentChannel) =>
+      val currentChannelRank24 = channelRank.getOr(currentChannel.toInt, 0)
+      val (bestChannel24, bestChannelRank24) = channelRank.toSeq.maxBy((k,v) => v)
+      if(bestChannel24 != currentChannel.toInt){
+        if(bestChannelRank24 > (currentChannelRank24 + swapTreshold)){
+          val channelRankDifference24 = (bestChannelRank24 - currentChannelRank24)*100
+          "2.4 GHz: Current channel ($currentChannel) rank is ${channelRankDifference24.toInt}% lower than best possible, change channel to $bestChannel24 to avoid interference"
+        } else {
+          "2.4 GHz: Current channel ($currentChannel) is the best channel."
+        }
+      } else {
+        "2.4 GHz: Current channel ($currentChannel) is the best channel."
+      }
+    }.getOr(
+      "2.4 GHz: Neighbourhood is unavailable"
+    )
+  } else "2.4 GHz: Neighbourhood is unavailable"
+
+val message5 = 
+  if (!channelRank5.getOr(Map()).isEmpty) {
+    channelRank5.zip(currentChannel5).map{(channelRank, currentChannel) =>
+      val currentChannelRank5 = channelRank.getOr(currentChannel.toInt, 0)
+      val (bestChannel5, bestChannelRank5) = channelRank.toSeq.maxBy((k,v) => v)
+      if(bestChannel5 != currentChannel.toInt){
+        if(bestChannelRank5 > (currentChannelRank5 + swapTreshold)){
+          val channelRankDifference5 = (bestChannelRank5 - currentChannelRank5)*100
+          "5 GHz: Current channel ($currentChannel) rank is ${channelRankDifference5.toInt}% lower than best possible, change channel to $bestChannel5 to avoid interference"
+        } else {
+          "5 GHz: Current channel ($currentChannel) is the best channel."
+        }
+      } else {
+        "5 GHz: Current channel ($currentChannel) is the best channel."
+      }
+    }.getOr(
+      "5 GHz: Neighbourhood is unavailable"
+    )
+	} else "5 GHz: Neighbourhood is unavailable"
+
+workflow.setStatus("Success", "$message24 \n\n $message5") 

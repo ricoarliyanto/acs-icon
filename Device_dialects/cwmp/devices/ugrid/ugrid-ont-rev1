@@ -1,0 +1,410 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.syslog"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet"
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.gpon"
+include "cwmp.capabilities.wan"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.firewall"
+include "cwmp.capabilities.forwarding"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.process"
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.users"
+include "cwmp.capabilities.vlan"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.xmpp"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+cwmp.setActiveWanFromInform = false
+
+remappingStrategy {
+  # Hardcode active keys berdasarkan datamodel UGRID
+  # Connection 2 adalah TR069_INTERNET_R (IP_Routed) yang aktif
+  activeKey.gpon = "root.WANDevice.1.WANConnectionDevice.2"
+  activeKey.pon = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig"
+  activeKey.lan = "root.LANDevice.1"
+  
+  read_converter {
+    Manufacturer {
+      expression = """${singleValue.toUpperCase()}"""
+      type = expression
+    }
+    
+    WAN.Internet {
+      Status = ${tools.expression} {
+        expression = """${if(singleValue.contains('Up')) 'Connected'
+        else if(set('Down', 'Disabled').exists(singleValue.contains(_))) 'Disconnected'
+        else 'Unconfigured'}"""
+      }
+      Mac = ${tools.readConverters.oneToOne.stripMAC}
+    }
+    
+    # Map ChannelWidth UGRID (X_VT_ChannelWidth) ke format standar
+    WiFi.%i {
+      ChannelWidth {
+        expression = "${map('0'->'Auto','1'->'20','2'->'40','3'->'Auto').getOr(singleValue,'NONE')}"
+        type = expression
+      }
+    }
+  }
+
+  write_converter {
+    WiFi.%i {
+      Security = ${tools.expression} {
+        expression = """${
+          """${remappingStrategy.wifiSecurity.setNone}""" else
+          """${remappingStrategy.wifiSecurity.setWpa}""" else
+          """${remappingStrategy.wifiSecurity.setWpa2}""" else
+          """${remappingStrategy.wifiSecurity.setWpa_Wpa2}""" else null}"""
+      }
+      
+      ChannelWidth = ${tools.expression} {
+        expression = "${map('Auto'->'0','20'->'1','40'->'2').get(value)}"
+      }
+    }
+    
+    # Fix: Tambahkan mapping untuk Upload Diagnostics
+    Diagnostics.Upload.UploadURL = ${tools.expression} {
+      expression = "${if (key.keyName == 'UploadURL') value else '4'}"
+    }
+    
+    Diagnostics.Download.DownloadURL = ${tools.expression} {
+      expression = "${if (key.keyName == 'DownloadURL') value else '4'}"
+    }
+  }
+
+  # WiFi Security Remapping Logic
+  wifiSecurity {
+    isNone = """if(
+      realValue('BeaconType') == 'Basic' and
+      realValue('BasicEncryptionModes') == 'None' and
+      realValue('BasicAuthenticationMode') == 'None'
+    ) 'NONE'"""
+    
+    setNone = """if(value == 'NONE')(
+      map('BeaconType' -> 'Basic',
+      'BasicEncryptionModes' -> 'None',
+      'BasicAuthenticationMode' -> 'None',
+      'WPAEncryptionModes' -> 'TKIPEncryption',
+      'WPAAuthenticationMode' -> 'PSKAuthentication',
+      'IEEE11iEncryptionModes' -> 'AESEncryption',
+      'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+    
+    isWpa = """if(
+      realValue('BeaconType') == 'WPA' and
+      realValue('WPAEncryptionModes') == 'TKIPEncryption' and
+      realValue('WPAAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA'"""
+    
+    setWpa = """if(value == 'WPA')(
+      map('BeaconType' -> 'WPA',
+      'WPAEncryptionModes' -> 'TKIPEncryption',
+      'WPAAuthenticationMode' -> 'PSKAuthentication',
+      'BasicEncryptionModes' -> 'None',
+      'BasicAuthenticationMode' -> 'None',
+      'IEEE11iEncryptionModes' -> 'AESEncryption',
+      'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+    
+    isWpa2 = """if(
+      realValue('BeaconType') == '11i' and
+      realValue('IEEE11iEncryptionModes') == 'AESEncryption' and
+      realValue('IEEE11iAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA2'"""
+    
+    setWpa2 = """if(value == 'WPA2')(
+      map('BeaconType' -> '11i',
+      'IEEE11iEncryptionModes' -> 'AESEncryption',
+      'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+      'WPAEncryptionModes' -> 'TKIPEncryption',
+      'WPAAuthenticationMode' -> 'PSKAuthentication',
+      'BasicEncryptionModes' -> 'None',
+      'BasicAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+    
+    isWpa_Wpa2 = """if(
+      realValue('BeaconType') == 'WPAand11i' and
+      realValue('WPAEncryptionModes') == 'TKIPEncryption' and
+      realValue('WPAAuthenticationMode') == 'PSKAuthentication' and
+      realValue('IEEE11iEncryptionModes') == 'AESEncryption' and
+      realValue('IEEE11iAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA_WPA2'"""
+    
+    setWpa_Wpa2 = """if(value == 'WPA_WPA2')(
+      map('BeaconType' -> 'WPAand11i',
+      'WPAEncryptionModes' -> 'TKIPEncryption',
+      'WPAAuthenticationMode' -> 'PSKAuthentication',
+      'IEEE11iEncryptionModes' -> 'AESEncryption',
+      'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+      'BasicEncryptionModes' -> 'None',
+      'BasicAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+  }
+
+  mapping {
+    root.X_AVS_EXT {
+      # SYSTEM & RESOURCES (Fix: No math expressions)
+      System {
+        cpeCpuUsed.real = "root.X_AVS_EXT.Resources.CPUUsed"
+        cpeMemUsed.real = "root.X_AVS_EXT.Resources.RAMUsed"
+        cpeMemTotal.real = "root.X_AVS_EXT.Resources.RAMAvailable"
+        Uptime.real = "root.X_AVS_EXT.Status.UpTime"
+      }
+      
+      # LAN PORTS
+      LAN {
+        Port.%i {
+          Alias.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Name"
+          DuplexMode.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.DuplexMode"
+          Enabled.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Enable"
+          MACAddress.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.MACAddress"
+          Name.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Name"
+          Status.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Status"
+          MaxBitRate.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.MaxBitRate"
+          Stats {
+            Downstream {
+              Bytes.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Stats.BytesReceived"
+              Packets.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Stats.PacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Stats.BytesSent"
+              Packets.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Stats.PacketsSent"
+            }
+          }
+        }
+      }
+      
+      # WAN & GPON
+      WAN {
+        Type.real = "GPON"
+        Enable.real = "root.WANDevice.1.WANCommonInterfaceConfig.EnabledForInternet"
+        Status.real = "root.WANDevice.1.WANCommonInterfaceConfig.PhysicalLinkStatus"
+        MacAddress.real = "root.X_AVS_EXT.OUI"
+        
+        Stats {
+          Downstream {
+            Bytes.real = "root.WANDevice.1.WANCommonInterfaceConfig.TotalBytesReceived"
+            Packets.real = "root.WANDevice.1.WANCommonInterfaceConfig.TotalPacketsReceived"
+          }
+          Upstream {
+            Bytes.real = "root.WANDevice.1.WANCommonInterfaceConfig.TotalBytesSent"
+            Packets.real = "root.WANDevice.1.WANCommonInterfaceConfig.TotalPacketsSent"
+          }
+        }
+        
+        GPON.1 {
+          PonMode.real = "root.WANDevice.1.X_CT-COM_WANGponLinkConfig.Mode"
+          LinkStatus.real = "root.WANDevice.1.WANCommonInterfaceConfig.PhysicalLinkStatus"
+          Enable.real = "root.WANDevice.1.X_CT-COM_WANGponLinkConfig.Enable"
+          BiasCurrent.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.BiasCurrent"
+          MACAddress.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.MACAddress"
+          RXPower.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower"
+          TXPower.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.TXPower"
+          # Perhatikan typo 'SupplyVottage' di datamodel UGRID
+          SupplyVoltage.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.SupplyVottage"
+          TransceiverTemperature.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.TransceiverTemperature"
+          
+          Stats {
+            Downstream {
+              Bytes.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesReceived"
+              Packets.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesSent"
+              Packets.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsSent"
+            }
+          }
+        }
+        
+        IP.Interface.1 {
+          Name.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Name"
+          Enable.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Enable"
+          Status.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.ConnectionStatus"
+          ConnectionType.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.ConnectionType"
+          IPv4Address.1 {
+            IPAddress.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.ExternalIPAddress"
+            SubnetMask.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.SubnetMask"
+            AddressingType.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.AddressingType"
+            Enable.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Enable"
+            Status.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Status"
+          }
+          Gateway.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.DefaultGateway"
+          DNSServers.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.DNSServers"
+        }
+      }
+      
+      # WIFI (Mapping WLAN 1 ke WiFi 1, WLAN 5 ke WiFi 2)
+      WiFi {
+        1 {
+          SSID.real = "root.LANDevice.1.WLANConfiguration.1.SSID"
+          Enable.real = "root.LANDevice.1.WLANConfiguration.1.RadioEnabled"
+          Status.real = "root.LANDevice.1.WLANConfiguration.1.Status"
+          Channel.real = "root.LANDevice.1.WLANConfiguration.1.Channel"
+          Band.real = "root.LANDevice.1.WLANConfiguration.1.SupportedStandards"
+          Standard.real = "root.LANDevice.1.WLANConfiguration.1.SupportedStandards"
+          Power.real = "root.LANDevice.1.WLANConfiguration.1.TransmitPower"
+          Security.real = "root.LANDevice.1.WLANConfiguration.1.BeaconType"
+          Password.real = "root.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase"
+          BSSID.real = "root.LANDevice.1.WLANConfiguration.1.BSSID"
+          ChannelWidth.real = "root.LANDevice.1.WLANConfiguration.1.X_VT_ChannelWidth"
+          Stats {
+            Downstream {
+              Bytes.real = "root.LANDevice.1.WLANConfiguration.1.TotalBytesReceived"
+              Packets.real = "root.LANDevice.1.WLANConfiguration.1.TotalPacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "root.LANDevice.1.WLANConfiguration.1.TotalBytesSent"
+              Packets.real = "root.LANDevice.1.WLANConfiguration.1.TotalPacketsSent"
+            }
+          }
+        }
+        2 {
+          SSID.real = "root.LANDevice.1.WLANConfiguration.5.SSID"
+          Enable.real = "root.LANDevice.1.WLANConfiguration.5.RadioEnabled"
+          Status.real = "root.LANDevice.1.WLANConfiguration.5.Status"
+          Channel.real = "root.LANDevice.1.WLANConfiguration.5.Channel"
+          Band.real = "root.LANDevice.1.WLANConfiguration.5.SupportedStandards"
+          Standard.real = "root.LANDevice.1.WLANConfiguration.5.SupportedStandards"
+          Power.real = "root.LANDevice.1.WLANConfiguration.5.TransmitPower"
+          Security.real = "root.LANDevice.1.WLANConfiguration.5.BeaconType"
+          Password.real = "root.LANDevice.1.WLANConfiguration.5.PreSharedKey.1.KeyPassphrase"
+          BSSID.real = "root.LANDevice.1.WLANConfiguration.5.BSSID"
+          ChannelWidth.real = "root.LANDevice.1.WLANConfiguration.5.X_VT_ChannelWidth"
+          Stats {
+            Downstream {
+              Bytes.real = "root.LANDevice.1.WLANConfiguration.5.TotalBytesReceived"
+              Packets.real = "root.LANDevice.1.WLANConfiguration.5.TotalPacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "root.LANDevice.1.WLANConfiguration.5.TotalBytesSent"
+              Packets.real = "root.LANDevice.1.WLANConfiguration.5.TotalPacketsSent"
+            }
+          }
+        }
+      }
+      
+      # DIAGNOSTICS (Fix: Tambahkan Upload dan path yang benar)
+      Diagnostics {
+        Download {
+          DownloadURL.real = "root.DownloadDiagnostics.DownloadURL"
+          DSCP.real = "root.DownloadDiagnostics.DSCP"
+          EthernetPriority.real = "root.DownloadDiagnostics.EthernetPriority"
+          Interface.real = "root.DownloadDiagnostics.Interface"
+          State.real = "root.DownloadDiagnostics.DiagnosticsState"
+          TestFileLength.real = "root.DownloadDiagnostics.TestBytesReceived"
+        }
+        Upload {
+          UploadURL.real = "root.UploadDiagnostics.UploadURL"
+          DSCP.real = "root.UploadDiagnostics.DSCP"
+          EthernetPriority.real = "root.UploadDiagnostics.EthernetPriority"
+          Interface.real = "root.UploadDiagnostics.Interface"
+          State.real = "root.UploadDiagnostics.DiagnosticsState"
+          TestFileLength.real = "root.UploadDiagnostics.TestFileLength"
+        }
+      }
+      
+      # NTP & DHCP
+      NTP {
+        Enable.real = "root.Time.Enable"
+        LocalTimeZone.real = "root.Time.LocalTimeZone"
+        NTPServer1.real = "root.Time.NTPServer1"
+        NTPServer2.real = "root.Time.NTPServer2"
+      }
+      
+      DHCP {
+        Enable.real = "root.LANDevice.1.LANHostConfigManagement.DHCPServerEnable"
+        LeaseTime.real = "root.LANDevice.1.LANHostConfigManagement.DHCPLeaseTime"
+        MinAddress.real = "root.LANDevice.1.LANHostConfigManagement.MinAddress"
+        MaxAddress.real = "root.LANDevice.1.LANHostConfigManagement.MaxAddress"
+        SubnetMask.real = "root.LANDevice.1.LANHostConfigManagement.SubnetMask"
+        DNSServers.real = "root.LANDevice.1.LANHostConfigManagement.DNSServers"
+        DomainName.real = "root.LANDevice.1.LANHostConfigManagement.DomainName"
+      }
+
+      DeviceInfo {
+        Manufacturer.real = "root.DeviceInfo.Manufacturer"
+        ModelName.real = "root.DeviceInfo.ModelName"
+        SerialNumber.real = "root.DeviceInfo.SerialNumber"
+        HardwareVersion.real = "root.DeviceInfo.HardwareVersion"
+        SoftwareVersion.real = "root.DeviceInfo.SoftwareVersion"
+      }
+    }
+  }
+}
+
+virtualPatching {
+  patching {
+    root.X_AVS_EXT {
+      Capabilities.GPON.%force-value = "true"
+      Capabilities.WiFi.%force-value = "true"
+      Capabilities.Ethernet.%force-value = "true"
+      Capabilities.DHCP.%force-value = "true"
+      Capabilities.NTP.%force-value = "true"
+      Capabilities.Resources.%force-value = "true"
+      Capabilities.Diagnostics.%force-value = "true"
+      
+      WAN {
+        GPON.1 {
+          Technology.%force-value = "GPON"
+        }
+      }
+      
+      WiFi {
+        1 {
+          SupportedStandards {
+            %force-value = "a,n,ac"
+          }
+          PossibleSecurities {
+            %force-type = "xsd:string"
+            %force-value = "NONE,WPA,WPA2,WPA_WPA2"
+          }
+          ChannelWidth {
+            %force-writable = true
+          }
+        }
+        2 {
+          SupportedStandards {
+            %force-value = "b,g,n"
+          }
+          PossibleSecurities {
+            %force-type = "xsd:string"
+            %force-value = "NONE,WPA,WPA2,WPA_WPA2"
+          }
+          ChannelWidth {
+            %force-writable = true
+          }
+        }
+      }
+    }
+  }
+}

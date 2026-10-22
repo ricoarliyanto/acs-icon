@@ -1,0 +1,6 @@
+# WiFi Max Clients capapbility
+# A device is able to limit the number of connected WiFi clients.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.WiFiMaxClients.%force-value = "true"
+}

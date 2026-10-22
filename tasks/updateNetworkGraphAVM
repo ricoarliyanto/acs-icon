@@ -1,0 +1,10 @@
+ldm.getAll(dmkey.root.LANDevice.`1`.Hosts.getObject().keySet.toSeq)
+ldm.getAll(ldm.root.LANDevice.any.WLANConfiguration.any.keys)
+ldm.getAll(ldm.root.WANDevice.any.WANConnectionDevice.any.WANIPConnection.any.keys)
+ldm.getAll(ldm.root.LANDevice.any.WANCommonInterfaceConfig.any.keys)
+
+val output = session.spawnTask(taskTemplates.uploadNetworkGraph, output = Seq("resourceId"))
+val meshResource = resource.byId(output("resourceId"))
+val meshMap = meshResource.transform(transformations = Seq(resource.transformations.avmMeshParser)).getStringContent
+sv.networkMeshMap.set(meshMap)
+meshResource.remove()

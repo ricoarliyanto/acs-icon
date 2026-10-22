@@ -1,0 +1,7 @@
+dmkey.root.iso.org.dod.internet.private.enterprises.hitronMib.hitronWifi5gMgmt.hitronWifi5gSiteSurvey.hitronWifi5gSiteSurveyScanRefresh.set("true")
+dmkey.root.iso.org.dod.internet.private.enterprises.hitronMib.hitronWifiMgmt.hitronWifiSiteSurvey.hitronWifiSiteSurveyScanRefresh.set("true")
+sleep(5.seconds)
+ldm.getAll(
+  dmkey.root.iso.org.dod.internet.private.enterprises.hitronMib.hitronWifi5gMgmt.hitronWifi5gSiteSurvey.hitronWifi5gSiteSurveyTable.dot,
+  dmkey.root.iso.org.dod.internet.private.enterprises.hitronMib.hitronWifiMgmt.hitronWifiSiteSurvey.hitronWifiSiteSurveyTable.dot,
+)

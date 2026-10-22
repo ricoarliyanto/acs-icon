@@ -1,0 +1,16 @@
+<config>
+  <log message="Check DM1" />
+  <if expr="${device.directGroups.contains('root.dataModel.cwmp.InternetGatewayDevice1')}">
+    <find query="${root.Layer3Forwarding.any.moveUp}" in="true">
+      <add parentKey="Forwarding." output="instance" />
+      <finish message="New routing for DM1 added. Instance number ${#instance}" />
+    </find>
+  </if>
+  <log message="Check DM2" />
+  <if expr="${device.directGroups.contains('root.dataModel.cwmp.Device2')}">
+    <find query="${root.Routing.Router.any}" in="true">
+      <add parentKey="IPv4Forwarding." output="instance" />
+      <finish message="New routing for DM2 added. Instance number ${#instance}" />
+    </find>
+  </if>
+</config> 

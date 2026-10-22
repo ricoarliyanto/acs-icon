@@ -1,0 +1,74 @@
+<config>
+  <store target="dnsAllowRemoteRequests" value="${task.property.dnsAllowRemoteRequests}" />
+  <store target="dnsServers" value="${task.property.dnsServers}" />
+  <store target="dnsCacheMaxTtl" value="${task.property.dnsCacheMaxTtl}" />
+  <store target="dnsMaxConcurrentQueries" value="${task.property.dnsMaxConcurrentQueries}" />
+  <store target="dnsCacheSize" value="${task.property.dnsCacheSize}" />
+  <store target="dnsMaxConcurrentTcpSessions" value="${task.property.dnsMaxConcurrentTcpSessions}" />
+  <store target="dnsQueryServerTimeout" value="${task.property.dnsQueryServerTimeout}" />
+  <store target="dnsMaxUdpPacketSize" value="${task.property.dnsMaxUdpPacketSize}" />
+  <store target="dnsQueryTotalTimeout" value="${task.property.dnsQueryTotalTimeout}" />
+  <store target="cliCommand1a" value="/ip dns set allow-remote-requests=no" />
+  <store target="cliCommand1b" value="/ip dns set allow-remote-requests=yes" />
+  <store target="cliCommand2" value="/ip dns set servers=${#dnsServers}" />
+  <store target="cliCommand3" value="/ip dns set cache-max-ttl=${#dnsCacheMaxTtl}" />
+  <store target="cliCommand4" value="/ip dns set max-concurrent-queries=${#dnsMaxConcurrentQueries}" />
+  <store target="cliCommand5" value="/ip dns set cache-size=${#dnsCacheSize}" />
+  <store target="cliCommand6" value="/ip dns set max-concurrent-tcp-sessions=${#dnsMaxConcurrentTcpSessions}" />
+  <store target="cliCommand7" value="/ip dns set query-server-timeout=${#dnsQueryServerTimeout}" />
+  <store target="cliCommand8" value="/ip dns set max-udp-packet-size=${#dnsMaxUdpPacketSize}" />
+  <store target="cliCommand9" value="/ip dns set query-total-timeout=${#dnsQueryTotalTimeout}" />
+  <if expr="${#dnsAllowRemoteRequests=='false'}">
+    <cli protocol="${sv.protocol}">
+      <command cmd="${#cliCommand1a}" />
+    </cli>
+    <else>
+      <cli protocol="${sv.protocol}">
+        <command cmd="${#cliCommand1b}" />
+      </cli>
+    </else>
+  </if>
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand2}" />
+    <out target="output2" />
+    <command cmd="${#cliCommand3}" />
+    <out target="output3" />
+    <command cmd="${#cliCommand4}" />
+    <out target="output4" />
+    <command cmd="${#cliCommand5}" />
+    <out target="output5" />
+    <command cmd="${#cliCommand6}" />
+    <out target="output6" />
+    <command cmd="${#cliCommand7}" />
+    <out target="output7" />
+    <command cmd="${#cliCommand8}" />
+    <out target="output8" />
+    <command cmd="${#cliCommand9}" />
+    <out target="output9" />
+  </cli>
+  <if expr="${#output2.contains('invalid value for argument server')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output3.contains('invalid time value for argument cache-max-ttl')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output4.contains('value of max-concurrent-queries out of range (0..4294967295)')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output5.contains('value of cache-size out of range (64..4294967295)')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output6.contains('value of max-concurrent-tcp-sessions out of range (0..4294967295)')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output7.contains('invalid time value for argument query-server-timeout')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output8.contains('value of max-udp-packet-size out of range (50..65507)')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output9.contains('invalid time value for argument query-server-timeout')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <getParameters key="Device.X_AVS_EXT.DNS" />
+</config>

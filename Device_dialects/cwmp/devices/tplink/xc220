@@ -1,0 +1,84 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic.dm2"
+include "cwmp.capabilities.management.dm2"
+include "cwmp.capabilities.resources.dm2"
+include "cwmp.capabilities.status.dm2"
+include "cwmp.capabilities.temperature.dm2"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.wan.dm2"
+include "cwmp.capabilities.ethernet.dm2"
+include "cwmp.ext.wan.gpon.dm2"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging.dm2"
+include "cwmp.capabilities.dhcp.dm2"
+include "cwmp.capabilities.dns.dm2"
+include "cwmp.capabilities.firewall.dm2"
+include "cwmp.capabilities.forwarding.dm2"
+include "cwmp.capabilities.lan.dm2"
+include "cwmp.capabilities.ntp.dm2"
+include "cwmp.capabilities.routing.dm2"
+include "cwmp.capabilities.users.dm2"
+include "cwmp.capabilities.wifi.dm2"
+include "cwmp.capabilities.xmpp.dm2"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics.dm2"
+
+remappingStrategy {
+  mapping {
+    root.X_AVS_EXT {
+      WAN {
+        PPP {
+          Username.real = "root.X_AVS_EXT.WAN.PPP.Username"
+          Interface.real = "root.PPP.Interface.1.Name"
+          ConnectionStatus.real = "root.PPP.Interface.1.ConnectionStatus"
+          LastConnectionError.real = "root.PPP.Interface.1.LastConnectionError"
+          CurrentMRUSize.real = "root.PPP.Interface.1.CurrentMRUSize"
+          IPCP.LocalIPAddress.real = "root.PPP.Interface.1.IPCP.LocalIPAddress"
+          IPCP.RemoteIPAddress.real = "root.PPP.Interface.1.IPCP.RemoteIPAddress"
+          IPCP.DNSServers.real = "root.PPP.Interface.1.IPCP.DNSServers"
+          Stats.Downstream.Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesReceived"
+          Stats.Downstream.Packets.real = "root.Ethernet.VLANTermination.1.Stats.PacketsReceived"
+          Stats.Downstream.BroadcastPackets.real = "root.Ethernet.VLANTermination.1.Stats.BroadcastPacketsReceived"
+          Stats.Downstream.MulticastPackets.real = "root.Ethernet.VLANTermination.1.Stats.MulticastPacketsReceived"
+          Stats.Downstream.UnicastPackets.real = "root.Ethernet.VLANTermination.1.Stats.UnicastPacketsReceived"
+          Stats.Upstream.Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesSent"
+          Stats.Upstream.Packets.real = "root.Ethernet.VLANTermination.1.Stats.PacketsSent"
+          Stats.Upstream.BroadcastPackets.real = "root.Ethernet.VLANTermination.1.Stats.BroadcastPacketsSent"
+          Stats.Upstream.MulticastPackets.real = "root.Ethernet.VLANTermination.1.Stats.MulticastPacketsSent"
+          Stats.Upstream.UnicastPackets.real = "root.Ethernet.VLANTermination.1.Stats.UnicastPacketsSent"
+        }
+        GPON {
+          LinkStatus.real = "root.Optical.Interface.1.Status"
+          PonMode.real = "root.Optical.Interface.1.X_TP_GPON_Config.PonMode"
+          XponStatus.real = "root.Optical.Interface.1.X_TP_GPON_Config.XponStatus"
+          RXPower.real = "root.Optical.Interface.1.X_TP_GPON_Config.RXPower"
+          TXPower.real = "root.Optical.Interface.1.X_TP_GPON_Config.TXPower"
+          TransceiverTemperature.real = "root.Optical.Interface.1.X_TP_GPON_Config.TransceiverTemperature"
+          BiasCurrent.real = "root.Optical.Interface.1.X_TP_GPON_Config.BiasCurrent"
+          SupplyVottage.real = "root.Optical.Interface.1.X_TP_GPON_Config.SupplyVottage"
+          MACAddress.real = "root.X_AVS_EXT.MAC"
+          Stats.Downstream.Bytes.real = "root.Optical.Interface.1.Stats.BytesReceived"
+          Stats.Downstream.Packets.real = "root.Optical.Interface.1.Stats.PacketsReceived"
+          Stats.Downstream.Errors.real = "root.Optical.Interface.1.Stats.ErrorReceived"
+          Stats.Upstream.Bytes.real = "root.Optical.Interface.1.Stats.BytesSent"
+          Stats.Upstream.Packets.real = "root.Optical.Interface.1.Stats.PacketsSent"
+          Stats.Upstream.Errors.real = "root.Optical.Interface.1.Stats.ErrorSent"
+        }
+        IP.Interface.1.Name.real = "root.IP.Interface.1.Name"
+        IP.Interface.1.IPv4Address.1.IPAddress.real = "root.IP.Interface.1.IPv4Address.1.IPAddress"
+        IP.Interface.1.IPv4Address.1.SubnetMask.real = "root.IP.Interface.1.IPv4Address.1.SubnetMask"
+        IP.Interface.1.IPv4Address.1.AddressingType.real = "root.IP.Interface.1.IPv4Address.1.AddressingType"
+        IP.Interface.1.IPv4Address.1.Enable.real = "root.IP.Interface.1.IPv4Address.1.Enable"
+        IP.Interface.1.IPv4Address.1.Status.real = "root.IP.Interface.1.IPv4Address.1.Status"
+      }
+      Resources.CPUUsed.real = "root.X_AVS_EXT.Resources.CPUUsed"
+      Resources.RAMUsedPercent.real = "root.X_AVS_EXT.Resources.RAMUsedPercent"
+    }
+  }
+}

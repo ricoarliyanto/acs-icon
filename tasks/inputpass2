@@ -1,0 +1,33 @@
+<config>
+  <!-- Task inputpass2 untuk mengubah PPPoE Password jika IP kosong -->
+  <!-- Mendukung: Huawei, ZTE, Fiberhome, Raisecom -->
+  <!-- Membutuhkan task 'activewanfinder' untuk mengisi sv.activeWan terlebih dahulu -->
+
+  <!-- Ambil External IP Address saat ini dari koneksi WAN aktif -->
+  <get key="${sv.activeWan}ExternalIPAddress" output="currentIp" ignoreFaults="true" />
+
+  <!-- Cek apakah IP bernilai null, string kosong, atau 0.0.0.0 -->
+  <if expr="${#currentIp == null or #currentIp == '' or #currentIp == '0.0.0.0'}">
+  
+    <!-- ========================= HUAWEI ========================= -->
+    <if expr="${device.manufacturer.toLowerCaseEnglish.contains('huawei')}">
+       <set key="${sv.activeWan}Password" value="${#inputpass2}" type="xsd:string" ignoreFaults="true" />
+    </if>
+
+    <!-- ========================= ZTE ========================= -->
+    <if expr="${device.manufacturer.toLowerCaseEnglish.contains('zte')}">
+       <set key="${sv.activeWan}Password" value="${#inputpass2}" type="xsd:string" ignoreFaults="true" />
+    </if>
+
+    <!-- ========================= FIBERHOME ========================= -->
+    <if expr="${device.manufacturer.toLowerCaseEnglish.contains('fiberhome')}">
+       <set key="${sv.activeWan}Password" value="${#inputpass2}" type="xsd:string" ignoreFaults="true" />
+    </if>
+
+    <!-- ========================= RAISECOM ========================= -->
+    <if expr="${device.manufacturer.toLowerCaseEnglish.contains('raisecom')}">
+       <set key="${sv.activeWan}Password" value="${#inputpass2}" type="xsd:string" ignoreFaults="true" />
+    </if>
+    
+  </if>
+</config>

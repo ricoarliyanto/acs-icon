@@ -1,0 +1,16 @@
+# Diagnostics capabilitiy
+# Diagnostics section enabled process based execution of typical diagnostics from device into direction of the WAN.
+# A device is able to run all basic TR-143 (ping, traceroute, active upload and active download).
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities {
+    Diagnostics {
+      %force-value = "true"
+      %force-type = "xsd:boolean"
+    }
+    Ping {
+      %force-value = "true"
+      %force-type = "xsd:boolean"
+    }
+  }
+}

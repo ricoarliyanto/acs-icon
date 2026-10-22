@@ -1,0 +1,6 @@
+# Bridging configuration
+# A device is able to configure layer 2 bridges
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Bridging.%force-value = "true"
+}

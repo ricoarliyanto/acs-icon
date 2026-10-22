@@ -1,0 +1,3 @@
+<config>
+  <get key="${device.rootObject}X_AVS_EXT.WAN." />
+</config>

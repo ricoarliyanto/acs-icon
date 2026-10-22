@@ -1,0 +1,6 @@
+<config>
+  <while expr="${device.hasProperty('refurbished') &amp;&amp; device.getProperty('refurbished') == 'true'}">
+    <wait blocking="true" />
+  </while>
+  <finish message="Refurbished blocking finished" />
+</config> 

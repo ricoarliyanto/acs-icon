@@ -1,0 +1,4 @@
+<config samples="15" interval="2">
+  <param key="Root.X_AVS_EXT.WAN.DSL.Stats.Downstream.AllowedRate" alias="DownstreamCurrRate" />
+  <param key="Root.X_AVS_EXT.WAN.DSL.Stats.Upstream.AllowedRate" alias="UpstreamCurrRate" />
+</config>

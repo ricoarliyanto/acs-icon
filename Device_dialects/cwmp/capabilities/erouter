@@ -1,0 +1,6 @@
+# ERouter capability
+# A device has eRouter capabilities
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.ERouter.%force-value = "true"
+}

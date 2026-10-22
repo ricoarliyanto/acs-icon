@@ -1,0 +1,4 @@
+<config>
+  <set key="Root.X_AVS_EXT.WAN.IP.1.AddressingType" value="Dynamic" />
+  <workflowStatus value="Success" desc="workflows.onlineStepTemplate.setWanIpAsDynamic.status.1.description" />
+</config>

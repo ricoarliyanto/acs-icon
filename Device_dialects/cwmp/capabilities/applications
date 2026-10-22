@@ -1,0 +1,6 @@
+# Apllication capability
+# A device is able to show installed software
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Applications.%force-value = "true"
+}

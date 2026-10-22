@@ -1,0 +1,6 @@
+# Storage capability
+# A device exposes storage information
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Storage.%force-value = "true"
+}

@@ -1,0 +1,6 @@
+# Neighborhood capability
+# A device is able to scan for neighborhood networks
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Neighborhood.%force-value = "true"
+}

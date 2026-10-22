@@ -1,0 +1,1 @@
+<config useQuota="true" resourceId="${#resourceId}" targetFileName="${''}" />

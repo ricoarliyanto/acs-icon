@@ -1,0 +1,7 @@
+<config>
+  <store type="devProp" target="smartWifiDisabledTimeout" value="${date.now.addDays((sv.smartWifiDisabledPeriod ? '30').toInt).format}" />
+  <if expr="${#smartWifiDisableReason == null}">
+    <store target="smartWifiDisableReason" value="Smart WiFi disabled for unknown reason" />
+  </if>
+  <store type="devProp" target="smartWifiDisableReason" value="${#smartWifiDisableReason}" />
+</config>

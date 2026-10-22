@@ -1,0 +1,6 @@
+# DSLAM Line capability
+# A device is a DSLAM Line
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.DSLAMLine.%force-value = "true"
+}

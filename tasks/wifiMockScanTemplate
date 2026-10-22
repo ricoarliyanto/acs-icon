@@ -1,0 +1,34 @@
+<config>
+  <store target="bssidList" value="0023C7000011,0023C7000012,0023C7000013" />
+  <store target="initChannel" value="3" />
+  <store target="initSSID" value="ssid" />
+  <store target="initFrequency" value="2416" />
+  <store target="initSignalStrength" value="-64" />
+  <store target="security" value="WPA2" />
+  <store target="standardList" value="a,b,n" />
+  <store target="regulatoryDomain" value="PLI" />
+  <store target="wifiNeighborhoodData" value="${ &quot;&quot; }" />
+  <dataModelChanges referencePoint="virtual">
+    <object key="${device.rootObject}X_AVS_EXT.WiFiNeighborhood." deleted="true" />
+  </dataModelChanges>
+  <store target="i" value="0" />
+  <while expr="${#i.toInt &lt; 3}">
+    <store target="bssid" value="${#bssidList.splitByTrim(',')(#i.toInt) }" />
+    <store target="channel" value="${ #initChannel.toInt + #i.toInt * 2}" />
+    <store target="ssid" value="${ #initSSID + (#i.toInt + 1) }" />
+    <store target="security" value="${ #security }" />
+    <store target="signalStrength" value="${ #initSignalStrength.toInt + #i.toInt * 20 }" />
+    <store target="standard" value="${ #standardList.splitByTrim(',')(#i.toInt) } " />
+    <dataModelChanges referencePoint="virtual">
+      <object key="${device.rootObject}X_AVS_EXT.WiFiNeighborhood.${#i.toInt + 1}">
+        <parameter key="Standard" value="${#standard}" />
+        <parameter key="SignalStrength" value="${ #signalStrength }" />
+        <parameter key="Security" value="${#security}" />
+        <parameter key="SSID" value="${#ssid}" />
+        <parameter key="Channel" value="${#channel}" />
+        <parameter key="BSSID" value="${#bssid}" />
+      </object>
+    </dataModelChanges>
+    <store target="i" value="${#i.toInt + 1}" />
+  </while>
+</config>

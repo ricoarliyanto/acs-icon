@@ -1,0 +1,7 @@
+session.spawnTask(
+  taskTemplates.testchildTask,
+  output = Seq("rawLog", "error"),
+) |> { output =>
+  output.get("error").foreach(error => log.warn(error))
+  log.info("rawLog")
+}

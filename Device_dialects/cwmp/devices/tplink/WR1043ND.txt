@@ -1,0 +1,137 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.syslog"
+include "cwmp.ext.syslog.avsystem"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.ethernet"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.forwarding"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.captivePortal"
+include "cwmp.capabilities.radius"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.dhcp"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood"
+
+# EXTRAS
+include "tools.xVendorCommand"
+
+remappingStrategy.wifiSecurity {
+
+  isNone = """if(
+      realValue('BeaconType') == 'Basic' and
+      realValue('BasicEncryptionModes') == 'None'
+    ) 'NONE'"""
+
+  setNone = """if(value == 'NONE')(
+      map('BeaconType' -> 'Basic',
+          'BasicEncryptionModes' -> 'None'
+      ).get(key.keyName)
+    )"""
+
+  isWep = """if(
+      realValue('BeaconType') == 'Basic' and
+      realValue('BasicEncryptionModes') == 'WEPEncryption'
+    ) 'WEP'"""
+
+  setWep = """if(value == 'WEP')(
+      map('BeaconType' -> 'Basic',
+          'BasicEncryptionModes' -> 'WEPEncryption'
+      ).get(key.keyName)
+    )"""
+}
+
+
+remappingStrategy.mapping {
+  root.X_AVS_EXT {
+    CaptivePortal {
+      key = "${sv.vdmWlan1.toParameterKey}"
+      include "cwmp.ext.wifi.captivePortal.avsystem"
+    }
+    Diagnostics.IPPing.Result.ResponseTime.StandardDeviation.real = ${remappingStrategy.activeKey.ipPing}".X_0023C7_StandardDeviationOfResponseTime"
+    LAN {
+      Devices.%i {
+        UserClassID = null
+        VendorClassID = null
+        Stats {
+          Downstream {
+            BytesLocal.real = "${sv.activeLan.toParameterKey}.Hosts.Host.%i.X_0023C7_Stats.Local.DownlinkBytes"
+            BytesRouted.real = "${sv.activeLan.toParameterKey}.Hosts.Host.%i.X_0023C7_Stats.Routed.DownlinkBytes"
+            PacketsLocal.real = "${sv.activeLan.toParameterKey}.Hosts.Host.%i.X_0023C7_Stats.Local.DownlinkPackets"
+            PacketsRouted.real = "${sv.activeLan.toParameterKey}.Hosts.Host.%i.X_0023C7_Stats.Routed.DownlinkPackets"
+          }
+          Upstream {
+            BytesLocal.real = "${sv.activeLan.toParameterKey}.Hosts.Host.%i.X_0023C7_Stats.Local.UplinkBytes"
+            BytesRouted.real = "${sv.activeLan.toParameterKey}.Hosts.Host.%i.X_0023C7_Stats.Routed.UplinkBytes"
+            PacketsLocal.real = "${sv.activeLan.toParameterKey}.Hosts.Host.%i.X_0023C7_Stats.Local.UplinkPackets"
+            PacketsRouted.real = "${sv.activeLan.toParameterKey}.Hosts.Host.%i.X_0023C7_Stats.Routed.UplinkPackets"
+          }
+        }
+      }
+    }
+    WiFi {
+      1 {
+        Neighborhood {
+          key = "${sv.vdmWlan1.toParameterKey}"
+          include "cwmp.ext.wifi.neighborhood.avsystem"
+        }
+        EAP {
+          key = "${sv.vdmWlan1.toParameterKey}"
+          include "cwmp.ext.wifi.radius.avsystem"
+        }
+        include "cwmp.ext.wifi.associatedDevices.avsystem"
+        Security.real = [
+          "${sv.vdmWlan1.toParameterKey}.BeaconType",
+          "${sv.vdmWlan1.toParameterKey}.BasicEncryptionModes",
+          "${sv.vdmWlan1.toParameterKey}.WPAEncryptionModes",
+          "${sv.vdmWlan1.toParameterKey}.WPAAuthenticationMode",
+          "${sv.vdmWlan1.toParameterKey}.IEEE11iEncryptionModes",
+          "${sv.vdmWlan1.toParameterKey}.IEEE11iAuthenticationMode"]
+        #include "cwmp.ext.wifi.avsystem"
+      }
+      5 {
+        Neighborhood {
+          key = "${sv.vdmWlan5.toParameterKey}"
+          include "cwmp.ext.wifi.neighborhood.avsystem"
+        }
+        EAP {
+          key = "${sv.vdmWlan5.toParameterKey}"
+          include "cwmp.ext.wifi.radius.avsystem"
+        }
+        include "cwmp.ext.wifi.associatedDevices.avsystem"
+        Security.real = [
+          "${sv.vdmWlan5.toParameterKey}.BeaconType",
+          "${sv.vdmWlan5.toParameterKey}.BasicEncryptionModes",
+          "${sv.vdmWlan5.toParameterKey}.WPAEncryptionModes",
+          "${sv.vdmWlan5.toParameterKey}.WPAAuthenticationMode",
+          "${sv.vdmWlan5.toParameterKey}.IEEE11iEncryptionModes",
+          "${sv.vdmWlan5.toParameterKey}.IEEE11iAuthenticationMode"]
+        #include "cwmp.ext.wifi.avsystem"
+      }
+    }
+  }
+}
+
+realPatching.patching {
+  # this device when its wifi is disabled returns empty PossibleChannels parameter, in such situations we will put
+  # placeholder values in appropriate VMD keys (mostly so the channel ranking mechanisms doesn't blow up in our faces)
+
+  root.LANDevice.1.WLANConfiguration.65094.PossibleChannels {
+    %patch-value = "${if(node.value == '') range(1,13).map(x => x.toString).join(',') else node.value.toString}"
+  }
+}

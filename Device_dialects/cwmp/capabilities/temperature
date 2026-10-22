@@ -1,0 +1,6 @@
+# Temperature capability
+# A device exposes temperature information
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Temperature.%force-value = "true"
+}

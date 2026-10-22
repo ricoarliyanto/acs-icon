@@ -1,0 +1,5 @@
+<config>
+  <if expr="${sv.internetEnable != null}">
+    <set key="${sv.activeWan}Enable" value="${sv.internetEnable}" type="xsd:boolean" />
+  </if>
+</config>

@@ -1,0 +1,15 @@
+<config>
+  <task class="com.avsystem.ump.acs.task.diagnostics.IpPingDiagnosticsTask" ignoreError="true">
+    <config Host="8.8.8.8" NumberOfRepetitions="5" />
+    <output var="Result.AverageResponseTime" alias="AverageResponseTime" />
+    <output var="Result.MaximumResponseTime" alias="MaximumResponseTime" />
+    <output var="Result.MinimumResponseTime" alias="MinimumResponseTime" />
+    <output var="Result.FailureCount" alias="FailureCount" />
+  </task>
+  <if expr="${#AverageResponseTime.toInt &gt; 300 or #FailureCount.toInt&gt;0}">
+    <workflowStatus value="Error" desc="Ping average response time: ${#AverageResponseTime} Packet Loss: ${#FailureCount.toDouble/5 *100} %" />
+    <else>
+      <workflowStatus value="Success" desc="Ping average response time: ${#AverageResponseTime} Packet Loss: ${#FailureCount.toDouble/5 *100} %" />
+    </else>
+  </if>
+</config>

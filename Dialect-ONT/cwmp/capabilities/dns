@@ -1,0 +1,6 @@
+# DNS capability
+# A device is able to configure DNS
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.DNS.%force-value = "true"
+}

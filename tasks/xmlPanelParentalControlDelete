@@ -1,0 +1,7 @@
+<config>
+  <store target="id" value="${task.properties.get('buttonIdentifier')}" />
+  <log message="removing 'X_ZTE-COM_ParentalControl.${#id}" level="DEBUG" />
+  <delete key="InternetGatewayDevice.X_ZTE-COM_ParentalControl.${#id}" />
+  <flush />
+  <getParameters key="InternetGatewayDevice.X_AVS_EXT." />
+</config>

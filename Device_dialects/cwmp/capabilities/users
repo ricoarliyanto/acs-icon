@@ -1,0 +1,6 @@
+# Users capability
+# A device supports User management
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Users.%force-value = "true"
+}

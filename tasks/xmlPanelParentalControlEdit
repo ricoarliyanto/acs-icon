@@ -1,0 +1,39 @@
+<config>
+  <store target="path" value="InternetGatewayDevice.X_ZTE-COM_ParentalControl.${task.properties.get('buttonIdentifier')}" />
+  <store target="everyday" value="${task.properties.get('Everyday').contains('Everyday')}" />
+  <store target="isSunday" value="${ if (#everyday.toBoolean) 64 else if (task.properties.get('Sunday').toBoolean) 64 else 0}" />
+  <store target="isMonday" value="${if (#everyday.toBoolean) 32 else if (task.properties.get('Monday').toBoolean) 32 else 0}" />
+  <store target="isTuesday" value="${if (#everyday.toBoolean) 16 else if (task.properties.get('Tuesday').toBoolean) 16 else 0}" />
+  <store target="isWednesday" value="${if (#everyday.toBoolean) 8 else if (task.properties.get('Wednesday').toBoolean) 8 else 0}" />
+  <store target="isThursday" value="${if (#everyday.toBoolean) 4 else if (task.properties.get('Thursday').toBoolean) 4 else 0}" />
+  <store target="isFriday" value="${if (#everyday.toBoolean) 2 else if (task.properties.get('Friday').toBoolean) 2 else 0}" />
+  <store target="isSaturday" value="${if (#everyday.toBoolean) 1 else if (task.properties.get('Saturday').toBoolean) 1 else 0}" />
+  <store target="days" value="${#isFriday.toInt + #isMonday.toInt  + #isSaturday.toInt + #isSunday.toInt + #isThursday.toInt + #isTuesday.toInt + #isWednesday.toInt}" />
+  <log message="${#days}" level="ERROR" />
+  <store target="wholeDay" value="${task.properties.get('WholeDay')}" />
+  <store target="startHour" value="${if (#wholeDay.contains('Whole day')) '0' else task.properties.get('StartTime').split(':').get(0).toInt.toString}" />
+  <store target="startMin" value="${if (#wholeDay.contains('Whole day')) '0' else task.properties.get('StartTime').split(':').get(1).toInt.toString}" />
+  <store target="endHour" value="${if (#wholeDay.contains('Whole day')) '23' else task.properties.get('EndTime').split(':').get(0).toInt.toString}" />
+  <store target="endMin" value="${if (#wholeDay.contains('Whole day')) '59' else task.properties.get('EndTime').split(':').get(1).toInt.toString}" />
+  <store target="identity" value="${task.properties.get('UserIdentity')}" />
+  <store target="enable" value="${task.properties.get('Enable')}" />
+  <store target="action" value="${task.properties.get('Action')}" />
+  <store target="name" value="${task.properties.get('Name')}" />
+  <if expr="${#urls != null and #urls != ''}">
+    <foreach list="${#urls.splitBy(',')}" iterator="url">
+      <add parentKey="${#path}.URLList">
+        <set key="URL" value="${#url}" />
+      </add>
+    </foreach>
+  </if>
+  <set key="${#path + '.UserIdentity'}" value="${#identity}" flush="false" />
+  <set key="${#path + '.StartHour'}" value="${#startHour}" flush="false" />
+  <set key="${#path + '.StartMin'}" value="${#startMin}" flush="false" />
+  <set key="${#path + '.Days'}" value="${#days}" flush="false" />
+  <set key="${#path + '.EndHour'}" value="${#endHour}" flush="false" />
+  <set key="${#path + '.EndMin'}" value="${#endMin}" flush="false" />
+  <set key="${#path + '.Action'}" value="${#action}" flush="false" />
+  <set key="${#path + '.Enable'}" value="${#enable}" flush="false" />
+  <set key="${#path + '.Name'}" value="${dm.getByPath(#path).get('Name').value}" flush="false" />
+  <flush />
+</config>

@@ -1,0 +1,17 @@
+<config>
+  <log message="Optimizing WiFi" />
+  <store target="monitoringId" value="change me" />
+  <store target="windowHours" value="24" />
+  <store target="maxSwaps" value="3" />
+  <store target="bssid" value="${sv.`bssid.1`}" />
+  <get key="Root.X_AVS_EXT.WiFi.1.Channel" output="currentChannel" />
+  <store target="bestChannel" value="${wifiOptimizationApi.getBestChannelFromMonitoring(#monitoringId,device.id,#bssid, date.now.addHours(-1*#windowHours.toInt))}" />
+  <store target="numberOfSwaps" value="${wifiOptimizationApi.channelSwaps(#monitoringId,device.id,#bssid,date.now.addHours(-1*#windowHours.toInt)).map(x =&gt; x.toInt).sum}" />
+  <if expr="${#bestChannel != #currentChannel  and #numberOfSwaps &lt;= #maxSwaps}">
+    <log message="Channel ${#bestChannel} is better" />
+    <set key="Root.X_AVS_EXT.WiFi.1.Channel" value="${#bestChannel}" />
+    <else>
+      <log message="Optimization not needed or max swaps exceeded" />
+    </else>
+  </if>
+</config>

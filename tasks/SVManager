@@ -1,0 +1,36 @@
+<config>
+  <log message="Updating SV for device" level="DEBUG" />
+  <if expr="${device.rootObject == 'Root.'}">
+    <find query="${root.WANDevice.any}" in="true">
+      <find query="${prefix.WANConnectionDevice.any.WANPPPConnection.any}" output="activePpp" />
+      <find query="${prefix.WANDSLInterfaceConfig.any.moveUp}" output="activeDsl" />
+      <find query="${prefix.WANEthernetInterfaceConfig.any.moveUp}" output="activeEthernet" />
+    </find>
+    <find query="${root.LANDevice.any}" output="activeLan" in="true">
+      <find query="${prefix.LANEthernetInterfaceConfig.any}" output="activeLanEthernet" />
+      <find query="${prefix.LANUSBInterfaceConfig.any}" output="activeLanUsb" />
+      <find query="${prefix.WLANConfiguration.any}" output="activeWlan" />
+      <comment text="Storing data for vdmWlan instance" />
+      <store value="0" target="counter" />
+      <foreach query="${prefix.WLANConfiguration.any}" iterator="wlan">
+        <log message="vdmWlan${#counter} = ${#wlan}" level="DEBUG" />
+        <store value="${#counter.toInt + 1}" target="counter" />
+        <store type="devProp" target="vdmWlan${#counter}" value="${#wlan}" />
+      </foreach>
+    </find>
+  </if>
+  <in key="${device.rootObject}Services">
+    <find query="${prefix.STBService.any}" output="activeStb" />
+    <find query="${prefix.StorageService.any}" output="activeStorage" />
+    <find query="${prefix.VoiceService.any}" output="activeVoip" in="true">
+      <find query="${prefix.VoiceProfile.any}" output="activeVoiceProfile" />
+    </find>
+  </in>
+  <foreach list="activePpp,activeDsl,activeEthernet,activeLan,activeLanEthernet,activeLanUsb,activeWlan,activeVoip,activeVoiceProfile,activeStb,activeStorage" iterator="name">
+    <if expr="${taskReport.stringProperty.get(#name) != null}">
+      <store target="${#name}" value="${taskReport.stringProperty.get(#name)}" type="devProp" />
+    </if>
+    <log message="${#name} = ${taskReport.stringProperty.get(#name)}" level="DEBUG" />
+  </foreach>
+  <store type="devProp" target="remappingEnabled" value="true" />
+</config>

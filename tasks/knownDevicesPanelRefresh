@@ -1,0 +1,12 @@
+<config>
+  <if expr="${device.directGroups.contains('root.dataModel.cwmp.InternetGatewayDevice1')}">
+    <getParameters key="${device.rootObject}LANDevice." />
+  </if>
+  <if expr="${device.directGroups.contains('root.dataModel.cwmp.Device2')}">
+    <getParameters key="${device.rootObject}WiFi.AccessPoint." />
+    <getParameters key="${device.rootObject}Hosts.Host." />
+    <getParameters key="${device.rootObject}WiFi.SSID." />
+    <getParameters key="${device.rootObject}Ethernet.Interface." />
+    <getParameters key="${device.rootObject}WiFi.Radio." />
+  </if>
+</config>

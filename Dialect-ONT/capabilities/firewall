@@ -1,0 +1,12 @@
+# Firewall capability
+# A device is able to configure and manage a firewall. Fallowing values are supported: OFF,LOW,MEDIUM,HIGH.
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    Capabilities.Firewall.%force-value = "true"
+    Firewall.PossibleLevels {
+      %force-value = "OFF,LOW,MEDIUM,HIGH"
+      %force-type = "xsd:boolean"
+    }
+  }
+}

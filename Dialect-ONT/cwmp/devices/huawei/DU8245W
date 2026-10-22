@@ -1,0 +1,204 @@
+include "cwmp.strategies"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.dsl"
+include "cwmp.capabilities.ethernet"
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.neighborhood"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.voip"
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+include "capabilities.mesh"
+
+cwmp.setActiveWanFromInform = false
+
+# Get WAN stats form Active WAN
+include "cwmp.ext.wan.stats.activeWan"
+
+remappingStrategy {
+  read_converter {
+    WiFi.%any {
+      Security {
+        expression = "${map('Basic' -> 'WEP', '11i' -> 'WPA2', 'WPAand11i' -> 'WPA_WPA2', 'WPA' -> 'WPA').getOr(value.values.anyElement,'NONE')}"
+        type = expression
+      }
+      Band = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+      AssociatedDevice.%any.Stats {
+        Downstream.LastDataRate = ${tools.readConverters.oneToOne.multiplyBy1000}
+        Upstream.LastDataRate = ${tools.readConverters.oneToOne.multiplyBy1000}
+      }
+    }
+    WiFiMesh.%any {
+      MACAddress = ${tools.readConverters.oneToOne.stripMAC}
+      Backhaul.MACAddress = ${tools.readConverters.oneToOne.stripMAC}
+      Radio.%any {
+        MACAddress = ${tools.readConverters.oneToOne.stripMAC}
+        WiFi.%any {
+          BSSID = ${tools.readConverters.oneToOne.stripMAC}
+          AssociatedDevice.%any {
+            MACAddress = ${tools.readConverters.oneToOne.stripMAC}
+            SignalStrength = ${tools.expression} {
+              expression = """${('' + (realValue('SNR').toInt + realValue('Noise').toInt)) ? ''}"""
+            }
+          }
+        }
+      }
+    }
+  }
+  write_converter {
+    WiFi.%any {
+      Security {
+        expression = "${map('WEP' -> 'Basic', 'WPA2' -> '11i', 'WPA_WPA2' -> 'WPAand11i', 'WPA' -> 'WPA').get(value)}"
+        type = expression
+      }
+    }
+  }
+
+  activeKey.nsLookup = "root.DNS.Diagnostics.NSLookupDiagnostics"
+
+  mapping {
+    root.X_AVS_EXT {
+      Diagnostics.Neighborhood {
+        State.real = "root.LANDevice.1.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState"
+        Run.real = "root.LANDevice.1.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState"
+      }
+      WiFi {
+        1 {
+          Enable.real = "${sv.vdmWlan1.toParameterKey}.Enable"
+          Password.real = "${sv.vdmWlan1.toParameterKey}.KeyPassphrase"
+          Security.real = "${sv.vdmWlan1.toParameterKey}.BeaconType"
+          AssociatedDevice.%i {
+            SignalStrength.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_RSSI"
+            NoiseFloor.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_Noise"
+            Stats.Downstream {
+              Bytes = null
+              Errors = null
+              Failures = null
+              LastDataRate.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_RxRate"
+              Packets = null
+              Retransmissions = null
+            }
+            Stats.Upstream {
+              Bytes = null
+              Errors = null
+              Failures = null
+              LastDataRate.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_TxRate"
+              Packets = null
+              Retransmissions = null
+            }
+          }
+          Neighborhood {
+            key = "root.LANDevice.1.WiFi.Radio.1.X_HW_NeighborAP"
+            include "cwmp.ext.wifi.neighborhood.hw"
+          }
+          NoiseFloor.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.1.X_HW_Noise"
+        }
+        2 = null
+        3 = null
+        4 = null
+        5 {
+          Enable.real = "${sv.vdmWlan5.toParameterKey}.Enable"
+          Password.real = "${sv.vdmWlan5.toParameterKey}.PreSharedKey.1.KeyPassphrase"
+          Security.real = "${sv.vdmWlan5.toParameterKey}.BeaconType"
+          AssociatedDevice.%i {
+            SignalStrength.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_HW_RSSI"
+            NoiseFloor.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_HW_Noise"
+            Stats.Downstream {
+              Bytes = null
+              Errors = null
+              Failures = null
+              LastDataRate.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_HW_RxRate"
+              Packets = null
+              Retransmissions = null
+            }
+            Stats.Upstream {
+              Bytes = null
+              Errors = null
+              Failures = null
+              LastDataRate.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_HW_TxRate"
+              Packets = null
+              Retransmissions = null
+            }
+          }
+          Neighborhood {
+            key = "root.LANDevice.1.WiFi.Radio.2.X_HW_NeighborAP"
+            include "cwmp.ext.wifi.neighborhood.hw"
+          }
+          NoiseFloor.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.1.X_HW_Noise"
+        }
+        6 = null
+        7 = null
+        8 = null
+      }
+      WiFiMesh.%i {
+        Serial.real = "root.X_HW_APDevice.%i.SerialNumber"
+        MACAddress.real = "root.X_HW_APDevice.%i.APMacAddr"
+        Manufacturer.real = "root.X_HW_APDevice.%i.Manufacturer"
+        SoftwareVersion.real = "root.X_HW_APDevice.%i.SoftwareVersion"
+        OUI.real = "root.X_HW_APDevice.%i.ManufacturerOUI"
+        Backhaul {
+          SignalStrength.real = "root.X_HW_APDevice.%i.SignalIntensity"
+        }
+        Radio.%j {
+          MACAddress.real = "root.X_HW_APDevice.%i.WLANConfiguration.%j.BSSID"
+          Band.real = "root.X_HW_APDevice.%i.WLANConfiguration.%j.RFBand"
+          WiFi.1 {
+            SSID.real = "root.X_HW_APDevice.%i.WLANConfiguration.%j.SSID"
+            BSSID.real = "root.X_HW_APDevice.%i.WLANConfiguration.%j.BSSID"
+            AssociatedDevice.%k {
+              MACAddress.real = "root.X_HW_APDevice.%i.WLANConfiguration.%j.AssociatedDevice.%k.AssociatedDeviceMACAddress"
+              SignalStrength {
+                real = [
+                  "root.X_HW_APDevice.%i.WLANConfiguration.%j.AssociatedDevice.%k.SNR",
+                  "root.X_HW_APDevice.%i.WLANConfiguration.%j.AssociatedDevice.%k.Noise"
+                ]
+              }
+              NoiseFloor.real = "root.X_HW_APDevice.%i.WLANConfiguration.%j.AssociatedDevice.%k.Noise"
+              Stats {
+                Downstream {
+                  LastDataRate.real = "root.X_HW_APDevice.%i.WLANConfiguration.%j.AssociatedDevice.%k.RxRate"
+                }
+                Upstream {
+                  LastDataRate.real = "root.X_HW_APDevice.%i.WLANConfiguration.%j.AssociatedDevice.%k.TxRate"
+                }
+              }
+            }
+          }
+        }
+      }
+      LAN.Port.%i.DuplexMode = null
+    }
+  }
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    WiFiMesh.%any {
+      Backhaul.LinkType.%force-value = "Wi-Fi"
+      Backhaul.MACAddress.%force-value = "${sv.mac}"
+      Radio.%any.WiFi.%any.AssociatedDevice.%any {
+        Active.%force-value = "true"
+      }
+    }
+    WiFiMesh.0 {
+      %force-object-exists = true
+      MACAddress.%force-value = "${sv.mac}"
+    }
+    WiFi.1.Band.%force-value="2.4"
+    WiFi.2.Band.%force-value="2.4"
+    WiFi.3.Band.%force-value="2.4"
+    WiFi.4.Band.%force-value="2.4"
+    WiFi.5.Band.%force-value="5"
+    WiFi.6.Band.%force-value="5"
+    WiFi.7.Band.%force-value="5"
+    WiFi.8.Band.%force-value="5"
+  }
+}

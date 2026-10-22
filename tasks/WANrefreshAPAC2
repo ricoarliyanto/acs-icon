@@ -1,0 +1,20 @@
+<config>
+  <defaults get.flush="false" set.flush="false">
+    <get key="Device.X_AVS_EXT.WAN.Ethernet.1.Enable" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.WAN.Ethernet.1.Status" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.MAC" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.WAN.IP.1.Address" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.WAN.PPP.Username" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.WAN.Ethernet.1.Stats.Downstream.Bytes" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.WAN.Ethernet.1.Stats.Downstream.Packets" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.WAN.Ethernet.1.Stats.Upstream.Bytes" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.WAN.Ethernet.1.Stats.Upstream.Packets" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.DHCP.Enable" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.DHCP.Gateway" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.DHCP.LeaseTime" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.DHCP.MaxAddress" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.DHCP.MinAddress" ignoreFaults="true" />
+    <get key="Device.X_AVS_EXT.DHCP.SubnetMask" ignoreFaults="true" />
+  </defaults>
+  <flush />
+</config>

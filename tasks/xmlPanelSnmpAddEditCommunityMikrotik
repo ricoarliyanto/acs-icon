@@ -1,0 +1,30 @@
+<config>
+  <store target="nextInstance" value="${dm.getByPath('X_AVS_EXT.SNMP.Community.').any.keys.map(p=&gt;p.splitBy('.').getOr(4,'').toInt).max+1}" />
+  <store target="addresses" value="${task.property.Addresses}" />
+  <store target="authentication-password" value="${task.property.AuthenticationPassword}" />
+  <store target="authentication-protocol" value="${task.property.AuthenticationProtocol}" />
+  <store target="encryption-password" value="${task.property.EncryptionPassword}" />
+  <store target="encryption-protocol" value="${task.property.EncryptionProtocol}" />
+  <store target="name" value="${task.property.Name}" />
+  <store target="read-access" value="${if(task.property.ReadAccess.toBoolean) 'yes' else 'no'}" />
+  <store target="security" value="${task.property.Security}" />
+  <store target="write-access" value="${if(task.property.WriteAccess.toBoolean) 'yes' else 'no'}" />
+  <store target="cliCommand" value="/snmp community add name=${#name}" />
+  <log message="${#cliCommand}" />
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <if expr="${#output.contains('community with the same name already exists!')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <foreach list="${list('addresses','authentication-password','authentication-protocol','encryption-password','encryption-protocol','read-access','security','write-access').filter(p=&gt; !p.empty)}">
+    <store target="cliCommand" value="/snmp community set numbers=${#nextInstance}  ${#i}=${taskReport.stringProperty.getOr(#i,'')}" />
+    <log message="${#cliCommand}" />
+    <cli protocol="${sv.protocol}">
+      <command cmd="${#cliCommand}" />
+      <out target="output" />
+    </cli>
+  </foreach>
+  <getParameters key="Device.X_AVS_EXT.SNMP.Community." />
+</config>

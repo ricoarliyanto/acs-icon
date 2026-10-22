@@ -1,0 +1,8 @@
+val upgrade = task.parameters.upgrade.is("true")
+val url = transfer.generateDownloadUrl("HTTP", task.parameters.resourceId.get)
+
+if(upgrade){
+  session.spawnTask("upgradeDuTask", Map("url" -> url, "version" -> task.parameters.currentVersion.getOr(""), "uuid" -> task.parameters.uuid.getOr("")))
+} else {
+  session.spawnTask("installDuTask", Map("url" -> url))
+} 

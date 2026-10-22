@@ -1,0 +1,6 @@
+# DHCP capability
+# A device is able to act as a DHCP server/client
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.DHCP.%force-value = "true"
+}

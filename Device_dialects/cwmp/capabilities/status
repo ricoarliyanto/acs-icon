@@ -1,0 +1,6 @@
+# Status capability
+# A device exposes status information
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Status.%force-value = "true"
+}

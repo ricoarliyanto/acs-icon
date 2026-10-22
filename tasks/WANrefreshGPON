@@ -1,0 +1,18 @@
+<config>
+  <defaults get.flush="false" set.flush="false">
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.Enable" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.Status" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.MACAddress" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.Address" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.BiasCurrent" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.RXPower" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.TXPower" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.SupplyVoltage" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.TransceiverTemperature" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.Stats.Downstream.Bytes" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.Stats.Downstream.Packets" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.Stats.Upstream.Bytes" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.Stats.Upstream.Packets" ignoreFaults="true" />
+  </defaults>
+  <flush />
+</config>

@@ -1,0 +1,6 @@
+# Resources capability
+# A device exposes system resources
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Resources.%force-value = "true"
+}

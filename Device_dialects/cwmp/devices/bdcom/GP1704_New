@@ -1,0 +1,166 @@
+# BDCOM GP1704 Dialect (Refactored)
+
+include "cwmp.strategies"
+
+# CAPABILITIES
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.diagnostics"
+
+cwmp {
+  bootstrapDiscoveryExpression = "${false}"
+  crDiscoveryExpression = "${inform.isConnectionRequest}"
+  messageTimeout = 180000
+  sessionTimeout = 180000
+}
+
+remappingStrategy {
+  # Define standard keys
+  activeKey.gpon = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig"
+  activeKey.wan = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1"
+  activeKey.wlan = "root.LANDevice.1.WLANConfiguration.1"
+
+  read_converter {
+    # --------------------------------------------------------------------------
+    # Converters for GPON values (uW/Raw -> Formatted)
+    # --------------------------------------------------------------------------
+    Serial {
+      expression="${value.values.anyElement.replaceAll(\":\",\"\").toUpperCase()}"
+      type=expression
+    }
+  }
+
+  mapping {
+    # --------------------------------------------------------------------------
+    # ROOT & RESOURCES
+    # --------------------------------------------------------------------------
+    root.X_AVS_EXT {
+      HardwareVersion.real = "root.DeviceInfo.HardwareVersion"
+      SoftwareVersion.real = "root.DeviceInfo.SoftwareVersion"
+      SerialNumber.real = "root.DeviceInfo.ProvisioningCode"
+      MAC.real = "root.X_AVS_EXT.MAC"
+
+      System {
+        cpeCpuUsed.real = "root.X_AVS_EXT.Resources.CPUUsed"
+        cpeMemUsed.real = "root.X_AVS_EXT.Resources.RAMUsedPercent"
+      }
+      
+      # --------------------------------------------------------------------------
+      # WAN / GPON
+      # --------------------------------------------------------------------------
+      WAN {
+        GPON.1 {
+           Status.real = ${remappingStrategy.activeKey.gpon}".Status"
+           "Wan type" = ${tools.expression} { expression = "'GPON'" }
+           "Link status".real = ${remappingStrategy.activeKey.gpon}".Status"
+           "MAC address".real = ${remappingStrategy.activeKey.wan}".MACAddress"
+
+           RXPower = ${tools.expression} {
+             expression = """let val = realValue('"""${remappingStrategy.activeKey.gpon}"""' + '.RXPower'); val == null || val == 0 ? null : String.format('%.2f dBm', 10 * Math.log10(val.toDouble() * 0.0001))"""
+           }
+           TXPower = ${tools.expression} {
+               expression = """let val = realValue('"""${remappingStrategy.activeKey.gpon}"""' + '.TXPower'); val == null || val == 0 ? null : String.format('%.2f dBm', 10 * Math.log10(val.toDouble() * 0.0001))"""
+           }
+           Voltage = ${tools.expression} {
+               expression = """let val = realValue('"""${remappingStrategy.activeKey.gpon}"""' + '.SupplyVottage'); val == null || val == 0 ? null : String.format('%.2f V', val.toDouble() * 0.0001)"""
+           }
+           "Bias Current" = ${tools.expression} {
+               expression = """let val = realValue('"""${remappingStrategy.activeKey.gpon}"""' + '.BiasCurrent'); val == null || val == 0 ? null : String.format('%.2f mA', val.toDouble() * 0.002)"""
+           }
+           Temperature = ${tools.expression} {
+               expression = """let val = realValue('"""${remappingStrategy.activeKey.gpon}"""' + '.TransceiverTemperature'); val == null || val == 0 ? null : String.format('%.2f C', val.toDouble() / 256.0)"""
+           }
+
+           Stats {
+              Downstream {
+                Bytes.real = ${remappingStrategy.activeKey.gpon}".Stats.BytesReceived"
+                Packets.real = ${remappingStrategy.activeKey.gpon}".Stats.PacketsReceived"
+                "Broadcast packets".real = ${remappingStrategy.activeKey.gpon}".Stats.RBroadcastPackets"
+                "Multicast packets".real = ${remappingStrategy.activeKey.gpon}".Stats.RMulticastPackets"
+                "Unicast packets".real = ${remappingStrategy.activeKey.gpon}".Stats.RUnicastPackets"
+                "Pause packets".real = ${remappingStrategy.activeKey.gpon}".Stats.RpausePackets"
+              }
+              Upstream {
+                Bytes.real = ${remappingStrategy.activeKey.gpon}".Stats.BytesSent"
+                Packets.real = ${remappingStrategy.activeKey.gpon}".Stats.PacketsSent"
+                "Broadcast packets".real = ${remappingStrategy.activeKey.gpon}".Stats.SBroadcastPackets"
+                "Multicast packets".real = ${remappingStrategy.activeKey.gpon}".Stats.SMulticastPackets"
+                "Unicast packets".real = ${remappingStrategy.activeKey.gpon}".Stats.SUnicastPackets"
+                "Pause packets".real = ${remappingStrategy.activeKey.gpon}".Stats.SpausePackets"
+              }
+           }
+        }
+
+        # --------------------------------------------------------------------------
+        # PPP / INTERNET
+        # --------------------------------------------------------------------------
+        PPP {
+             Enable.real = ${remappingStrategy.activeKey.wan}".Enable"
+             Status.real = ${remappingStrategy.activeKey.wan}".ConnectionStatus"
+             Name.real = ${remappingStrategy.activeKey.wan}".Name"
+             
+             ConnectionType {
+                real = ${remappingStrategy.activeKey.wan}".ConnectionType"
+                type = "expression"
+                expression = "value != null ? value : 'IP_Routed'"
+             }
+             
+             NATEnabled.real = ${remappingStrategy.activeKey.wan}".NATEnabled"
+             ExternalIPAddress.real = ${remappingStrategy.activeKey.wan}".ExternalIPAddress"
+             SubnetMask.real = ${remappingStrategy.activeKey.wan}".SubnetMask"
+             DefaultGateway.real = ${remappingStrategy.activeKey.wan}".DefaultGateway"
+             DNSServers.real = ${remappingStrategy.activeKey.wan}".DNSServers"
+             MACAddress.real = ${remappingStrategy.activeKey.wan}".MACAddress"
+             Uptime.real = ${remappingStrategy.activeKey.wan}".Uptime"
+             LastConnectionError.real = ${remappingStrategy.activeKey.wan}".LastConnectionError"
+        }
+      }
+
+      # --------------------------------------------------------------------------
+      # WIFI
+      # --------------------------------------------------------------------------
+      WiFi {
+        1 {
+          Enable.real = ${remappingStrategy.activeKey.wlan}".Enable"
+          SSID.real = ${remappingStrategy.activeKey.wlan}".SSID"
+          Status.real = ${remappingStrategy.activeKey.wlan}".Status"
+          # AutoChannel property mapped from root for convenience
+          AutoChannelEnable.real = ${remappingStrategy.activeKey.wlan}".AutoChannelEnable"
+        }
+      }
+      
+      # --------------------------------------------------------------------------
+      # DIAGNOSTICS (Mixed legacy/standard)
+      # --------------------------------------------------------------------------
+      Diagnostics {
+        Download {
+          DiagnosticsState.real = "root.DownloadDiagnostics.DiagnosticsState"
+          Result.TotalBytesReceived.real = "root.X_AVS_EXT.Diagnostics.Download.Result.TotalBytesReceived"
+        }
+        Upload {
+          DiagnosticsState.real = "root.UploadDiagnostics.DiagnosticsState"
+          Result.TotalBytesSent.real = "root.UploadDiagnostics.TotalBytesTransfered"
+        }
+      }
+    }
+
+    # --------------------------------------------------------------------------
+    # LEGACY / FLAT PROPERTIES (Kept for compatibility)
+    # --------------------------------------------------------------------------
+    root.mac.real = "root.X_AVS_EXT.MAC"
+    root.cpeCpuUsed.real = "root.X_AVS_EXT.Resources.CPUUsed"
+    root.cpeMemUsed.real = "root.X_AVS_EXT.Resources.RAMUsedPercent"
+    
+    # Redundant but kept used in visual formatters if needed by UI
+    root.cpeRXPower.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower"
+    root.cpeTXPower.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.TXPower"
+    root.TransceiverTemperature.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.TransceiverTemperature"
+  }
+}

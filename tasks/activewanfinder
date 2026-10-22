@@ -1,0 +1,182 @@
+device.property("activeWan").remove()
+device.property("activePpp").remove()
+device.property("internetType").remove()
+device.property("activeTr069").remove()
+// Check manufacturer once
+val isBdcom = device.manufacturer.toLower.contains("bdcm") || device.manufacturer.toLower.contains("bdcom")
+var connectedFound = false
+
+if (isBdcom) {
+    device.property("activeWan").set("BDCOM_Skipped")
+    device.property("internetType").set("BDCOM_Skipped")
+    // Return or exit block to prevent running the rest
+}
+
+if (!isBdcom) {
+    var activeWan = true
+    var activePpp = true
+    var interfaceTypekey = ""
+    val tejasInternetVlans = Seq("30","400","401","402","403","404","405","406","407","408","409","410","411","412","413","414","415","416","417","418","419","499","500","501","502","503","504","505","506","599","601","602","603","700","701","702","703","704","705","706","707","708","709","710","711","712"
+    )
+    if(device.manufacturer.toLower.contains("zte") && device.productClass=="F660" && (device.softwareVersion=="V5.2.10P1T10" || device.softwareVersion=="V5.2.10P1T4" || device.softwareVersion=="V5.2.10P2T22" || device.softwareVersion=="V5.2.10P2T23" )) {
+    	interfaceTypekey = "X_CT-COM_ServiceList"
+    } else if(device.manufacturer.toLower.contains("zte")) {
+    	interfaceTypekey = "X_ZTE-COM_ServiceList"
+    } else if(device.manufacturer.toLower.contains("huawei")) {
+    	interfaceTypekey = "X_HW_SERVICELIST"
+    } else if(device.manufacturer.toLower.contains("alcl")){ 
+    	interfaceTypekey = "X_D0542D_ServiceList"
+    } else if(device.manufacturer.toLower.contains("genexis")){ 
+    	interfaceTypekey = "X_RTK_ServiceList"
+    } else {
+        // Default fallback: Use standard params to avoid crash, even if logic fails to find 'INTERNET'
+        interfaceTypekey = "ConnectionStatus"
+    }
+    
+    var vlanIdKey = ""
+    if(device.manufacturer.toLower.contains("zte")) {
+    	vlanIdKey = "X_ZTE-COM_VLANID"
+    } else if(device.manufacturer.toLower.contains("huawei")) {
+    		vlanIdKey = "X_HW_VLAN"
+    } else if(device.manufacturer.toLower.contains("alcl")){ 
+    		vlanIdKey = "X_CT-COM_WANGponLinkConfig.VLANIDMark"
+    } else if(device.manufacturer.toLower.contains("genexis")){ 
+    		vlanIdKey = "X_WANGponLinkConfig.VLANIDMark"
+    } else if(device.manufacturer.toLower.contains("tejas")){ 
+    		vlanIdKey = "X_BROADCOM_COM_VlanMuxID"
+    } else {
+        // Default fallback: Use standard param
+        vlanIdKey = "AddressingType"
+    }
+    
+    ///Connected interface 
+    ///IPoE
+    
+    val subsetToGet = Seq(interfaceTypekey,vlanIdKey,"ConnectionStatus","ExternalIPAddress")
+    var wanKeys = ldm.root.WANDevice.any.WANConnectionDevice.any.WANIPConnection.any.keys
+    var keysToGet = wanKeys.flatMap(k => subsetToGet.map(s => k.selectDynamic(s)))
+    var values = ldm.getAll(keysToGet,true)
+    var filteredInternetWans:Seq[DMKey] = Seq.empty	
+    if(device.manufacturer.toLower.contains("tejas"))
+    	filteredInternetWans = wanKeys.filter(k => tejasInternetVlans.contains(values.get(k.selectDynamic(vlanIdKey)).getOr("")))
+    		else if(device.productClass == "F679D") {
+    			filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(vlanIdKey)).getOr("") == "30")
+    			if(filteredInternetWans.isEmpty) filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).get.toString.toUpper == "INTERNET")
+    		} else filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).get.toString.toUpper == "INTERNET")
+    if(filteredInternetWans.headOpt.nonEmpty){
+      val filteredWan = filteredInternetWans.filter(k => values.get(k.ConnectionStatus).get.toString.toUpper == "CONNECTED")
+      if(filteredWan.headOpt.nonEmpty){
+      	val filteredWan2 = filteredWan.filter(k => values.get(k.ExternalIPAddress).get.nonEmpty)
+    	  if(filteredWan2.headOpt.nonEmpty){    
+      		val filteredWan1 = filteredWan2.headOpt.get
+     			connectedFound=true
+    			var vlanIdValue = if(device.manufacturer.toLower.contains("alcl") || device.manufacturer.toLower.contains("genexis"))
+    				ldm.get(filteredWan1.ancestor(5).selectDynamic(vlanIdKey)).tryAsOpt
+    					else	ldm.get(filteredWan1.selectDynamic(vlanIdKey)).tryAsOpt
+     					device.property("activeWan").set(filteredWan1.toString)
+     					device.property("internetType").set("IPoE")
+     			}
+      }
+    }
+    
+    
+    
+    ///PPPoE
+    if(connectedFound==false){
+    	filteredInternetWans = Seq.empty 
+    	wanKeys = ldm.root.WANDevice.any.WANConnectionDevice.any.WANPPPConnection.any.keys
+    	keysToGet = wanKeys.flatMap(k => subsetToGet.map(s => k.selectDynamic(s)))
+    	values = ldm.getAll(keysToGet,true)
+    	if(device.manufacturer.toLower.contains("tejas"))
+    		filteredInternetWans = wanKeys.filter(k => tejasInternetVlans.contains(values.get(k.selectDynamic(vlanIdKey)).getOr("")))
+    			else if(device.productClass == "F679D") {
+    				filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(vlanIdKey)).getOr("") == "30")
+    				if(filteredInternetWans.isEmpty) filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).get.toString.toUpper == "INTERNET")
+    			} else filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).get.toString.toUpper == "INTERNET")  
+      if(filteredInternetWans.headOpt.nonEmpty){
+    		val filteredWan = filteredInternetWans.filter(k => values.get(k.ConnectionStatus).get.toString.toUpper == "CONNECTED")
+    		if(filteredWan.headOpt.nonEmpty){
+    		log.info(filteredWan)
+          val filteredWan2 = filteredWan.filter(k => values.get(k.ExternalIPAddress).get.nonEmpty)
+          if(filteredWan2.headOpt.nonEmpty){    
+    	  		val filteredWan1 = filteredWan2.headOpt.get	
+    				connectedFound=true
+       			var vlanIdValue2 = if(device.manufacturer.toLower.contains("alcl") || device.manufacturer.toLower.contains("genexis"))
+    					ldm.get(filteredWan1.ancestor(5).selectDynamic(vlanIdKey)).tryAsOpt
+    						else	ldm.get(filteredWan1.selectDynamic(vlanIdKey)).tryAsOpt
+    	 						device.property("activeWan").set(filteredWan1.toString)
+    	 						device.property("activePpp").set(filteredWan1.toString)
+    	 						device.property("internetType").set("PPPoE")
+        	}
+     		}
+    	}
+    }
+    
+    
+    
+    ///non Connected interface 
+    if(connectedFound==false){
+      
+      ///PPPoE
+    	filteredInternetWans = Seq.empty 
+    	wanKeys = ldm.root.WANDevice.any.WANConnectionDevice.any.WANPPPConnection.any.keys
+    	keysToGet = wanKeys.flatMap(k => subsetToGet.map(s => k.selectDynamic(s)))
+    	values = ldm.getAll(keysToGet,true)
+    	if(device.manufacturer.toLower.contains("tejas"))
+    		filteredInternetWans = wanKeys.filter(k => tejasInternetVlans.contains(values.get(k.selectDynamic(vlanIdKey)).getOr("")))
+    			else if(device.productClass == "F679D") {
+    				filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(vlanIdKey)).getOr("") == "30")
+    				if(filteredInternetWans.isEmpty) filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).toString.toUpper.contains("INTERNET"))
+    			} else filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).toString.toUpper.contains("INTERNET"))  
+    	if(filteredInternetWans.headOpt.nonEmpty){
+    		val filteredWan = filteredInternetWans.headOpt.get
+    		var vlanIdValue2 = if(device.manufacturer.toLower.contains("alcl") || device.manufacturer.toLower.contains("genexis"))
+    			ldm.get(filteredWan.ancestor(5).selectDynamic(vlanIdKey)).tryAsOpt
+    				else	ldm.get(filteredWan.selectDynamic(vlanIdKey)).tryAsOpt
+     		 		device.property("activeWan").set(filteredWan.toString)
+      			device.property("activePpp").set(filteredWan.toString)
+      			device.property("internetType").set("PPPoE")
+    	}
+      ///IPoE
+    	wanKeys = ldm.root.WANDevice.any.WANConnectionDevice.any.WANIPConnection.any.keys
+    	keysToGet = wanKeys.flatMap(k => subsetToGet.map(s => k.selectDynamic(s)))
+    	values = ldm.getAll(keysToGet,true)
+    	if(device.manufacturer.toLower.contains("tejas"))
+    		filteredInternetWans = wanKeys.filter(k => tejasInternetVlans.contains(values.get(k.selectDynamic(vlanIdKey)).getOr("")))
+    			else if(device.productClass == "F679D") {
+    				filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(vlanIdKey)).getOr("") == "30")
+    				if(filteredInternetWans.isEmpty) filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).toString.toUpper.contains("INTERNET"))
+    			} else filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).toString.toUpper.contains("INTERNET"))
+    	if(filteredInternetWans.headOpt.nonEmpty){
+    		val filteredWan = filteredInternetWans.headOpt.get
+     		var vlanIdValue = if(device.manufacturer.toLower.contains("alcl") || device.manufacturer.toLower.contains("genexis"))
+    			ldm.get(filteredWan.ancestor(5).selectDynamic(vlanIdKey)).tryAsOpt
+    			else	ldm.get(filteredWan.selectDynamic(vlanIdKey)).tryAsOpt
+     	 			device.property("activeWan").set(filteredWan.toString)
+     	 			device.property("internetType").set("IPoE")
+    	} 
+    
+    
+    }
+    
+    
+    
+    ///Tr069
+    filteredInternetWans = Seq.empty 
+    wanKeys = ldm.root.WANDevice.any.WANConnectionDevice.any.WANIPConnection.any.keys
+    keysToGet = wanKeys.flatMap(k => subsetToGet.map(s => k.selectDynamic(s)))
+    values = ldm.getAll(keysToGet,true)
+    if(device.manufacturer.toLower.contains("tejas"))
+    	filteredInternetWans = wanKeys.filter(k => !tejasInternetVlans.contains(values.get(k.selectDynamic(vlanIdKey)).getOr("")))
+    		else if(device.productClass == "F679D") {
+    			filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(vlanIdKey)).getOr("") == "20")
+    			if(filteredInternetWans.isEmpty) filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).toString.toUpper.contains("TR069"))
+    		} else filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).toString.toUpper.contains("TR069"))
+    if(filteredInternetWans.headOpt.nonEmpty){
+    	var filteredWan = filteredInternetWans.filter(k => ldm.get(k.ExternalIPAddress).tryAsOpt.toString.toUpper.contains(device.currentWanIP.toString))
+    	if(filteredWan.headOpt.nonEmpty){
+    		val filteredWan1 = filteredWan.headOpt.get
+      		device.property("activeTr069").set(filteredWan1.toString)
+      }
+    }
+}

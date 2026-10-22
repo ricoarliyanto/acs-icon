@@ -1,0 +1,5 @@
+val config = """<config saveResult="true">""" + task.parameters.gpaJson.get.parseJson.asArray.map(_.asString).map{param =>"""<parameter name="$param"/>"""}.join("\n") + "\n</config>"
+
+log.info(config)
+val result = session.spawnTask(taskTemplates.emptyGpaTask, output = Seq("result"), config = config.opt)
+taskReport.property.result.set(result.apply("result"))

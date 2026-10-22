@@ -1,0 +1,7 @@
+<config saveToReport="false" samples="5">
+  <object key="${device.rootObject.toParameterKey}.X_AVS_EXT.WiFi." />
+  <object key="${device.rootObject.toParameterKey}.X_AVS_EXT.LAN." />
+  <object key="${device.rootObject.toParameterKey}.X_AVS_EXT.USB.Hosts." />
+  <object key="${device.rootObject.toParameterKey}.X_AVS_EXT.WAN.IP." />
+  <object key="${device.rootObject.toParameterKey}.X_AVS_EXT.WiFiMesh." />
+</config>

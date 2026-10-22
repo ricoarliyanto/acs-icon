@@ -1,0 +1,53 @@
+<config>
+  <store target="errorMessage" value="${''}" />
+  <task template="${sv.getSlaContractedSpeedTask ? #getSlaContractedSpeedTask}" class="com.avsystem.ump.acs.task.xml.XmlTask" ignoreError="true" />
+  <if expr="${!#childStatus.startsWith('SUCCESS')}">
+    <store target="errorMessage" value="WARNING: SLA web service failed" />
+  </if>
+  <store target="contractedDownloadSpeed" value="${sv.contractedDownloadSpeed}" />
+  <store target="contractedUploadSpeed" value="${sv.contractedUploadSpeed}" />
+  <task class="com.avsystem.ump.acs.task.diagnostics.DownloadDiagnosticsTask" template="slaDownloadDiagnostic">
+    <output var="Result.EOMTime" alias="eom" />
+    <output var="Result.BOMTime" alias="bom" />
+    <output var="Result.TestBytesReceived" alias="bytes" />
+  </task>
+  <store target="start" value="${#bom.replace('T',' ').substring(0,23).toDate('yyyy-MM-dd HH:mm:ss.SSS').millis}" />
+  <store target="end" value="${#eom.replace('T',' ').substring(0,23).toDate('yyyy-MM-dd HH:mm:ss.SSS').millis}" />
+  <store target="speed" value="${((#end.toLong - #start.toLong) / 1000.0).useAs(s =&gt; (#bytes.toLong * 8).useAs(b =&gt; b / s))}" />
+  <store target="dsSpeed" value="${#speed}" />
+  <if expr="${(#contractedDownloadSpeed.toLong &gt; 0) ? false}">
+    <if expr="${#speed.toDouble &lt; #contractedDownloadSpeed.toLong}">
+      <store target="errorString" value="Download speed below SLA: ${(#speed.toDouble / math.pow(10,6)).toInt} Mbps &lt; ${(#contractedDownloadSpeed.toLong / math.pow(10,6)).toInt} Mbps" />
+      <store target="errorMessage" value="${if (#errorMessage == '') #errorString else #errorMessage + '; ' + #errorString}" />
+    </if>
+    <else>
+      <store target="errorString" value="SLA for download unavailable; actual download speed: ${(#speed.toDouble / math.pow(10,6)).toInt} Mbps" />
+      <store target="errorMessage" value="${if (#errorMessage == '') #errorString else #errorMessage + '; ' + #errorString}" />
+    </else>
+  </if>
+  <task template="UploadDiagnostics_1MB" class="com.avsystem.ump.acs.task.diagnostics.UploadDiagnosticsTask">
+    <output var="Result.EOMTime" alias="eom" />
+    <output var="Result.BOMTime" alias="bom" />
+    <output var="Result.TotalBytesSent" alias="bytes" />
+  </task>
+  <store target="start" value="${#bom.replace('T',' ').substring(0,23).toDate('yyyy-MM-dd HH:mm:ss.SSS').millis}" />
+  <store target="end" value="${#eom.replace('T',' ').substring(0,23).toDate('yyyy-MM-dd HH:mm:ss.SSS').millis}" />
+  <store target="speed" value="${((#end.toLong - #start.toLong) / 1000.0).useAs(s =&gt; (#bytes.toLong * 8).useAs(b =&gt; b / s))}" />
+  <store target="usSpeed" value="${#speed}" />
+  <if expr="${(#contractedUploadSpeed.toLong &gt; 0) ? false}">
+    <if expr="${#speed.toDouble &lt; #contractedUploadSpeed.toLong}">
+      <store target="errorString" value="Upload speed below SLA: ${(#speed.toDouble / math.pow(10,6)).toInt} Mbps &lt; ${(#contractedUploadSpeed.toLong / math.pow(10,6)).toInt} Mbps" />
+      <store target="errorMessage" value="${if (#errorMessage == '') #errorString else #errorMessage + '; ' + #errorString}" />
+    </if>
+    <else>
+      <store target="errorString" value="SLA for upload unavailable; actual upload speed: ${(#speed.toDouble / math.pow(10,6)).toInt} Mbps" />
+      <store target="errorMessage" value="${if (#errorMessage == '') #errorString else #errorMessage + '; ' + #errorString}" />
+    </else>
+  </if>
+  <if expr="${#errorMessage != ''}">
+    <workflowStatus value="Warning" desc="workflows.onlineStepTemplate.workflowSlaFulfillment.status.1.descriptionworkflowTranslatable${#errorMessage}workflowTranslatable" />
+    <else>
+      <workflowStatus value="Success" desc="workflows.onlineStepTemplate.workflowSlaFulfillment.status.2.descriptionworkflowTranslatable${(#dsSpeed.toDouble / math.pow(10,6)).toInt}workflowTranslatable${(#usSpeed.toDouble / math.pow(10,6)).toInt}workflowTranslatable" />
+    </else>
+  </if>
+</config>

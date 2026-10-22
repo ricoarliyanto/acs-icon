@@ -1,0 +1,9 @@
+var devices = Seq[Map[String, String]]()
+
+ldm.foreach(ldm.root.X_AVS_EXT.LAN.Devices.any(true)){ key =>
+  val mac = key.MACAddress.get(temporaryResults = true)
+  val hostname = key.HostName.get(temporaryResults = true)
+  devices += Map("mac" -> mac, "hostname" -> hostname)
+}
+
+workflow.exportVariable("devices",devices.encodeJson.toString) 

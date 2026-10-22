@@ -1,0 +1,9 @@
+<config>
+  <store target="vlanName" value="${task.property.vlanName}" />
+  <store target="cliCommand" value="/interface vlan remove ${#vlanName}" />
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <getParameters key="Device.X_AVS_EXT.VLAN." />
+</config>

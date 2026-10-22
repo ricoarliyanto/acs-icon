@@ -1,0 +1,42 @@
+val params = task.parameters
+val password = params.password.get
+val conditions = Seq(
+  params.enable.get != "",
+  params.ssid.get != "null",
+  params.channel.get != "null",
+  params.autoChannelEnable.get != "",
+  params.transmitPower.get != "null",
+  params.standard.get != "null",
+  params.security.get != "null",
+  password != "null" && password != "******",
+)
+
+val dmKeyPath = dmkey.root.X_AVS_EXT.WiFi.toString + "." + task.parameters.instanceNumber.get + "."
+val dmKeys = Seq(
+  (dmKeyPath + "Enable").toDMKey,
+  (dmKeyPath + "SSID").toDMKey,
+  (dmKeyPath + "Channel").toDMKey,
+  (dmKeyPath + "AutoChannelEnable").toDMKey,
+  (dmKeyPath + "Power").toDMKey,
+  (dmKeyPath + "Standard").toDMKey,
+  (dmKeyPath + "Security").toDMKey,
+  (dmKeyPath + "Password").toDMKey,
+)
+
+val values = Seq(
+  params.enable.get,
+  params.ssid.get,
+  params.channel.get,
+  params.autoChannelEnable.get,
+  params.transmitPower.get,
+  params.standard.get,
+  params.security.get,
+  params.password.get,
+)
+
+ldm.setAll(
+  conditions
+    .indexed
+    .filter((_,cond) => cond)
+    .map((index,_) => ldm.valueToSet(dmKeys.get(index).get, values.get(index).get))
+) 

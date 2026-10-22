@@ -1,0 +1,14 @@
+<config>
+  <removeProperty target="activeDslConfig" />
+  <removeProperty target="activeWlan" />
+  <removeProperty target="dhcpRoot" />
+  <removeProperty target="voipLine1Root" />
+  <removeProperty target="voipLine2Root" />
+  <removeProperty target="voipProfileRoot" />
+  <removeProperty target="managementPvcRoot" />
+  <removeProperty target="ipTvPvcRoot" />
+  <removeProperty target="ipTvEnabled" />
+  <removeProperty target="voipPvcRoot" />
+  <removeProperty target="ipTvDataSent" />
+  <removeProperty target="ipTvDataReceived" />
+</config>

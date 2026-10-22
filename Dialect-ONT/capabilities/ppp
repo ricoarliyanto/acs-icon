@@ -1,0 +1,6 @@
+# PPP capability
+# A device is able to configure PPP credentials.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.PPP.%force-value = "true"
+}

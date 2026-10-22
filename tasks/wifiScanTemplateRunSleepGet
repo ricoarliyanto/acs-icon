@@ -1,0 +1,6 @@
+val REQUESTED : String = "1"
+val xAvsExt = dmkey.root.X_AVS_EXT
+
+xAvsExt.Diagnostics.Neighborhood.Run.set(REQUESTED)
+sleep(5.seconds)
+xAvsExt.WiFiNeighborhood.getObject()

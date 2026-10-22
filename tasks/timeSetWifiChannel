@@ -1,0 +1,7 @@
+<config>
+  <store target="channel" value="${#channel}" />
+  <defaults get.flush="false" set.flush="false">
+    <set key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Channel" value="${#channel}" />
+  </defaults>
+  <flush />
+</config>

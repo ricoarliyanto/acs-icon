@@ -1,0 +1,25 @@
+val vlanID = task.parameters.vlanID.getOr(fail("INPUT_ERROR", "Parameter vlanID is missing"))
+
+val vlanIdKey = 
+  if(device.manufacturer.toLower.contains("zte")) 
+  	"X_ZTE-COM_VLANID"
+  else 
+		"X_HW_VLAN"
+
+val subsetToGet = Seq(vlanIdKey, "ExternalIPAddress")
+val wanKeys = ldm.root.WANDevice.any.WANConnectionDevice.any.WANIPConnection.any.keys
+val keysToGet = wanKeys.flatMap(k => subsetToGet.map(s => k.selectDynamic(s)))
+val values = ldm.getAll(keysToGet)
+val filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(vlanIdKey)).is(vlanID))
+val filteredWan = filteredInternetWans.headOpt.getOr(fail("VLAN_NOT_FOUND", "No WAN with VLAN $vlanID was found"))
+val wanDeviceFiltered = filteredWan.ancestor(3)
+Seq(
+  "deviceId" -> device.deviceId.raw.tryAsOpt,
+  "serialNumber" -> device.serialNumber.tryAsOpt,
+  "model" -> device.modelName.tryAsOpt,
+  "manufacturer" -> device.manufacturer.toString.tryAsOpt,
+  "IPAddress" -> ldm.get(filteredWan.ExternalIPAddress).tryAsOpt,
+  "WANDownload" -> ldm.get(wanDeviceFiltered.WANCommonInterfaceConfig.TotalBytesReceived).tryAsOpt,
+  "WANUpload" -> ldm.get(wanDeviceFiltered.WANCommonInterfaceConfig.TotalBytesSent).tryAsOpt,
+  "temperature" -> ldm.get(dmkey.root.X_AVS_EXT.WAN.GPON.`1`.TransceiverTemperature).tryAsOpt,
+).map((k, v) => taskReport.property.selectDynamic(k).set(v.getOr("unavailable"))) 

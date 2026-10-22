@@ -1,0 +1,21 @@
+<config>
+  <store target="name" value="${task.property.Name}" />
+  <store target="kind" value="${task.property.Kind}" />
+  <log message="/queue type add name=${#name} kind=${#kind}" />
+  <store target="cliCommand" value="/queue type add name=${#name} kind=${#kind}" />
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <foreach list="${task.properties.filter(p=&gt; p.key.charAt(0).isUpper and (p.key != 'Kind' and  p.key != 'Name')).keySet}">
+    <if expr="${!task.property.get(#i).empty}">
+      <log message="/queue type set numbers=[/queue type find name=${#name}] ${#i.split('(?=[A-Z])').asList.map(p =&gt; p.toLowerCase).join('-')}=${task.property.get(#i)}" />
+      <store target="cliCommand" value="/queue type set numbers=[/queue type find name=${#name}] ${#i.split('(?=[A-Z])').asList.map(p =&gt; p.toLowerCase).join('-')}=${task.property.get(#i)}" />
+      <cli protocol="${sv.protocol}">
+        <command cmd="${#cliCommand}" />
+        <out target="output" />
+      </cli>
+    </if>
+  </foreach>
+  <getParameters key="Device.X_AVS_EXT.TrafficControl.Queue.Type." />
+</config>

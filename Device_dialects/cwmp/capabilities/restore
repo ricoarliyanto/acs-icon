@@ -1,0 +1,6 @@
+# Restore capability
+# A device acts as a restore target
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Restore.%force-value = "true"
+}

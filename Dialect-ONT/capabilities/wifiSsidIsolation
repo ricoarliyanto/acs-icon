@@ -1,0 +1,6 @@
+# SSID Isolation capapbility
+# A device has SSID isolation capability.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.WiFiSsidIsolation.%force-value = "true"
+}

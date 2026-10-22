@@ -1,0 +1,11 @@
+<config>
+  <store value="0" target="hostsCounter" />
+  <foreach query="${root.LANDevice.`1`.Hosts.Host.any}">
+    <store target="InterfaceType" value="${dm.getByPath(#i+'InterfaceType').value}" />
+    <store target="Active" value="${dm.getByPath(#i+'Active').value}" />
+    <if expr="${#InterfaceType == '802.11' and #Active.toBoolean}">
+      <store value="${#hostsCounter.toInt + 1}" target="hostsCounter" />
+    </if>
+  </foreach>
+  <store value="${#hostsCounter}" target="hostsCounter" type="devProp" />
+</config>

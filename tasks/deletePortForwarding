@@ -1,0 +1,17 @@
+<config>
+  <log message="Check DM1" />
+  <if expr="${device.directGroups.contains('root.dataModel.cwmp.InternetGatewayDevice1')}">
+    <find query="${root.get(string.removeTRRoot(sv.activeWan)).moveUp.any}" in="true">
+      <delete key="PortMapping.${#instance}" />
+    </find>
+  </if>
+  <log message="Check DM2" />
+  <if expr="${device.directGroups.contains('root.dataModel.cwmp.Device2')}">
+    <find query="${root.NAT.any.moveUp}" in="true">
+      <delete key="PortMapping.${#instance}" />
+    </find>
+  </if>
+  <log message="VDM refresh" />
+  <getParameters key="${device.rootObject}.X_AVS_EXT.Forwarding." />
+  <finish message="Port mapping deleted. Instance number ${#instance}" />
+</config>

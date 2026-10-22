@@ -1,0 +1,130 @@
+device.property("activeWan").remove()
+device.property("activePpp").remove()
+device.property("internetType").remove()
+device.property("activeTr069").remove()
+// Check manufacturer once
+val isBdcom = device.manufacturer.toLower.contains("bdcm") || device.manufacturer.toLower.contains("bdcom")
+var connectedFound = false
+
+if (isBdcom) {
+    device.property("activeWan").set("BDCOM_Skipped")
+    device.property("internetType").set("BDCOM_Skipped")
+    // Return or exit block to prevent running the rest
+}
+
+if (!isBdcom) {
+    var activeWan = true
+    var activePpp = true
+    var interfaceTypekey = ""
+    
+    if(device.manufacturer.toLower.contains("zte") && device.productClass=="F660" && (device.softwareVersion=="V5.2.10P1T10" || device.softwareVersion=="V5.2.10P1T4" || device.softwareVersion=="V5.2.10P2T22" || device.softwareVersion=="V5.2.10P2T23" )) {
+    	interfaceTypekey = "X_CT-COM_ServiceList"
+    } else if(device.manufacturer.toLower.contains("zte")) {
+    	interfaceTypekey = "X_ZTE-COM_ServiceList"
+    } else if(device.manufacturer.toLower.contains("huawei")) {
+    	interfaceTypekey = "X_HW_SERVICELIST"
+    } else if(device.manufacturer.toLower.contains("fiberhome")) {
+    	interfaceTypekey = "X_FH_SERVICELIST"
+    } else {
+        // Default fallback: Use standard params to avoid crash, even if logic fails to find 'INTERNET'
+        interfaceTypekey = "ConnectionStatus"
+    }
+    
+    var vlanIdKey = ""
+    if(device.manufacturer.toLower.contains("zte")) {
+    	vlanIdKey = "X_ZTE-COM_VLANID"
+    } else if(device.manufacturer.toLower.contains("huawei")) {
+    		vlanIdKey = "X_HW_VLAN"
+    } else {
+        // Default fallback: Use standard param
+        vlanIdKey = "AddressingType"
+    }
+    
+    val subsetToGet = Seq(interfaceTypekey,vlanIdKey,"ConnectionStatus","ExternalIPAddress","MACAddress","Username")
+    
+    ///PPPoE (koneksi HSI pakai PPPoE)
+    var filteredInternetWans:Seq[DMKey] = Seq.empty 
+    var wanKeys = ldm.root.WANDevice.any.WANConnectionDevice.any.WANPPPConnection.any.keys
+    var keysToGet = wanKeys.flatMap(k => subsetToGet.map(s => k.selectDynamic(s)))
+    var values = ldm.getAll(keysToGet,true)
+    
+    // pemilihan hanya cari interfacetypekey-nya internet
+    filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).toString.toUpper.contains("INTERNET"))  
+
+    if(filteredInternetWans.headOpt.nonEmpty){
+    	val filteredWan = filteredInternetWans.filter(k => values.get(k.ConnectionStatus).toString.toUpper.contains("CONNECTED"))
+    	if(filteredWan.headOpt.nonEmpty){
+    		log.info(filteredWan)
+            val filteredWan2 = filteredWan.filter(k => values.get(k.ExternalIPAddress).toString.nonEmpty)
+            if(filteredWan2.headOpt.nonEmpty){    
+    	  		val filteredWan1 = filteredWan2.headOpt.get	
+    			connectedFound=true
+    	 		device.property("activeWan").set(filteredWan1.toString)
+    	 		device.property("activePpp").set(filteredWan1.toString)
+    	 		device.property("internetType").set("PPPoE")
+                if(values.get(filteredWan1.selectDynamic("ExternalIPAddress")).nonEmpty) {
+                    device.property("IPService").set(values.get(filteredWan1.selectDynamic("ExternalIPAddress")).get.toString)
+                }
+                if(values.get(filteredWan1.selectDynamic("MACAddress")).nonEmpty) {
+                    device.property("cpeActiveWanMac").set(values.get(filteredWan1.selectDynamic("MACAddress")).get.toString)
+                }
+                if(values.get(filteredWan1.selectDynamic("Username")).nonEmpty) {
+                    device.property("cpePppUsername").set(values.get(filteredWan1.selectDynamic("Username")).get.toString)
+                }
+                if(!device.manufacturer.toLower.contains("fiberhome")) {
+                    var vlanVal = values.get(filteredWan1.selectDynamic(vlanIdKey))
+                    if(vlanVal.isEmpty) vlanVal = ldm.get(filteredWan1.selectDynamic(vlanIdKey)).tryAsOpt
+                    if(vlanVal.nonEmpty) {
+                        device.property("VLAN_Service").set(vlanVal.get.toString)
+                    }
+                }
+        	}
+     	}
+    }
+    
+    ///non Connected interface (fallback)
+    if(connectedFound==false){
+      ///PPPoE fallback
+    	if(filteredInternetWans.headOpt.nonEmpty){
+    		val filteredWan = filteredInternetWans.headOpt.get
+     		device.property("activeWan").set(filteredWan.toString)
+      		device.property("activePpp").set(filteredWan.toString)
+      		device.property("internetType").set("PPPoE")
+            if(values.get(filteredWan.selectDynamic("ExternalIPAddress")).nonEmpty) {
+                device.property("IPService").set(values.get(filteredWan.selectDynamic("ExternalIPAddress")).get.toString)
+            }
+            if(values.get(filteredWan.selectDynamic("MACAddress")).nonEmpty) {
+                device.property("cpeActiveWanMac").set(values.get(filteredWan.selectDynamic("MACAddress")).get.toString)
+            }
+            if(values.get(filteredWan.selectDynamic("Username")).nonEmpty) {
+                device.property("cpePppUsername").set(values.get(filteredWan.selectDynamic("Username")).get.toString)
+            }
+            if(!device.manufacturer.toLower.contains("fiberhome")) {
+                var vlanVal = values.get(filteredWan.selectDynamic(vlanIdKey))
+                if(vlanVal.isEmpty) vlanVal = ldm.get(filteredWan.selectDynamic(vlanIdKey)).tryAsOpt
+                if(vlanVal.nonEmpty) {
+                    device.property("VLAN_Service").set(vlanVal.get.toString)
+                }
+            }
+    	}
+    }
+    
+    ///Tr069
+    filteredInternetWans = Seq.empty 
+    wanKeys = ldm.root.WANDevice.any.WANConnectionDevice.any.WANIPConnection.any.keys
+    keysToGet = wanKeys.flatMap(k => subsetToGet.map(s => k.selectDynamic(s)))
+    values = ldm.getAll(keysToGet,true)
+    
+    // pemilihan hanya cari interfacetypekey-nya tr069
+    filteredInternetWans = wanKeys.filter(k => values.get(k.selectDynamic(interfaceTypekey)).toString.toUpper.contains("TR069"))
+    if(filteredInternetWans.headOpt.nonEmpty){
+    	var filteredWan = filteredInternetWans.filter(k => ldm.get(k.ExternalIPAddress).tryAsOpt.toString.toUpper.contains(device.currentWanIP.toString))
+    	if(filteredWan.headOpt.nonEmpty){
+    		val filteredWan1 = filteredWan.headOpt.get
+      		device.property("activeTr069").set(filteredWan1.toString)
+        } else {
+            val filteredWan1 = filteredInternetWans.headOpt.get
+            device.property("activeTr069").set(filteredWan1.toString)
+        }
+    }
+}

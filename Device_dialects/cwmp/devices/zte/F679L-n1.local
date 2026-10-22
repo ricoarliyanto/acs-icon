@@ -1,0 +1,419 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.syslog"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+
+# INTERNET ACCESS
+include "capabilities.wan"
+include "capabilities.gpon"
+include "cwmp.ext.wan.gpon"
+include "cwmp.ext.wan.gpon.zte"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.forwarding"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.voip"
+include "cwmp.capabilities.firewall"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood"
+
+include "capabilities.resources"
+include "cwmp.ext.resources"
+
+cwmp.setActiveWanFromInform = false
+
+
+remappingStrategy {
+  read_converter {
+    Serial {
+      expression="${value.values.anyElement.replaceAll(\":\",\"\").toUpperCase()}"
+      type=expression
+    }
+    WiFi.%i.Enable = null
+  }
+
+  activeKey.pon = "${sv.activeWan.ancestorKey(3).toParameterKey}.X_ZTE-COM_WANPONInterfaceConfig"
+
+  mapping {
+    root.X_AVS_EXT {
+      Status {
+        Temperature.real = ${remappingStrategy.activeKey.gpon}".TransceiverTemperature"
+      }
+      Type.real = "root.WANDevice.1.WANCommonInterfaceConfig.WANAccessType"
+
+      WAN {
+        IP {
+          1."MAC Address".real = "${sv.vdmWan1.parseJson.interfaceKey.asString.toParameterKey ? sv.activeWan.toParameterKey}.MACAddress"
+          2."MAC Address".real = "${sv.vdmWan2.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          3."MAC Address".real = "${sv.vdmWan3.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          4."MAC Address".real = "${sv.vdmWan4.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          5."MAC Address".real = "${sv.vdmWan5.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          6."MAC Address".real = "${sv.vdmWan6.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          7."MAC Address".real = "${sv.vdmWan7.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          8."MAC Address".real = "${sv.vdmWan8.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+        }
+        PPP {
+          1."MAC Address".real = "${sv.vdmWan1.parseJson.interfaceKey.asString.toParameterKey ? sv.activeWan.toParameterKey}.MACAddress"
+          2."MAC Address".real = "${sv.vdmWan2.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          3."MAC Address".real = "${sv.vdmWan3.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          4."MAC Address".real = "${sv.vdmWan4.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          5."MAC Address".real = "${sv.vdmWan5.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          6."MAC Address".real = "${sv.vdmWan6.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          7."MAC Address".real = "${sv.vdmWan7.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+          8."MAC Address".real = "${sv.vdmWan8.parseJson.interfaceKey.asString.toParameterKey}.MACAddress"
+        }
+        Enable.real = "root.WANDevice.1.WANCommonInterfaceConfig.EnabledForInternet"
+        Type.real = "root.WANDevice.1.WANCommonInterfaceConfig.WANAccessType"
+        Status.real = "root.WANDevice.1.WANCommonInterfaceConfig.PhysicalLinkStatus"
+        Stats {
+          Downstream {
+            Bytes.real = "root.WANDevice.1.WANCommonInterfaceConfig.TotalBytesReceived"
+            Packets.real = "root.WANDevice.1.WANCommonInterfaceConfig.TotalPacketsReceived"
+          }
+          Upstream {
+            Bytes.real = "root.WANDevice.1.WANCommonInterfaceConfig.TotalBytesSent"
+            Packets.real = "root.WANDevice.1.WANCommonInterfaceConfig.TotalPacketsSent"
+          }
+        }
+        GPON.1 {
+          Status.real = ${remappingStrategy.activeKey.gpon}".Status"
+          BiasCurrent.real = ${remappingStrategy.activeKey.gpon}".BiasCurrent"
+          RXPower.real = ${remappingStrategy.activeKey.gpon}".RXPower"
+          TXPower.real = ${remappingStrategy.activeKey.gpon}".TXPower"
+          SupplyVoltage.real = ${remappingStrategy.activeKey.gpon}".SupplyVoltage"
+          DropPackets.real = ${remappingStrategy.activeKey.gpon}".Stats.DropPackets"
+          TransceiverTemperature.real = ${remappingStrategy.activeKey.gpon}".TransceiverTemperature"
+          Stats {
+            Downstream {
+              Bytes.real = ${remappingStrategy.activeKey.gpon}".Stats.BytesReceived"
+              Packets.real = ${remappingStrategy.activeKey.gpon}".Stats.PacketsReceived"
+            }
+            Upstream {
+              Bytes.real = ${remappingStrategy.activeKey.gpon}".Stats.BytesSent"
+              Packets.real = ${remappingStrategy.activeKey.gpon}".Stats.PacketsSent"
+            }
+          }
+        }
+      }
+      WiFi {
+        Bandsteering.real = "root.LANDevice.1.WIFI.BANDSTEER.BandSteeringEnable"
+        1 {
+          Enable.real = "${sv.vdmWlan1.toParameterKey}.Enable"
+          RadioEnabled.real = "${sv.vdmWlan1.toParameterKey}.RadioEnabled"
+          OperatingChannelBandwidth.real = "${sv.vdmWlan1.toParameterKey}.X_ZTE-COM_OperatingChannelBandwidth"
+          Neighborhood.%i {
+            BSSID.real = "root.LANDevice.1.WIFI.Radio.1.X_ZTE-COM_NeighborAP.%i.BSSID"
+            Channel.real = "root.LANDevice.1.WIFI.Radio.1.X_ZTE-COM_NeighborAP.%i.Channel"
+            SSID.real = "root.LANDevice.1.WIFI.Radio.1.X_ZTE-COM_NeighborAP.%i.SSID"
+            Security.real = "root.LANDevice.1.WIFI.Radio.1.X_ZTE-COM_NeighborAP.%i.Security"
+            SignalStrength.real = "root.LANDevice.1.WIFI.Radio.1.X_ZTE-COM_NeighborAP.%i.RSSI"
+            Standard.real = "root.LANDevice.1.WIFI.Radio.1.X_ZTE-COM_NeighborAP.%i.Standard"
+            Bandwidth.real = "root.LANDevice.1.WIFI.Radio.1.X_ZTE-COM_NeighborAP.%i.Bandwidth"
+            Noise.real = "root.LANDevice.1.WIFI.Radio.1.X_ZTE-COM_NeighborAP.%i.Noise"
+            MaxBitRate.real = "root.LANDevice.1.WIFI.Radio.1.X_ZTE-COM_NeighborAP.%i.MaxBitRate"
+          }
+          AssociatedDevice.%i {
+            Bandwidth.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceBandWidth"
+            IPAddress.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceIPAddress"
+            MACAddress.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceMACAddress"
+            SignalStrength.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceRssi"
+            Band.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_Radio"
+            HostName.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_AssociatedDeviceName"
+            Stats {
+              Downstream {
+                Bytes.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesReceived"
+                Packets.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketReceived"
+              }
+              Upstream {
+                Bytes.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesSend"
+                Packets.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketSend"
+              }
+            }
+          }
+          WPS {
+            Enable.real = "${sv.vdmWlan1.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan1.toParameterKey}.WPS.DevicePassword"
+          }
+          Stats {
+            Downstream {
+              Bytes.real = "${sv.vdmWlan1.toParameterKey}.Stats.BytesReceived"
+              Packets.real = "${sv.vdmWlan1.toParameterKey}.Stats.PacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "${sv.vdmWlan1.toParameterKey}.Stats.BytesSent"
+              Packets.real = "${sv.vdmWlan1.toParameterKey}.Stats.PacketsSent"
+            }
+          }
+        }
+        2 {
+          Enable.real = "${sv.vdmWlan2.toParameterKey}.Enable"
+          RadioEnabled.real = "${sv.vdmWlan2.toParameterKey}.RadioEnabled"
+          OperatingChannelBandwidth.real = "${sv.vdmWlan2.toParameterKey}.X_ZTE-COM_OperatingChannelBandwidth"
+          AssociatedDevice.%i {
+            Bandwidth.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceBandWidth"
+            IPAddress.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceIPAddress"
+            MACAddress.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceMACAddress"
+            SignalStrength.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceRssi"
+            Band.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_Radio"
+            HostName.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_AssociatedDeviceName"
+            Stats {
+              Downstream {
+                Bytes.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesReceived"
+                Packets.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketReceived"
+              }
+              Upstream {
+                Bytes.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesSend"
+                Packets.real = "${sv.vdmWlan2.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketSend"
+              }
+            }
+          }
+          WPS {
+            Enable.real = "${sv.vdmWlan2.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan2.toParameterKey}.WPS.DevicePassword"
+          }
+        }
+        3 {
+          Enable.real = "${sv.vdmWlan3.toParameterKey}.Enable"
+          RadioEnabled.real = "${sv.vdmWlan3.toParameterKey}.RadioEnabled"
+          OperatingChannelBandwidth.real = "${sv.vdmWlan3.toParameterKey}.X_ZTE-COM_OperatingChannelBandwidth"
+          AssociatedDevice.%i {
+            Bandwidth.real = "${sv.vdmWlan3.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceBandWidth"
+            IPAddress.real = "${sv.vdmWlan3.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceIPAddress"
+            MACAddress.real = "${sv.vdmWlan3.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceMACAddress"
+            SignalStrength.real = "${sv.vdmWlan3.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceRssi"
+            Band.real = "${sv.vdmWlan3.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_Radio"
+            HostName.real = "${sv.vdmWlan3.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_AssociatedDeviceName"
+            Stats {
+              Downstream {
+                Bytes.real = "${sv.vdmWlan3.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesReceived"
+                Packets.real = "${sv.vdmWlan3.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketReceived"
+              }
+              Upstream {
+                Bytes.real = "${sv.vdmWlan3.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesSend"
+                Packets.real = "${sv.vdmWlan3.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketSend"
+              }
+            }
+          }
+          WPS {
+            Enable.real = "${sv.vdmWlan3.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan3.toParameterKey}.WPS.DevicePassword"
+          }
+        }
+        4 {
+          Enable.real = "${sv.vdmWlan4.toParameterKey}.Enable"
+          RadioEnabled.real = "${sv.vdmWlan4.toParameterKey}.RadioEnabled"
+          OperatingChannelBandwidth.real = "${sv.vdmWlan4.toParameterKey}.X_ZTE-COM_OperatingChannelBandwidth"
+          AssociatedDevice.%i {
+            Bandwidth.real = "${sv.vdmWlan4.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceBandWidth"
+            IPAddress.real = "${sv.vdmWlan4.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceIPAddress"
+            MACAddress.real = "${sv.vdmWlan4.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceMACAddress"
+            SignalStrength.real = "${sv.vdmWlan4.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceRssi"
+            Band.real = "${sv.vdmWlan4.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_Radio"
+            HostName.real = "${sv.vdmWlan4.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_AssociatedDeviceName"
+            Stats {
+              Downstream {
+                Bytes.real = "${sv.vdmWlan4.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesReceived"
+                Packets.real = "${sv.vdmWlan4.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketReceived"
+              }
+              Upstream {
+                Bytes.real = "${sv.vdmWlan4.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesSend"
+                Packets.real = "${sv.vdmWlan4.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketSend"
+              }
+            }
+          }
+          WPS {
+            Enable.real = "${sv.vdmWlan4.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan4.toParameterKey}.WPS.DevicePassword"
+          }
+        }
+        5 {
+          Enable.real = "${sv.vdmWlan5.toParameterKey}.Enable"
+          RadioEnabled.real = "${sv.vdmWlan5.toParameterKey}.RadioEnabled"
+          OperatingChannelBandwidth.real = "${sv.vdmWlan5.toParameterKey}.X_ZTE-COM_OperatingChannelBandwidth"
+          Neighborhood.%i {
+            BSSID.real = "root.LANDevice.1.WIFI.Radio.2.X_ZTE-COM_NeighborAP.%i.BSSID"
+            Channel.real = "root.LANDevice.1.WIFI.Radio.2.X_ZTE-COM_NeighborAP.%i.Channel"
+            SSID.real = "root.LANDevice.1.WIFI.Radio.2.X_ZTE-COM_NeighborAP.%i.SSID"
+            Security.real = "root.LANDevice.1.WIFI.Radio.2.X_ZTE-COM_NeighborAP.%i.Security"
+            SignalStrength.real = "root.LANDevice.1.WIFI.Radio.2.X_ZTE-COM_NeighborAP.%i.RSSI"
+            Standard.real = "root.LANDevice.1.WIFI.Radio.2.X_ZTE-COM_NeighborAP.%i.Standard"
+            Bandwidth.real = "root.LANDevice.1.WIFI.Radio.2.X_ZTE-COM_NeighborAP.%i.Bandwidth"
+            Noise.real = "root.LANDevice.1.WIFI.Radio.2.X_ZTE-COM_NeighborAP.%i.Noise"
+            MaxBitRate.real = "root.LANDevice.1.WIFI.Radio.2.X_ZTE-COM_NeighborAP.%i.MaxBitRate"
+          }
+          AssociatedDevice.%i {
+            Bandwidth.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceBandWidth"
+            IPAddress.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceIPAddress"
+            MACAddress.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceMACAddress"
+            SignalStrength.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceRssi"
+            Band.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_Radio"
+            HostName.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_AssociatedDeviceName"
+            Stats {
+              Downstream {
+                Bytes.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesReceived"
+                Packets.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketReceived"
+              }
+              Upstream {
+                Bytes.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesSend"
+                Packets.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketSend"
+              }
+            }
+          }
+          WPS {
+            Enable.real = "${sv.vdmWlan5.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan5.toParameterKey}.WPS.DevicePassword"
+          }
+          Stats {
+            Downstream {
+              Bytes.real = "${sv.vdmWlan5.toParameterKey}.Stats.BytesReceived"
+              Packets.real = "${sv.vdmWlan5.toParameterKey}.Stats.PacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "${sv.vdmWlan5.toParameterKey}.Stats.BytesSent"
+              Packets.real = "${sv.vdmWlan5.toParameterKey}.Stats.PacketsSent"
+            }
+          }
+        }
+        6 {
+          key = "${sv.vdmWlan6.toParameterKey}"
+          include "cwmp.ext.wifi.profile"
+          Enable.real = "${sv.vdmWlan6.toParameterKey}.Enable"
+          RadioEnabled.real = "${sv.vdmWlan6.toParameterKey}.RadioEnabled"
+          OperatingChannelBandwidth.real = "${sv.vdmWlan6.toParameterKey}.X_ZTE-COM_OperatingChannelBandwidth"
+          AssociatedDevice.%i {
+            Bandwidth.real = "${sv.vdmWlan6.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceBandWidth"
+            IPAddress.real = "${sv.vdmWlan6.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceIPAddress"
+            MACAddress.real = "${sv.vdmWlan6.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceMACAddress"
+            SignalStrength.real = "${sv.vdmWlan6.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceRssi"
+            Band.real = "${sv.vdmWlan6.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_Radio"
+            HostName.real = "${sv.vdmWlan6.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_AssociatedDeviceName"
+            Stats {
+              Downstream {
+                Bytes.real = "${sv.vdmWlan6.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesReceived"
+                Packets.real = "${sv.vdmWlan6.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketReceived"
+              }
+              Upstream {
+                Bytes.real = "${sv.vdmWlan6.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesSend"
+                Packets.real = "${sv.vdmWlan6.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketSend"
+              }
+            }
+          }
+          WPS {
+            Enable.real = "${sv.vdmWlan6.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan6.toParameterKey}.WPS.DevicePassword"
+          }
+        }
+        7 {
+          key = "${sv.vdmWlan7.toParameterKey}"
+          include "cwmp.ext.wifi.profile"
+          Enable.real = "${sv.vdmWlan7.toParameterKey}.Enable"
+          RadioEnabled.real = "${sv.vdmWlan7.toParameterKey}.RadioEnabled"
+          OperatingChannelBandwidth.real = "${sv.vdmWlan7.toParameterKey}.X_ZTE-COM_OperatingChannelBandwidth"
+          AssociatedDevice.%i {
+            Bandwidth.real = "${sv.vdmWlan7.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceBandWidth"
+            IPAddress.real = "${sv.vdmWlan7.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceIPAddress"
+            MACAddress.real = "${sv.vdmWlan7.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceMACAddress"
+            SignalStrength.real = "${sv.vdmWlan7.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceRssi"
+            Band.real = "${sv.vdmWlan7.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_Radio"
+            HostName.real = "${sv.vdmWlan7.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_AssociatedDeviceName"
+            Stats {
+              Downstream {
+                Bytes.real = "${sv.vdmWlan7.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesReceived"
+                Packets.real = "${sv.vdmWlan7.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketReceived"
+              }
+              Upstream {
+                Bytes.real = "${sv.vdmWlan7.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesSend"
+                Packets.real = "${sv.vdmWlan7.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketSend"
+              }
+            }
+          }
+          WPS {
+            Enable.real = "${sv.vdmWlan7.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan7.toParameterKey}.WPS.DevicePassword"
+          }
+        }
+        8 {
+          key = "${sv.vdmWlan8.toParameterKey}"
+          include "cwmp.ext.wifi.profile"
+          Enable.real = "${sv.vdmWlan8.toParameterKey}.Enable"
+          RadioEnabled.real = "${sv.vdmWlan8.toParameterKey}.RadioEnabled"
+          OperatingChannelBandwidth.real = "${sv.vdmWlan8.toParameterKey}.X_ZTE-COM_OperatingChannelBandwidth"
+          AssociatedDevice.%i {
+            Bandwidth.real = "${sv.vdmWlan8.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceBandWidth"
+            IPAddress.real = "${sv.vdmWlan8.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceIPAddress"
+            MACAddress.real = "${sv.vdmWlan8.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceMACAddress"
+            SignalStrength.real = "${sv.vdmWlan8.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceRssi"
+            Band.real = "${sv.vdmWlan8.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_Radio"
+            HostName.real = "${sv.vdmWlan8.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_AssociatedDeviceName"
+            Stats {
+              Downstream {
+                Bytes.real = "${sv.vdmWlan8.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesReceived"
+                Packets.real = "${sv.vdmWlan8.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketReceived"
+              }
+              Upstream {
+                Bytes.real = "${sv.vdmWlan8.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_BytesSend"
+                Packets.real = "${sv.vdmWlan8.toParameterKey}.AssociatedDevice.%i.X_ZTE-COM_WLAN_PacketSend"
+              }
+            }
+          }
+          WPS {
+            Enable.real = "${sv.vdmWlan8.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan8.toParameterKey}.WPS.DevicePassword"
+          }
+        }
+      }
+    }
+  }
+}
+
+virtualPatching {
+  patching {
+    root.X_AVS_EXT {
+      Capabilities.WAN.%force-value = "true"
+      WiFi {
+        1 {
+          SupportedStandards.%force-value = "b,g,n"
+          PossibleChannels.%force-value = "1,2,3,4,5,6,7,8,9,10,11"
+        }
+        2 {
+          SupportedStandards.%force-value = "b,g,n"
+          PossibleChannels.%force-value = "1,2,3,4,5,6,7,8,9,10,11"
+        }
+        3 {
+          SupportedStandards.%force-value = "b,g,n"
+          PossibleChannels.%force-value = "1,2,3,4,5,6,7,8,9,10,11"
+        }
+        4 {
+          SupportedStandards.%force-value = "b,g,n"
+          PossibleChannels.%force-value = "1,2,3,4,5,6,7,8,9,10,11"
+        }
+        5.SupportedStandards.%force-value = "a,n,ac"
+        6.SupportedStandards.%force-value = "a,n,ac"
+        7.SupportedStandards.%force-value = "a,n,ac"
+        8.SupportedStandards.%force-value = "a,n,ac"
+      }
+    }
+  }
+}
+virtualPatching {
+  patching {
+    root.X_AVS_EXT {
+      WAN {
+        GPON.1 {
+          SupplyVoltage.%patch-value = "${node.value.replaceAll('[^0-9.-]', '').toDouble/1000.0}"
+        }
+      }
+    }
+  }
+}

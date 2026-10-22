@@ -1,0 +1,6 @@
+# CMTS capability
+# A device is a CMTS
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.CMTS.%force-value = "true"
+}

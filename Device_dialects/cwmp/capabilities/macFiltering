@@ -1,0 +1,6 @@
+# MacFiltering capability
+# A device is able to configure Mac Filtering
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.MacFiltering.%force-value = "true"
+}

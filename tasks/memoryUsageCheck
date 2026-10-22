@@ -1,0 +1,16 @@
+val ramUsed = dmkey.root.X_AVS_EXT.Resources.RAMUsed.get().toDouble
+val ramAvailable = dmkey.root.X_AVS_EXT.Resources.RAMAvailable.get().toDouble
+
+val usage = (ramUsed/ramAvailable*100).toInt
+
+var status = "Success"
+var description = "RAM Usage is nominal (usage $usage%)"
+
+if(usage >= 99) {
+  status = "Error"
+  description = "Almost all RAM is used - potential memory leak (usage $usage%)"
+} else if(usage > 90) {
+  status = "Warning"
+  description = "Very high RAM utilization (usage $usage%)"
+}
+workflow.setStatus(status = status, description = description) 

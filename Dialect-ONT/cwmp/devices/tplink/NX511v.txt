@@ -1,0 +1,128 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic.dm2"
+include "cwmp.capabilities.management.dm2"
+include "cwmp.capabilities.resources.dm2"
+include "cwmp.capabilities.status.dm2"
+include "cwmp.capabilities.syslog.dm2"
+include "cwmp.ext.syslog.avsystem"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet.dm2"
+include "cwmp.capabilities.ppp.dm2"
+include "cwmp.capabilities.wan.dm2"
+include "cwmp.capabilities.ethernet"
+include "cwmp.capabilities.lte.dm2"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging.dm2"
+include "cwmp.capabilities.dhcp.dm2"
+include "cwmp.capabilities.dns.dm2"
+include "cwmp.capabilities.firewall.dm2"
+include "cwmp.capabilities.forwarding.dm2"
+include "cwmp.capabilities.lan.dm2"
+include "cwmp.ext.lan.devices.dm2"
+include "cwmp.capabilities.macFiltering.dm2"
+include "cwmp.capabilities.ntp.dm2"
+include "cwmp.capabilities.process.dm2"
+include "cwmp.capabilities.radius.dm2"
+include "cwmp.capabilities.storage.dm2"
+include "cwmp.capabilities.wifi.dm2"
+include "cwmp.capabilities.bulkData.dm2"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood.dm2"
+#include "cwmp.ext.wifi.neighborhood.properties"
+#include "tools.patching.wifiNeighborhood"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics.dm2"
+
+# MESH
+include "cwmp.capabilities.mesh.dm2.local"
+
+include "tools.readConverters"
+
+
+# FIXES
+remappingStrategy{
+    read_converter {
+    WAN.LTE {
+      CellID = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+      DLFrequency = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+      PCI = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+      Power = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+      RSRP0 = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+      RSRQ = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+      RSSI = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+      SINR = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+      ULFrequency = ${tools.readConverters.oneToOne.stripNonNumericCharacters}
+    }
+  }
+  mapping {
+    root.X_AVS_EXT{
+      WAN {
+        LTE {
+          IMEI.real = "root.Cellular.Interface.1.IMEI"
+          Earfcn.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.Earfcn"
+          Enable.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.Enable"
+          LAC.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.LAC"
+          MCS.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.MCS"
+          Order.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.Order"
+          PLMN.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.PLMN"
+          RAC.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.RAC"
+          RAT.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.RAT"
+          RRC.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.RRC"
+          RSRP0.real = "root.Cellular.Interface.1.X_TP_WANLTELinkConfig.ServingCellInfo.2.RSRP"
+          RSRQ.real = "root.Cellular.Interface.1.X_TP_WANLTELinkConfig.ServingCellInfo.2.RSRQ"
+          RSSI.real = "root.Cellular.Interface.1.X_TP_WANLTELinkConfig.ServingCellInfo.2.RSSI"
+          CellID.real = "root.Cellular.Interface.1.X_TP_WANLTELinkConfig.ServingCellInfo.2.Cid"
+          RoamStatus.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.RoamStatus"
+          SIMStatus.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.SIMStatus"
+          SINR.real = "root.Cellular.Interface.1.X_TP_WANLTELinkConfig.ServingCellInfo.2.SINR"
+          ServiceDomain.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.ServiceDomain"
+          ServiceStatus.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.ServiceStatus"
+          SignalQuality.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.SignalQuality"
+          SysSubMode.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.SysSubMode"
+          SystemMode.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.SystemMode"
+          TAC.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.TAC"
+          TDD.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.TDD"
+          UpLoadData.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.UpLoadData"
+          UplinkMaxThrp.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.UplinkMaxThrp"
+          UpstreamMaxRate.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.UpstreamMaxRate"
+          attach_apn.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.attach_apn"
+          bandid.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.bandid"
+          bandwidth.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.bandwidth"
+          castatus.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.castatus"
+          DLFrequency.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.dlFreq"
+          ULFrequency.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.ulFreq"
+          PCI.real = "root.Cellular.Interface.1.X_TP_WANLTELinkConfig.ServingCellInfo.2.PCI"
+          Roaming {
+            Status.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.RoamStatus"
+            Enable.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.RoamAllowDialup"
+          }
+          Stats {
+            Downstream {
+              Bytes.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.Stats.BytesReceived"
+              Packets.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.Stats.PacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.Stats.BytesSent"
+              Packets.real = "root.WANDevice.2.X_ATP_WANUMTSInterfaceConfig.Stats.PacketsSent"
+            }
+          }
+        }
+      }
+    }
+  }
+}

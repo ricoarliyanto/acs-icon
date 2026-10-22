@@ -1,0 +1,1 @@
+<config instance="${sv.backupRestoreInstance.toInt ? 1}" protocol="${task.properties.getOr('protocol', sv.transferProtocol)}" />

@@ -1,0 +1,17 @@
+<config>
+  <store target="vlanName" value="${task.property.vlanName}" />
+  <store target="vlanStatus" value="${task.property.vlanEnabled}" />
+  <store target="cliCommandDisable" value="/interface vlan disable ${#vlanName}" />
+  <store target="cliCommandEnable" value="/interface vlan enable ${#vlanName}" />
+  <if expr="${#vlanStatus=='false'}">
+    <cli protocol="${sv.protocol}">
+      <command cmd="${#cliCommandEnable}" />
+    </cli>
+    <else>
+      <cli protocol="${sv.protocol}">
+        <command cmd="${#cliCommandDisable}" />
+      </cli>
+    </else>
+  </if>
+  <getParameters key="Device.X_AVS_EXT.VLAN." />
+</config>

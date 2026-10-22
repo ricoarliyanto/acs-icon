@@ -1,0 +1,17 @@
+<config>
+  <telnetSession address="${device.currentWanIP}" windowsEndline="true">
+    <telnetCommand command="${sv.sshUser}" waitBeforeResponse="5" output="userOutput" />
+    <telnetCommand command="${sv.sshPass}" waitBeforeResponse="5" output="passOutput" />
+    <telnetCommand command="iwpriv ra0 get_site_survey" output="hosts" waitBeforeResponse="3" />
+    <telnetCommand command="exit" output="exitOutput" />
+  </telnetSession>
+  <if expr="${#hosts.split(&quot;\\n&quot;).length &lt; 3}">
+    <finish status="ERROR" message="Invalid command output. Probably connection error/timeout" />
+  </if>
+  <store target="hostsParsed" value="${#hosts.split(&quot;\\n&quot;).asList.drop(3).dropRight(2).map(s =&gt; s.split(&quot;&lt;&gt;\\[\\]&quot;).asList).map(line =&gt; line.slice(0,4).map(x =&gt; x.trim).join(&quot;`&quot;) + &quot;`&quot; + (line.get(4).trim.toInt / 2 - 100) + &quot;`&quot; + line.get(7).trim + &quot;`&quot; + (if (line.get(8).trim == &quot;YES&quot;) &quot;true&quot; else &quot;false&quot;).toString).toList.join(&quot;\n&quot;)}" />
+  <store target="amount" value="${#hostsParsed.split(&quot;\n&quot;).length}" />
+  <while expr="${#amount.toInt &gt; 0}">
+    <store target="amount" value="${#amount.toInt - 1}" />
+    <store type="devProp" target="wifiNeighborhood_${#amount.toInt + 1}" value="${#hostsParsed.split(&quot;\n&quot;).asList.get(#amount.toInt)}" />
+  </while>
+</config>

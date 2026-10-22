@@ -1,0 +1,8 @@
+# WiFi neighborhood scanning capability
+# A device is able to scan Wi-Fi neighborhood and report the results.
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    Capabilities.Neighborhood.%force-value = "true"
+  }
+}

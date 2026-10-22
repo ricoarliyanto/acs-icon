@@ -1,0 +1,10 @@
+<config>
+  <set key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.SSID" value="${0}" flush="false" />
+  <set key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.Enable" value="true" flush="false" />
+  <set key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AutoChannelEnable" value="true" flush="false" />
+  <set key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.PreSharedKey.1.KeyPassphrase" value="${1}" flush="false" />
+  <set key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.IEEE11iEncryptionModes" value="AESEncryption" flush="false" />
+  <set key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.IEEE11iAuthenticationMode" value="PSKAuthentication" flush="false" />
+  <set key="InternetGatewayDevice.LANDevice.1.WLANConfiguration.6.BeaconType" value="WPAand11i" flush="false" />
+  <flush />
+</config>

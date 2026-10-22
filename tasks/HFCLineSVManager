@@ -1,0 +1,38 @@
+<config>
+  <defaults get.flush="true" get.ignoreFaults="true">
+    <in key="Device.X_AVS_EXT.Line.1">
+      <get key="CableMac" output="cableMac" />
+      <get key="CableDownstreamIndex" output="cableDownstream" />
+      <get key="CableUpstreamIndex" output="cableUpstream" />
+      <get key="DownstreamChannelId" output="rcs" />
+      <get key="UpstreamChannelId" output="tcs" />
+      <get key="Status" output="status" />
+    </in>
+    <flush />
+    <if expr="${#status != 'Down'}">
+      <get key="Device.X_AVS_EXT.Line.1.ServiceFlows" output="serviceFlows" />
+    </if>
+    <flush />
+    <reloadDialect />
+    <if expr="${#rcs.toLong &gt; 250}">
+      <get key="Device.X_AVS_EXT.Line.1.DownstreamChannelSet" output="dsChannelSet" ignoreFaults="true" />
+    </if>
+    <if expr="${#tcs.toLong &gt; 250}">
+      <get key="Device.X_AVS_EXT.Line.1.UpstreamChannelSet" output="usChannelSet" ignoreFaults="true" />
+    </if>
+    <flush />
+    <reloadDialect />
+    <store target="counter" value="0" />
+    <foreach list="${sv.dsChannelSet.splitBy(',') ? list(#rcs)}">
+      <store target="counter" value="${#counter.toInt + 1}" />
+      <get key="Device.X_AVS_EXT.Line.1.Cable.Downstream.${#counter}.CableIndex" output="downstreamCableIndex${#counter}" />
+    </foreach>
+    <store target="counter" value="0" />
+    <foreach list="${sv.usChannelSet.splitBy(',') ? list(#tcs)}">
+      <store target="counter" value="${#counter.toInt + 1}" />
+      <get key="Device.X_AVS_EXT.Line.1.Cable.Upstream.${#counter}.CableIndex" output="upstreamCableIndex${#counter}" />
+    </foreach>
+    <flush />
+    <reloadDialect />
+  </defaults>
+</config>

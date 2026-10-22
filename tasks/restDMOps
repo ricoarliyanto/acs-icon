@@ -1,0 +1,139 @@
+log.info("Starting Generic GET/SET Parameter Task.")
+
+
+var summaryMessages = Seq[String]()
+var valuesToSet = Seq[ValueToSet]()
+var pathsToGet = Seq[DMKey]()
+
+val setStringOpt = task.parameters.SET.getOpt
+val getPathsOpt = task.parameters.GET.getOpt
+
+val anyStandardParam = dmkey.root.ManagementServer.PeriodicInformTime.raw
+val rootPrefix = if (anyStandardParam.startsWith("Device.")) "Device." else "InternetGatewayDevice."
+log.info("Detected data model root: $rootPrefix")
+
+
+if (setStringOpt.isDefined) {
+  val setString = setStringOpt.get
+  log.info("SET mode detected. Parsing data: $setString")
+
+  var currentPair = ""
+  var j = 0
+  while (j < setString.length) {
+    val char = setString.slice(j, j + 1)
+    if (char == ";") {
+      if (currentPair != "") {
+        var key = ""; var value = ""; var foundEq = false; var k = 0
+        while (k < currentPair.length) {
+          val pairChar = currentPair.slice(k, k + 1)
+          if (pairChar == "=" && !foundEq) { foundEq = true } 
+          else { if (foundEq) { value = value + pairChar } else { key = key + pairChar } }
+          k = k + 1
+        }
+        val fullKey = if (key.startsWith("Device.") || key.startsWith("InternetGatewayDevice.")) key else rootPrefix + key
+        valuesToSet = valuesToSet ++ Seq(fullKey.toDMKey.valueToSet(value))
+      }
+      currentPair = ""
+    } else {
+      currentPair = currentPair + char
+    }
+    j = j + 1
+  }
+  if (currentPair != "") {
+    var key = ""; var value = ""; var foundEq = false; var k = 0
+    while (k < currentPair.length) {
+      val pairChar = currentPair.slice(k, k + 1)
+      if (pairChar == "=" && !foundEq) { foundEq = true } 
+      else { if (foundEq) { value = value + pairChar } else { key = key + pairChar } }
+      k = k + 1
+    }
+    val fullKey = if (key.startsWith("Device.") || key.startsWith("InternetGatewayDevice.")) key else rootPrefix + key
+    valuesToSet = valuesToSet ++ Seq(fullKey.toDMKey.valueToSet(value))
+  }
+
+  if (valuesToSet.length > 0) {
+    log.info("Executing ${valuesToSet.length} SET operations...")
+    ldm.setAll(valuesToSet)
+    log.info("SET operations sent. Now verifying...")
+
+    var verificationFailed = false
+    var errorMessage = ""
+    var verifiedValues = Seq[ValueToSet]() 
+    
+    var v_idx = 0
+    while (v_idx < valuesToSet.length) {
+      val v = valuesToSet(v_idx)
+      val keyRaw = v.key.raw
+      val isExecutable = keyRaw.endsWith(".Run") || keyRaw.endsWith(".Start")
+
+      if (isExecutable) {
+        log.info("Skipping verification for executable parameter: $keyRaw")
+      } else {
+        if (!verificationFailed) {
+          val cachedValue = device.cachedDm.getByKeyOpt(v.key).getOr("NOT_FOUND")
+          if (cachedValue != v.value) {
+            errorMessage = "Verification FAILED for $keyRaw. Expected: '${v.value}', found: '$cachedValue'."
+            log.error(errorMessage)
+            verificationFailed = true
+          } else {
+            verifiedValues = verifiedValues ++ Seq(v)
+          }
+        }
+      }
+      v_idx = v_idx + 1
+    }
+
+    if (verificationFailed) {
+      finish("ERROR", errorMessage)
+    } else {
+      var p_idx = 0
+      while (p_idx < verifiedValues.length) {
+        val verified = verifiedValues(p_idx)
+        taskReport.property(verified.key.raw).set(verified.value)
+        p_idx = p_idx + 1
+      }
+      summaryMessages = summaryMessages ++ Seq("Successfully executed and verified ${valuesToSet.length} SET operations.")
+    }
+  }
+}
+
+if (getPathsOpt.isDefined) {
+  val pathsString = getPathsOpt.get
+  log.info("GET mode detected. Parsing paths: $pathsString")
+
+  var currentPath = ""
+  var i = 0
+  while (i < pathsString.length) {
+    val char = pathsString.slice(i, i + 1)
+    if (char == ";") {
+      if (currentPath != "") { 
+        val fullPath = if (currentPath.startsWith("Device.") || currentPath.startsWith("InternetGatewayDevice.")) currentPath else rootPrefix + currentPath
+        pathsToGet = pathsToGet ++ Seq(fullPath.toDMKey)
+      }
+      currentPath = ""
+    } else {
+      currentPath = currentPath + char
+    }
+    i = i + 1
+  }
+  if (currentPath != "") { 
+    val fullPath = if (currentPath.startsWith("Device.") || currentPath.startsWith("InternetGatewayDevice.")) currentPath else rootPrefix + currentPath
+    pathsToGet = pathsToGet ++ Seq(fullPath.toDMKey)
+  }
+
+  if (pathsToGet.length > 0) {
+    log.info("Executing ${pathsToGet.length} GET operations...")
+    val getResults = ldm.getAll(pathsToGet)
+    getResults.foreach { (key, value) =>
+      taskReport.property(key.raw).set(value)
+    }
+    summaryMessages = summaryMessages ++ Seq("Successfully executed ${pathsToGet.length} GET operations.")
+  }
+}
+
+if (summaryMessages.isEmpty) {
+  finish("WARNING", "No valid 'GET' or 'SET' parameter provided.")
+} else {
+  val finalSummary = summaryMessages.join(" ")
+  finish("SUCCESS", finalSummary)
+}

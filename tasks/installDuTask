@@ -1,0 +1,3 @@
+<config>
+  <install URL="${#url}" />
+</config>

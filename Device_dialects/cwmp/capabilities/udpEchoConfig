@@ -1,0 +1,6 @@
+# UDPEchoConfig capability
+# A device supports UDP Echo Configuration
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.UDPEchoConfig.%force-value = "true"
+}

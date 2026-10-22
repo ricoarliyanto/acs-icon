@@ -1,0 +1,79 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.wifi"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Diagnostics {
+    "%force-value"="true"
+  }
+}
+
+remappingStrategy{
+
+  activeKey.gpon = "root.WANDevice.1.X_CT-COM_EponInterfaceConfig"
+
+  mapping {
+    root.X_AVS_EXT{
+      WiFi.%i {
+        Enable.real = "root.LANDevice.1.WLANConfiguration.%i.RadioEnabled"
+        Password.real = "root.LANDevice.1.WLANConfiguration.%i.PreSharedKey.1.KeyPassphrase"
+        Security.real = "root.LANDevice.1.WLANConfiguration.%i.BeaconType"
+      }
+      WiFiNeighborhood.%i {
+        BSSID.real = "root.LANDevice.1.WLANConfiguration.%i.BSSID"
+        Channel.real = "root.LANDevice.1.WLANConfiguration.%i.Channel"
+        SSID.real = "root.LANDevice.1.WLANConfiguration.%i.SSID"
+        Standard.real = "root.LANDevice.1.WLANConfiguration.%i.Standard"
+        ChannelBandwidth.real = "root.LANDevice.1.WLANConfiguration.%i.X_CT-COM_ChannelWidth"
+      }
+      WAN.GPON.%j {
+        BiasCurrent.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.BiasCurrent"
+        Enable.real = "root.WANDevice.%j.WANCommonInterfaceConfig.EnabledForInternet"
+        MACAddress.real = "root.WANDevice.%j.WANConnectionDevice.1.WANPPPConnection.1.MACAddress"
+        RXPower.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.RXPower"
+        Status.real = "root.WANDevice.%j.WANCommonInterfaceConfig.PhysicalLinkStatus"
+        SupplyVoltage.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.SupplyVottage"
+        TXPower.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.TXPower"
+        TransceiverTemperature.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.TransceiverTemperature"
+        Stats.DropPackets.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.DropPackets"
+        Stats.FECError.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.FECError"
+        Stats.HECError.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.HECError"
+        Stats.Downstream.BroadcastPackets.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.RBroadcastPackets"
+        Stats.Downstream.Bytes.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.BytesReceived"
+        Stats.Downstream.MulticastPackets.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.RMulticastPackets"
+        Stats.Downstream.Packets.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.PacketsReceived"
+        Stats.Downstream.PausePackets.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.RpausePackets"
+        Stats.Downstream.UnicastPackets.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.RUnicastPackets"
+        Stats.Upstream.BroadcastPackets.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.SBroadcastPackets"
+        Stats.Upstream.Bytes.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.BytesSent"
+        Stats.Upstream.MulticastPackets.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.SMulticastPackets"
+        Stats.Upstream.Packets.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.PacketsSent"
+        Stats.Upstream.PausePackets.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.SpausePackets"
+        Stats.Upstream.UnicastPackets.real = "root.WANDevice.%j.X_CT-COM_EponInterfaceConfig.Stats.SUnicastPackets"
+      }
+    }
+  }
+}

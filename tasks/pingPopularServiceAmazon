@@ -1,0 +1,37 @@
+val ip = "18.162.140.65"
+var ping_score = 0
+
+session.requestRestart()
+val (successfulPings, pingSuccess, avgResponseTime) = try {
+  session.spawnTask(
+    taskTemplates.IPPingDiagnostics_FromTask,
+    Map("pingHost"->"${ip}"),
+    Seq("Result.AverageResponseTime", "Result.FailureCount", "Result.SuccessCount")
+  ) |> {subtask => 
+    subtask.get("error").fold {
+      val successfulPings = subtask.getOr("Result.SuccessCount", "0").toInt
+      val pingSuccess = if(successfulPings > 0) true else false
+      val avgResponseTime = subtask.getOr("Result.AverageResponseTime", "0").toInt
+
+      ping_score += successfulPings / 10
+
+      (successfulPings, pingSuccess, avgResponseTime)
+    } (error => error.splitAtSep(": ") |> {(code, msg) =>
+      log.info(msg)
+
+      (0, false, 0)
+    })
+  }
+} catch{ e =>
+  log.info(e)
+
+  (0, false, 0)
+}
+
+ping_score = ping_score * 100 
+log.info(ping_score)
+
+if(ping_score > 0)
+workflow.setStatus("Success", "Your device has $ping_score% ping success ratio with average $avgResponseTime ms")
+else
+workflow.setStatus("Warning", "Your device did not reach desired service")

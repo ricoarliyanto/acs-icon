@@ -1,0 +1,64 @@
+val firmwareVersion = task.parameters.selectDynamic("firmwareVersion").getOr(fail("You should provide firmware version."))
+val deviceProductFirmwareGroup = device.groups.find(el=>el.toString.contains(groups.domainRoot.devicetypes.toString)).get
+val deviceProductTypeGroup = deviceProductFirmwareGroup.parent
+val futureFirmwareVersionGroupId = deviceProductTypeGroup.subgroup("firmwareVersion").?(fallback = fail("You should provide correct firmware version."))
+if(sv.dialectName.getOr("").contains("cwmp.devices.avsystem.suchar")){
+  workflow.setStatus("Success", description = """"
+    Device firmware version upgraded successfully 
+    New firmwareVersion: ${firmwareVersion} 
+    """")
+  finish()
+}
+val foundResourcesId = http.localRest("resources", method = "GET", uriParameters = Seq(
+  ("searchCriteria" -> "directGroups contains '$futureFirmwareVersionGroupId',category eq 'FIRMWARE'")
+)) |> { result =>
+  if(result.isError) {
+    taskReport.property.error.set("HTTP request to 'resources' failed in group $futureFirmwareVersionGroupId")
+    finish()
+  }
+  result.body.asArray.map(_.asString)
+}
+
+val resourceId = foundResourcesId.collectFirst { resourceId =>
+  val singleResourceData = http.localRest("resources/$resourceId", method = "GET") |> { result =>
+    if(result.isError) {
+      taskReport.property.error.set("HTTP request for single resource $resourceId failed in group $futureFirmwareVersionGroupId")
+      finish()
+    }
+    // rawLog += "Found resource: ${result.body.renderPretty()}\n" // tlegutko, useful for debug, but too verbose 
+    result.body.asObject
+  }
+  singleResourceData.get("description")
+    .map(_ => resourceId)
+}
+
+resourceId.foreach{ firmwareResourceId =>
+  val content = Json.object(Map(
+    "templateName" -> Json.string("provisioningFirmwareUpgrade"),
+    "config" -> Json.object(Map(
+      "taskName" -> Json.string("Applying $firmwareResourceId"),
+      "parameters" -> Json.array(
+        Json.object(
+          "name" -> Json.string("firmwareResourceId"),
+          "value" -> Json.string(firmwareResourceId)
+        )
+      ),
+    ))
+  ))
+  http.localRest("tasksFromTemplates/device/${device.serialNumber}", method = "POST", content = content).tryAndFold(
+    e => {
+      fail("Error scheduling firmware upgrade task. $e")
+    },
+    _ => {
+      workflow.setStatus("Success", description = """"
+        Device firmware version upgraded successfully 
+        New firmwareVersion: ${firmwareVersion} 
+        """")
+      finish()
+    }
+  )
+}
+ workflow.setStatus("NotAvailable", description = """"
+    Device firmware couldn't be ugraded.
+    Please add specific firmware version through ump resources.
+    """") 

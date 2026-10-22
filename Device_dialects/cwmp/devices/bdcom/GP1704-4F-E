@@ -1,0 +1,125 @@
+# BDCOM GP1704-4F-E Dialect
+# Mapped DeviceInfo to X_AVS_EXT to prevent Standard Path crashes
+# GPON Parameters mapped via expression to handle missing values gracefully (ignore faults)
+
+include "cwmp.default"
+include "cwmp.strategies"
+
+# CAPABILITIES
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.diagnostics"
+
+cwmp {
+  gpvMaxBatchSize = 1
+  bootstrapDiscoveryExpression = "${false}"
+  crDiscoveryExpression = "${inform.isConnectionRequest}"
+  
+  messageTimeout = 180000
+  sessionTimeout = 180000
+  
+  # EXCLUDE UNSAFE TREES FROM REFRESH
+  parametersExcludedFromRefresh = [
+  "InternetGatewayDevice.WANDevice.",
+  "InternetGatewayDevice.LANDevice.",
+  "InternetGatewayDevice.Layer3Forwarding.",
+  "InternetGatewayDevice.UserInterface.",
+  "InternetGatewayDevice.ManagementServer.",
+  "InternetGatewayDevice.Time.",
+  "InternetGatewayDevice.IPPingDiagnostics."
+  ]
+  
+  variables {
+    useRefreshDataModelQuota = true
+    UseRefreshDataModelQuota = true 
+    dotGpv = "false"
+  }
+}
+
+remappingStrategy {
+  mapping {
+    root.InternetGatewayDevice {
+      DeviceInfo {
+        Manufacturer.real = "InternetGatewayDevice.X_AVS_EXT.Manufacturer"
+        ManufacturerOUI.real = "InternetGatewayDevice.X_AVS_EXT.OUI"
+        ModelName.real = "InternetGatewayDevice.X_AVS_EXT.Model"
+        ProductClass.real = "InternetGatewayDevice.X_AVS_EXT.ProductClass"
+        SerialNumber.real = "InternetGatewayDevice.X_AVS_EXT.Serial"
+        HardwareVersion.real = "InternetGatewayDevice.X_AVS_EXT.HardwareVersion"
+        SoftwareVersion.real = "InternetGatewayDevice.X_AVS_EXT.SoftwareVersion"
+      }
+    
+      WANDevice.real = "InternetGatewayDevice.WANDevice"
+    }
+
+    root.X_AVS_EXT {
+      # === DEVICE INFO ===
+      HardwareVersion.real = "InternetGatewayDevice.X_AVS_EXT.HardwareVersion"
+      SoftwareVersion.real = "InternetGatewayDevice.X_AVS_EXT.SoftwareVersion"
+      SerialNumber.real = "InternetGatewayDevice.X_AVS_EXT.Serial"
+      MAC.real = "InternetGatewayDevice.X_AVS_EXT.MAC"
+      Model.real = "InternetGatewayDevice.X_AVS_EXT.Model"
+      ProductClass.real = "InternetGatewayDevice.X_AVS_EXT.ProductClass"
+      
+      # === RESOURCES ===
+      Resources.CPUUsed.real = "InternetGatewayDevice.X_AVS_EXT.Resources.CPUUsed"
+      Resources.RAMUsedPercent.real = "InternetGatewayDevice.X_AVS_EXT.Resources.RAMUsedPercent"
+      
+      # === WAN ===
+      WAN {
+        Name.real = "InternetGatewayDevice.X_AVS_EXT.WAN.Name"
+        Type.real = "InternetGatewayDevice.X_AVS_EXT.WAN.Type"
+        Status.real = "InternetGatewayDevice.X_AVS_EXT.WAN.Status"
+        MACAddress.real = "InternetGatewayDevice.X_AVS_EXT.WAN.MACAddress"
+         
+        # GPON Specific (using expression to catch faults)
+        GPON.1 {
+          Status.real = "InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.Status"
+            
+          # Using expression with realValue() allows optional reading (returns null if failed)
+          RXPower = ${tools.expression} {
+            expression = "realValue('InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.RXPower')"
+          }
+          TXPower = ${tools.expression} {
+            expression = "realValue('InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.TXPower')"
+          }
+          "Bias Current" = ${tools.expression} {
+            expression = "realValue('InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.BiasCurrent')"
+          }
+          Voltage = ${tools.expression} {
+            expression = "realValue('InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.SupplyVoltage')"
+          }
+          Temperature = ${tools.expression} {
+            expression = "realValue('InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.TransceiverTemperature')"
+          }
+
+          Stats {
+            Downstream {
+              Bytes.real = "InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.Stats.Downstream.Bytes"
+              Packets.real = "InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.Stats.Downstream.Packets"
+            }
+            Upstream {
+              Bytes.real = "InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.Stats.Upstream.Bytes"
+              Packets.real = "InternetGatewayDevice.X_AVS_EXT.WAN.GPON.1.Stats.Upstream.Packets"
+            }
+          }
+        }
+         
+        # IP / PPP IP
+        PPP.1 {
+          Username.real = "InternetGatewayDevice.X_AVS_EXT.WAN.PPP.1.Username"
+          Status.real = "InternetGatewayDevice.X_AVS_EXT.WAN.PPP.1.Status"
+        }
+        IP.1 {
+          IPv4.1 {
+            Address.real = "InternetGatewayDevice.X_AVS_EXT.WAN.IP.1.IPv4.1.Address"
+          }
+        }
+      }
+    }
+  }
+}

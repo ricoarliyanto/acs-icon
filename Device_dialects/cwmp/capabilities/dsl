@@ -1,0 +1,6 @@
+# DSL capability
+# A device is able to connect via DSL
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.DSL.%force-value = "true"
+}

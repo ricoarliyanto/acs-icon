@@ -1,0 +1,4 @@
+session.wait()
+val newTime = dmkey.root.DeviceInfo.UpTime.get()
+
+log.warn("finished! ${newTime}")

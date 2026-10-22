@@ -1,0 +1,15 @@
+# Generic capabilitiy
+# Basic parameters identifying device (including MAC). This set of parameters is common for all device
+
+include "tools.readConverters"
+
+remappingStrategy.read_converter {
+  #Normalize MAC address - uppercased and colon removed
+  MAC = ${tools.readConverters.oneToOne.stripMAC}
+}
+
+
+# Copy patched values into device entity
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Generic.%force-value = "true"
+}

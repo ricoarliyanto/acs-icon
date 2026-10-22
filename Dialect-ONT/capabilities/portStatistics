@@ -1,0 +1,6 @@
+# PortStatistics capability
+# A line terminating device has counters for total, configured, or free ports.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.PortStatistics.%force-value = "true"
+}

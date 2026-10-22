@@ -1,0 +1,4 @@
+<config>
+  <get key="InternetGatewayDevice.DeviceInfo.X_AIS_GPON.RxPower" output="RxPower" />
+  <store type="devProp" target="RxPower" value="${#RxPower}" />
+</config>

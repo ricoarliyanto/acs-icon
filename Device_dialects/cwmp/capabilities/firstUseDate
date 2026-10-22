@@ -1,0 +1,6 @@
+# First Use Date capability
+# A device records its first use date
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.FirstUseDate.%force-value = "true"
+}

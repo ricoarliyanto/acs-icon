@@ -1,0 +1,34 @@
+<config>
+  <store target="bucket-size" value="${(task.property.BucketSizeUpload+'/'+task.property.BucketSizeDownload).stripSuffix('/')}" />
+  <store target="burst-limit" value="${(task.property.BurstLimitUpload+'/'+task.property.BurstLimitDownload).stripSuffix('/')}" />
+  <store target="burst-threshold" value="${(task.property.BurstThresholdUpload+'/'+task.property.BurstThresholdDownload).stripSuffix('/')}" />
+  <store target="burst-time" value="${(task.property.BurstTimeUpload+'/'+task.property.BurstTimeDownload).stripSuffix('/')}" />
+  <store target="comment" value="${&quot;\&quot;&quot;+task.property.Comment+&quot;\&quot;&quot;}" />
+  <store target="dst" value="${task.property.Destination}" />
+  <store target="limit-at" value="${(task.property.LimitAtUpload+'/'+task.property.LimitAtDownload).stripSuffix('/')}" />
+  <store target="max-limit" value="${(task.property.MaxLimitUpload+'/'+task.property.MaxLimitDownload).stripSuffix('/')}" />
+  <store target="name" value="${task.property.Name}" />
+  <store target="parent" value="${task.property.Parent}" />
+  <store target="priority" value="${(task.property.PriorityUpload+'/'+task.property.PriorityDownload).stripSuffix('/')}" />
+  <store target="queue" value="${(task.property.QueueTypeUpload+'/'+task.property.QueueTypeDownload).stripSuffix('/')}" />
+  <store target="target" value="${task.property.Target}" />
+  <store target="time" value="${task.property.Time}" />
+  <store target="total-bucket-size" value="${task.property.TotalBucketSize}" />
+  <store target="total-burst-limit" value="${task.property.TotalBurstLimit}" />
+  <store target="total-burst-threshold" value="${task.property.TotalBurstThreshold}" />
+  <store target="total-burst-time" value="${task.property.TotalBurstTime}" />
+  <store target="total-limit-at" value="${task.property.TotalLimitAt}" />
+  <store target="total-max-limit" value="${task.property.TotalMaxLimit}" />
+  <store target="total-queue" value="${task.property.TotalQueue ? ''}" />
+  <foreach list="${list('comment','dst','parent','priority','queue','time','bucket-size','burst-time','burst-threshold','burst-limit','max-limit','limit-at','total-bucket-size','total-burst-time','total-burst-threshold','total-burst-limit','total-max-limit','total-limit-at','total-queue').filter(p=&gt; !p.empty)}">
+    <if expr="${taskReport.stringProperty.getOr(#i,'') != ''}">
+      <store target="cliCommand" value="/queue simple set numbers=[/queue simple find name=${#name}] ${#i}=${taskReport.stringProperty.getOr(#i,'')}" />
+      <log message="${#cliCommand}" />
+      <cli protocol="${sv.protocol}">
+        <command cmd="${#cliCommand}" />
+        <out target="output" />
+      </cli>
+    </if>
+  </foreach>
+  <getParameters key="Device.X_AVS_EXT.TrafficControl.Queue.Simple." />
+</config>

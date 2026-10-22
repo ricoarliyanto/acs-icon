@@ -1,0 +1,163 @@
+# BDCOM GP1704 Dialect
+# Refined based on Alcatel G-0425G-H and Huawei EG8041V5
+
+include "cwmp.strategies"
+
+# CAPABILITIES
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.diagnostics"
+
+cwmp {
+  gpvMaxBatchSize = 1
+  bootstrapDiscoveryExpression = "${false}"
+  crDiscoveryExpression = "${inform.isConnectionRequest}"
+  
+  variables {
+     activeWan = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1"
+     vdmWan1 = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1"
+     vdmWan2 = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1"
+     vdmWan3 = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANPPPConnection.1"
+  }
+}
+
+remappingStrategy {
+  read_converter {
+    # Standardize conversions
+    
+    # GPON Power/Voltage conversions
+    root.X_AVS_EXT.WAN.GPON.1 {
+       RXPower {
+         type: expression
+         # Convert 0.1uW to dBm
+         expression: "value == null || value == 0 ? null : (10 * Math.log10(value.toDouble() * 0.0001))"
+       }
+       TXPower {
+         type: expression
+         # Convert 0.1uW to dBm
+         expression: "value == null || value == 0 ? null : (10 * Math.log10(value.toDouble() * 0.0001))"
+       }
+    }
+
+    # System Status
+    root.X_AVS_EXT.System.cpeCpuUsed {
+      type: expression
+      expression: "value != null ? value + ' %' : '0 %'"
+    }
+    root.X_AVS_EXT.System.cpeMemUsed {
+      type: expression
+      expression: "value != null ? value + ' %' : '0 %'"
+    }
+  }
+
+  mapping {
+    root.InternetGatewayDevice {
+      WANDevice.real = "InternetGatewayDevice.WANDevice"
+    }
+
+    root.X_AVS_EXT {
+      HardwareVersion.real = "InternetGatewayDevice.DeviceInfo.HardwareVersion"
+      SoftwareVersion.real = "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
+      SerialNumber.real = "InternetGatewayDevice.DeviceInfo.ProvisioningCode"
+      
+      System {
+        cpeCpuUsed.real = "InternetGatewayDevice.X_AVS_EXT.Virtual.CPUUsage"
+        cpeMemUsed.real = "InternetGatewayDevice.X_AVS_EXT.Virtual.MemoryUsage"
+      }
+
+      WAN {
+        GPON.1 {
+           Status.real = "InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.WANAccessType"
+           RXPower.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower"
+           TXPower.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.TXPower"
+
+           Stats {
+             Downstream {
+               Bytes.real =  "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesReceived"
+               Packets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsReceived"
+               BroadcastPackets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RBroadcastPackets"
+               MulticastPackets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RMulticastPackets"
+               UnicastPackets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RUnicastPackets"
+               PausePackets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RpausePackets"
+             }
+             Upstream {
+               Bytes.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesSent"
+               Packets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsSent"
+               BroadcastPackets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SBroadcastPackets"
+               MulticastPackets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SMulticastPackets"
+               UnicastPackets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SUnicastPackets"
+               PausePackets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.SpausePackets"
+             }
+           }
+        }
+        
+        PPP {
+             Enable.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Enable"
+             Status.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionStatus"
+             Name.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Name"
+             
+             ConnectionType {
+                real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionType"
+                type = "expression"
+                expression = "value != null ? value : 'IP_Routed'"
+             }
+             
+             NATEnabled.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.NATEnabled"
+             ExternalIPAddress.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress"
+             SubnetMask.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.SubnetMask"
+             DefaultGateway.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DefaultGateway"
+             DNSServers.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DNSServers"
+             MACAddress.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.MACAddress"
+             Uptime.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Uptime"
+             LastConnectionError.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.LastConnectionError"
+        }
+        
+        Connection.%i {
+           Status.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.%i.ConnectionStatus"
+           IPAddress.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.%i.ExternalIPAddress"
+           MACAddress.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.%i.MACAddress"
+           Name.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.%i.Name"
+           ConnectionType.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.%i.ConnectionType"
+           Uptime.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.%i.Uptime"
+           LastConnectionError.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.%i.LastConnectionError"
+        }
+      }
+      
+      WiFi {
+        1 {
+          Enable.real = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Enable"
+          SSID.real = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID"
+          Status.real = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Status"
+          
+          # Associated Devices (Standard)
+          AssociatedDevice.%i {
+             MACAddress.real = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.%i.AssociatedDeviceMACAddress"
+             IPAddress.real = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.%i.AssociatedDeviceIPAddress"
+             SignalStrength.real = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.AssociatedDevice.%i.AssociatedDeviceSignalStrength"
+          }
+        }
+      }
+
+      Diagnostics.Download.DiagnosticsState.real = "InternetGatewayDevice.DownloadDiagnostics.DiagnosticsState"
+    }
+  }
+}
+
+virtualPatching {
+  # Smart CPU Calculation (ProcessStatus based)
+  InternetGatewayDevice.X_AVS_EXT.Virtual.CPUUsage {
+    type: expression
+    expression: "let cpu = parameter.get('InternetGatewayDevice.DeviceInfo.ProcessStatus.CPUUsage'); return cpu != null ? cpu.value : '0'"
+  }
+  
+  # Smart Memory Calculation (Free/Total based)
+  InternetGatewayDevice.X_AVS_EXT.Virtual.MemoryUsage {
+    type: expression
+    expression: "let free = parameter.get('InternetGatewayDevice.DeviceInfo.MemoryStatus.Free')?.value; let total = parameter.get('InternetGatewayDevice.DeviceInfo.MemoryStatus.Total')?.value; if (free != null && total != null) { let f = free.toDouble(); let t = total.toDouble(); return t > 0 ? String.format('%.2f', ((t - f) / t) * 100) : '0'; } return '0'"
+  }
+}

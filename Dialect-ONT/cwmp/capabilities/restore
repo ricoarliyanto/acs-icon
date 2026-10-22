@@ -1,0 +1,6 @@
+# Configuration Restore capability
+# A device is able to restore its configuration
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Restore.%force-value = "true"
+}

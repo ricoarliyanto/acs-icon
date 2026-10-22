@@ -1,0 +1,6 @@
+# VLAN capability
+# A device supports VLAN configuration
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.VLAN.%force-value = "true"
+}

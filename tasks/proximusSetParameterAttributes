@@ -1,0 +1,10 @@
+val spaEntries = task.parameters("spaJson").get.parseJson.asObject("entries").asArray
+
+spaEntries.map(_.asObject).foreach{entry =>
+  val key = entry("key").asString
+  val notificationType = entry.get("notificationType").filter(_.isString).map(_.asString).getOr("")
+  val accessList = entry.get("accessList").filter(_.isArray).map(_.asArray.map(_.asString).join(",")).getOr("")
+  val notificationChange = entry("notificationChange").asBoolean
+  val accessListChange = entry("accessListChange").asBoolean
+  key.toDMKey.setAttributes(if(notificationChange) ("notification",notificationType) else ("unsupported", "unsupported"), if(accessListChange) ("accessList",accessList) else ("unsupported", "unsupported")) //API doe not allow Seq, so sending fake attributtes
+}

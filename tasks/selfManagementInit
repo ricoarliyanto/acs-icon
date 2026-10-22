@@ -1,0 +1,35 @@
+<config>
+  <find query="${root.WANDevice.any.WANDSLInterfaceConfig.parameterValue('Enable', '1')}" output="activeDsl" />
+  <store type="devProp" target="activeDslConfig" value="${#activeDsl}" />
+  <find query="${root.LANDevice.any.WLANConfiguration.any}" output="activeWlan" />
+  <store type="devProp" target="activeWlan" value="${#activeWlan}" />
+  <find query="${root.LANDevice.any.LANHostConfigManagement.parameterValue('DHCPServerEnable', '1')}" output="dhcpRoot" />
+  <store type="devProp" target="dhcpRoot" value="${#dhcpRoot}" />
+  <store target="voipLine1Root" value="${''}" />
+  <store target="voipLine2Root" value="${''}" />
+  <foreach query="${root.Services.VoiceService.any.VoiceProfile.any.Line.any}" in="true" iterator="pref">
+    <if expr="${#voipLine1Root != '' and #voipLine2Root == ''}">
+      <store target="voipLine2Root" value="${#pref}" />
+    </if>
+    <if expr="${#voipLine1Root == ''}">
+      <store target="voipLine1Root" value="${#pref}" />
+    </if>
+  </foreach>
+  <store type="devProp" target="voipLine1Root" value="${#voipLine1Root}" />
+  <store type="devProp" target="voipLine2Root" value="${#voipLine2Root}" />
+  <find query="${root.Services.VoiceService.any.VoiceProfile.any.Line.any.moveUp.moveUp}" output="voipProfileRoot" />
+  <store type="devProp" target="voipProfileRoot" value="${#voipProfileRoot}" />
+  <find query="${root.WANDevice.any.WANConnectionDevice.any.WANDSLLinkConfig.parameterValue('DestinationAddress', sv.managementPvc).moveUp.WANIPConnection.any}" output="managementPvcRoot" />
+  <store type="devProp" target="managementPvcRoot" value="${#managementPvcRoot}" />
+  <store target="ipTvPvcRoot" value="${''}" />
+  <find query="${root.WANDevice.any.WANConnectionDevice.any.WANDSLLinkConfig.parameterValue('DestinationAddress', sv.ipTvPvc).moveUp.WANIPConnection.any}" output="ipTvPvcRoot" />
+  <store type="devProp" target="ipTvPvcRoot" value="${#ipTvPvcRoot}" />
+  <if expr="${#ipTvPvcRoot != null and sv.ipTvEnabled == null}">
+    <store type="devProp" target="ipTvEnabled" value="false" />
+  </if>
+  <find query="${root.WANDevice.any.WANConnectionDevice.any.WANDSLLinkConfig.parameterValue('DestinationAddress', sv.voipPvc).moveUp.WANIPConnection.any}" output="voipPvcRoot" />
+  <store type="devProp" target="voipPvcRoot" value="${#voipPvcRoot}" />
+  <find query="${root.WANDevice.any.WANConnectionDevice.any.WANDSLLinkConfig.parameterValue('DestinationAddress', sv.ipTvPvc).moveUp.WANIPConnection.any.Stats}" output="ipTvData" />
+  <store type="devProp" target="ipTvDataSent" value="${#ipTvData}.EthernetBytesSent" />
+  <store type="devProp" target="ipTvDataReceived" value="${#ipTvData}.EthernetBytesReceived" />
+</config>

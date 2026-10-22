@@ -1,0 +1,16 @@
+# Blacklisting configuration
+# You may consider using patching strategy with attribute %drop, instead of blacklisting
+blacklistStrategy = {
+  type: BLACKLISTING
+
+  # When false, Get/Set/Delete requests for blacklisted keys are reported as successful, with empty result.
+  # When true, Get/Set/Delete requests result in failure.
+  # NOTE: Add requests always result in failure, regardless of this setting.
+  failRequests = false
+
+  # List of blacklisted data model keys. An object key blacklists entire data model subtree.
+  # Patterns (e.g. instance number wildcards or regular expressions) are not supported - only exact keys.
+  blacklistedKeys = []
+}
+
+liveDatamodelStrategies += ${blacklistStrategy}

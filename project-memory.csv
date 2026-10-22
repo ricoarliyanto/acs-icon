@@ -1,0 +1,43 @@
+# Persistent Memory - Project acs-icon CWMP Dialect Development
+
+## Project Location
+- Base: /home/win/code/acs-icon/
+- Device_dialects: /home/win/code/acs-icon/Device_dialects/cwmp/devices/
+
+## Key Files & Locations
+
+### Datamodel UGRID
+- Path: /home/win/code/acs-icon/datamodel/ugrid/4C3FA731AFD5_datamodel.csv
+- Format: CSV (semicololon-delimited)
+- Columns: NAME;TYPE;VALUE;WRITABLE;ACTIVE_NOTIFICATION
+- Total lines: ~2058 (including header)
+- Content: UGRID (Unstructured Grid) datamodel entries
+
+### Datamodel Huawei
+- Path: /home/win/code/acs-icon/datamodel/huawei/EG8041V5_485754430B990CAF_datamodel.csv
+- Same CSV format as UGRID
+- Content: Huawei EG8041V5 datamodel entries
+
+### Reference Dialect (Huawei)
+- Path: /home/win/code/acs-icon/Device_dialects/cwmp/devices/huawei/EG8041V5-rev2
+- Format: ASCII text (CRLF line terminators)
+- This is the reference dialect to follow for creating UGRID dialect
+
+### Target Dialect Output
+- Path: /home/win/code/acs-icon/Device_dialects/cwmp/devices/ugrid/
+- Status: TO BE CREATED - CWMP dialect for UGRID device
+
+## Context
+- User requested creation of CWMP dialect for UGRID device
+- Reference: Huawei EG8041V5 dialect (EG8041V5-rev2)
+- Both datamodels follow same CSV structure
+- Dialect file follows specific format (needs to be studied from Huawei reference)
+
+## Workflow
+1. Read UGRID datamodel CSV
+2. Read Huawei datamodel CSV  
+3. Read Huawei dialect reference file
+4. Create equivalent CWMP dialect for UGRID at specified path
+
+## Timestamp
+- Last updated: 2026-07-13

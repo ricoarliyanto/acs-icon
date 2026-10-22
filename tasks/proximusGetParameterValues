@@ -1,0 +1,6 @@
+val paremeters = task.parameters.gpvJson.get.parseJson.asArray.map(_.asString).map(_.toDMKey)
+val result = ldm.getAll(paremeters)
+
+taskReport.property.result.set(
+    Json.object(result.map((k,v) => (k.raw, Json.string(v)))).render
+)

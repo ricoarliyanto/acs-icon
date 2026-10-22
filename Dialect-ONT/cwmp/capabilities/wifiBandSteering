@@ -1,0 +1,6 @@
+# WiFi Band Steering capapbility
+# A device has WiFi band steering capability.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.WiFiBandSteering.%force-value = "true"
+}

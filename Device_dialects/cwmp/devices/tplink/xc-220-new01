@@ -1,0 +1,227 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic.dm2"
+include "cwmp.capabilities.management.dm2"
+include "cwmp.capabilities.resources.dm2"
+include "cwmp.capabilities.status.dm2"
+include "cwmp.capabilities.temperature.dm2"
+include "cwmp.capabilities.syslog.dm2"
+include "cwmp.ext.management.stun"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet.dm2"
+include "cwmp.capabilities.wan.dm2"
+include "cwmp.ext.wan.gpon.dm2"
+
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging.dm2"
+include "cwmp.capabilities.dhcp.dm2"
+include "cwmp.capabilities.dns.dm2"
+include "cwmp.capabilities.firewall.dm2"
+include "cwmp.capabilities.forwarding.dm2"
+include "cwmp.capabilities.lan.dm2"
+include "cwmp.capabilities.ntp.dm2"
+include "cwmp.capabilities.users.dm2"
+include "cwmp.capabilities.xmpp.dm2"
+include "cwmp.capabilities.routing.dm2"
+include "cwmp.capabilities.wifi.dm2"
+include "cwmp.capabilities.ethernet.dm2"
+
+
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics.dm2"
+include "cwmp.capabilities.neighborhood.dm2"
+
+
+# WIFI
+
+include "tools.readConverters"
+
+cwmp.setActiveWanFromInform = false
+
+remappingStrategy {
+   
+
+  read_converter {
+    # Convert Manufacturer value to uppercase
+    Manufacturer {
+      expression = """${singleValue.toUpperCase()}"""
+      type = expression
+    }
+
+  
+
+    WAN.Internet {
+      Status= ${tools.expression} {
+        expression = """${if(singleValue.contains('Up')) 'Connected'
+        else if(set('Down', 'Disabled').exists(singleValue.contains(_))) 'Disconnected'
+        else 'Unconfigured'}"""
+      }
+      Mac = ${tools.readConverters.oneToOne.stripMAC}
+    }
+
+  }
+
+ 
+
+  mapping {
+ 
+    root.X_AVS_EXT {
+      LAN {
+        Port.%i {
+          Alias.real = "root.Ethernet.Interface.%i.Alias"
+          DuplexMode.real = "root.Ethernet.Interface.%i.DuplexMode"
+          Enabled.real = "root.Ethernet.Interface.%i.Enable"
+          MACAddress.real = "root.Ethernet.Interface.%i.MACAddress"
+          Name.real = "root.Ethernet.Interface.%i.Name"
+          Status.real = "root.Ethernet.Interface.%i.Status"
+          Upstream.real = "root.Ethernet.Interface.%i.Upstream"
+          MaxBitRate.real = "root.Ethernet.Interface.%i.MaxBitRate"
+          Stats {
+            Downstream {
+              Bytes.real = "root.Ethernet.Interface.%i.Stats.BytesReceived"
+              Packets.real = "root.Ethernet.Interface.%i.Stats.PacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "root.Ethernet.Interface.%i.Stats.BytesSent"
+              Packets.real = "root.Ethernet.Interface.%i.Stats.PacketsSent"
+            }
+          }
+        }
+      }
+      WAN {
+        PPP {
+          Username.real = "root.X_AVS_EXT.WAN.PPP.Username"
+          Interface.real = "root.PPP.Interface.1.Name"
+          ConnectionStatus.real = "root.PPP.Interface.1.ConnectionStatus"
+          LastConnectionError.real = "root.PPP.Interface.1.LastConnectionError"
+          CurrentMRUSize.real = "root.PPP.Interface.1.CurrentMRUSize"
+          AuthenticationProtocol.real = "root.PPP.Interface.1.AuthenticationProtocol"
+          ConnectionTrigger.real = "root.PPP.Interface.1.ConnectionTrigger"
+          X_TP_IPv6ConnStatus.real = "root.PPP.Interface.1.X_TP_IPv6ConnStatus"
+          IPCP {
+            LocalIPAddress.real = "root.PPP.Interface.1.IPCP.LocalIPAddress"
+            RemoteIPAddress.real = "root.PPP.Interface.1.IPCP.RemoteIPAddress"
+            DNSServers.real = "root.PPP.Interface.1.IPCP.DNSServers"
+          }
+          Stats {
+            Downstream {
+              Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesReceived"
+              Packets.real = "root.Ethernet.VLANTermination.1.Stats.PacketsReceived"
+              BroadcastPackets.real = "root.Ethernet.VLANTermination.1.Stats.BroadcastPacketsReceived"
+              MulticastPackets.real = "root.Ethernet.VLANTermination.1.Stats.MulticastPacketsReceived"
+              UnicastPackets.real = "root.Ethernet.VLANTermination.1.Stats.UnicastPacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesSent"
+              Packets.real = "root.Ethernet.VLANTermination.1.Stats.PacketsSent"
+              BroadcastPackets.real = "root.Ethernet.VLANTermination.1.Stats.BroadcastPacketsSent"
+              MulticastPackets.real = "root.Ethernet.VLANTermination.1.Stats.MulticastPacketsSent"
+              UnicastPackets.real = "root.Ethernet.VLANTermination.1.Stats.UnicastPacketsSent"
+            }
+          }
+        }
+
+        GPON {
+          PonMode.real = "root.Optical.Interface.1.X_TP_GPON_Config.PonMode"
+          LinkStatus.real = "root.Optical.Interface.1.Status"
+          Enable.real = "root.Optical.Interface.1.Enable"
+          BiasCurrent.real = "root.Optical.Interface.1.X_TP_GPON_Config.BiasCurrent"
+          MACAddress.real = "root.X_AVS_EXT.MAC"
+          RXPower.real = "root.Optical.Interface.1.X_TP_GPON_Config.RXPower"
+          TXPower.real = "root.Optical.Interface.1.X_TP_GPON_Config.TXPower"
+          SupplyVottage.real = "root.Optical.Interface.1.X_TP_GPON_Config.SupplyVottage"
+          TransceiverTemperature.real = "root.Optical.Interface.1.X_TP_GPON_Config.TransceiverTemperature"
+          XponStatus.real = "root.Optical.Interface.1.X_TP_GPON_Config.XponStatus"
+          RegErrNo.real = "root.Optical.Interface.1.X_TP_GPON_Config.RegErrNo"
+          FecDsEn.real = "root.Optical.Interface.1.X_TP_GPON_Config.FecDsEn"
+          FecUsEn.real = "root.Optical.Interface.1.X_TP_GPON_Config.FecUsEn"
+          Stats {
+            Downstream {
+              Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesReceived"
+              Packets.real = "root.Ethernet.VLANTermination.1.Stats.PacketsReceived"
+              BroadcastPackets.real = "root.Ethernet.VLANTermination.1.Stats.BroadcastPacketsReceived"
+              MulticastPackets.real = "root.Ethernet.VLANTermination.1.Stats.MulticastPacketsReceived"
+              UnicastPackets.real = "root.Ethernet.VLANTermination.1.Stats.UnicastPacketsReceived"
+              Errors.real = "root.Optical.Interface.1.Stats.ErrorReceived"
+              CurrentRate.real = "root.Optical.Interface.1.Stats.X_TP_DownstreamCurrRate"
+            }
+            Upstream {
+              Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesSent"
+              Packets.real = "root.Ethernet.VLANTermination.1.Stats.PacketsSent"
+              BroadcastPackets.real = "root.Ethernet.VLANTermination.1.Stats.BroadcastPacketsSent"
+              MulticastPackets.real = "root.Ethernet.VLANTermination.1.Stats.MulticastPacketsSent"
+              UnicastPackets.real = "root.Ethernet.VLANTermination.1.Stats.UnicastPacketsSent"
+              Errors.real = "root.Optical.Interface.1.Stats.ErrorSent"
+              CurrentRate.real = "root.Optical.Interface.1.Stats.X_TP_UpstreamCurrRate"
+            }
+          }
+          OMCI {
+            PacketsReceived.real = "root.Optical.Interface.1.X_TP_OMCIStats.PacketsReceived"
+            PacketsSent.real = "root.Optical.Interface.1.X_TP_OMCIStats.PacketsSent"
+          }
+        }
+
+        IP {
+          Interface.1 {
+            Name.real = "root.IP.Interface.1.Name"
+            IPv4Address.1 {
+              IPAddress.real = "root.IP.Interface.1.IPv4Address.1.IPAddress"
+              SubnetMask.real = "root.IP.Interface.1.IPv4Address.1.SubnetMask"
+              AddressingType.real = "root.IP.Interface.1.IPv4Address.1.AddressingType"
+              Enable.real = "root.IP.Interface.1.IPv4Address.1.Enable"
+              Status.real = "root.IP.Interface.1.IPv4Address.1.Status"
+            }
+          }
+        }
+      }
+      WiFi {
+        1 {
+          SSID.real = "root.WiFi.SSID.1.SSID"
+          Enable.real = "root.WiFi.Radio.1.Enable"
+          Status.real = "root.WiFi.Radio.1.Status"
+          Channel.real = "root.WiFi.Radio.1.Channel"
+          Band.real = "root.WiFi.Radio.1.OperatingFrequencyBand"
+          Standard.real = "root.WiFi.Radio.1.OperatingStandards"
+          Power.real = "root.WiFi.Radio.1.TransmitPower"
+          Security.real = "root.WiFi.AccessPoint.1.Security.ModeEnabled"
+          Password.real = "root.WiFi.AccessPoint.1.Security.KeyPassphrase"
+          Neighborhood.%i {
+            BSSID.real = "root.LANDevice.1.WiFi.Radio.1.X_HW_NeighborAP.%i.BSSID"
+            Channel.real = "root.LANDevice.1.WiFi.Radio.1.X_HW_NeighborAP.%i.Channel"
+            SSID.real = "root.LANDevice.1.WiFi.Radio.1.X_HW_NeighborAP.%i.SSID"
+            Security.real = "root.LANDevice.1.WiFi.Radio.1.X_HW_NeighborAP.%i.Security"
+            SignalStrength.real = "root.LANDevice.1.WiFi.Radio.1.X_HW_NeighborAP.%i.RSSI"
+            Standard.real = "root.LANDevice.1.WiFi.Radio.1.X_HW_NeighborAP.%i.Standard"
+            ChannelBandwidth.real = "root.LANDevice.1.WiFi.Radio.1.X_HW_NeighborAP.%i.ChannelWidth"
+          }
+          BSSID.real = "root.WiFi.SSID.1.BSSID"
+          Stats {
+            Downstream {
+              Bytes.real = "root.WiFi.SSID.1.Stats.BytesReceived"
+              Packets.real = "root.WiFi.SSID.1.Stats.PacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "root.WiFi.SSID.1.Stats.BytesSent"
+              Packets.real = "root.WiFi.SSID.1.Stats.PacketsSent"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+virtualPatching {
+  patching {
+    root.X_AVS_EXT {
+      Capabilities.GPON.%force-value = "true"
+      Capabilities.WiFi.%force-value = "true"
+
+    }
+  }
+}

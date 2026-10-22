@@ -1,0 +1,14 @@
+<config>
+  <store target="SSID" value="${task.properties.get('SSID')}" />
+  <store target="Name" value="${task.properties.get('Name')}" />
+  <store target="Mode" value="${task.properties.get('Mode')}" />
+  <store target="MACAddress" value="${task.properties.get('MACAddress')}" />
+  <find query="${root.LANDevice.any.WLANConfiguration.any.valueOf('SSID').is(#SSID)}" output="instance" />
+  <store target="chosenWifi" value="${#instance}X_ZTE-COM_AccessControl" />
+  <set key="${#instance.toParameterKey}.X_ZTE-COM_AccessControlMode" value="${#Mode}" />
+  <log message="Adding Access Control to ${#chosenWifi}" level="DEBUG" />
+  <add parentKey="${#chosenWifi}">
+    <set key="Name" value="${#Name}" />
+    <set key="MACAddress" value="${#MACAddress}" />
+  </add>
+</config>

@@ -1,0 +1,6 @@
+# Status capabilitiy
+# Device status parameters like temperature and current up time
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Status.%force-value = "true"
+}

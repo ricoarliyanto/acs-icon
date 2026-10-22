@@ -1,0 +1,17 @@
+# Build artifacts
+target/
+target
+/graphify-out/
+/graphify-out
+
+# Node.js
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db

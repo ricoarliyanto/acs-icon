@@ -1,0 +1,10 @@
+<config>
+  <store target="ntpServer" value="${sv.`quickFix.preferedNTPServer`}" />
+  <if expr="${#ntpServer != ''}">
+    <set key="Root.Time.NTPServer1" value="${#ntpServer}" />
+    <log message="NTPServer1 set to ${#ntpServer}" />
+    <else>
+      <log level="WARN" message="Define quickFix.preferedNTPServer profile first!" />
+    </else>
+  </if>
+</config>

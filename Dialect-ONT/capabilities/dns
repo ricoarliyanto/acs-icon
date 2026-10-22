@@ -1,0 +1,6 @@
+# DNS capability
+# Device allows to set properties for Domain Name Service
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.DNS.%force-value = "true"
+}

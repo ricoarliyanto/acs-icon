@@ -1,0 +1,18 @@
+<config>
+  <defaults get.flush="false" set.flush="false">
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.Power" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.RSRP0" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.RSRP1" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.RSRQ" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.SINR" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.RSSI" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.CellID" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.IMEI" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.IMSI" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.PCI" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.PLMN" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.Stats.Downstream.Bytes" ignoreFaults="true" />
+    <get key="InternetGatewayDevice.X_AVS_EXT.WAN.LTE.Stats.Upstream.Bytes" ignoreFaults="true" />
+  </defaults>
+  <flush />
+</config>

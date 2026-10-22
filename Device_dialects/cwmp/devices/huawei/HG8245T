@@ -1,0 +1,153 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.syslog"
+include "cwmp.ext.syslog.hw"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.gpon"
+include "cwmp.ext.wan.gpon.huawei"
+
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.forwarding"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.voip"
+include "cwmp.capabilities.firewall"
+include "cwmp.ext.firewall.hw"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood"
+include "cwmp.ext.wifi.neighborhood.huawei"
+cwmp.setActiveWanFromInform = false
+remappingStrategy.mapping {
+  root.X_AVS_EXT.WAN.PPP {
+    // For DSL Monitoring and CC
+    Username.real = "${sv.activeWan.toParameterKey}".Username
+    Password.real = "${sv.activeWan.toParameterKey}".Password
+    Status.real = "${sv.activeWan.toParameterKey}".ConnectionStatus
+    Enable.real = "${sv.activeWan.toParameterKey}".Enable
+    LastConnectionError.real = "${sv.activeWan.toParameterKey}".LastConnectionError
+    1 {
+      Username.real = "${sv.activeWan.toParameterKey}".Username
+      Password.real = "${sv.activeWan.toParameterKey}".Password
+      Status.real = "${sv.activeWan.toParameterKey}".ConnectionStatus
+      Enable.real = "${sv.activeWan.toParameterKey}".Enable
+      LastConnectionError.real = "${sv.activeWan.toParameterKey}".LastConnectionError
+    }
+  }
+
+  root.X_AVS_EXT.VoIP.WAN.IP{
+    Enable.real = "${sv.activeVoipInterface.toParameterKey}".Enable
+    Status.real = "${sv.activeVoipInterface.toParameterKey}".ConnectionStatus
+    Name.real = "${sv.activeVoipInterface.toParameterKey}".Name
+    Alias.real = "${sv.activeVoipInterface.toParameterKey}".Alias
+    Address.real = "${sv.activeVoipInterface.toParameterKey}".ExternalIPAddress
+    AddressingType.real = "${sv.activeVoipInterface.toParameterKey}".AddressingType
+    DNSEnable.real = "${sv.activeVoipInterface.toParameterKey}".DNSEnabled
+    DNSServers.real = "${sv.activeVoipInterface.toParameterKey}".DNSServers
+    DefaultGateway.real = "${sv.activeVoipInterface.toParameterKey}".DefaultGateway
+    SubnetMask.real = "${sv.activeVoipInterface.toParameterKey}".SubnetMask
+    ConnectionType.real = "${sv.activeVoipInterface.toParameterKey}".ConnectionType
+    LastConnectionError.real = "${sv.activeVoipInterface.toParameterKey}".LastConnectionError
+    AddressingType.real = "${sv.activeVoipInterface.toParameterKey}".AddressingType
+  }
+}
+
+remappingStrategy {
+  read_converter {
+    WiFi.%i.Enable = null
+  }
+  mapping {
+    root.X_AVS_EXT {
+      Status.Temperature.real = "root.WANDevice.1.X_GponInterafceConfig.TransceiverTemperature"
+      WiFi {
+        1 {
+          Enable.real = "${sv.vdmWlan1.toParameterKey}.Enable"
+          Password.real = [
+            "${sv.vdmWlan1.toParameterKey}.PreSharedKey.1.KeyPassphrase",
+            "${sv.vdmWlan1.toParameterKey}.PreSharedKey.1.PreSharedKey"
+          ]
+          WPS {
+            Status.real = "${sv.vdmWlan1.toParameterKey}.WPS.ConfigurationState"
+            Enable.real = "${sv.vdmWlan1.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan1.toParameterKey}.WPS.DevicePassword"
+          }
+        }
+        2 {
+          Enable.real = "${sv.vdmWlan2.toParameterKey}.Enable"
+          Password.real = [
+            "${sv.vdmWlan2.toParameterKey}.PreSharedKey.1.KeyPassphrase",
+            "${sv.vdmWlan2.toParameterKey}.PreSharedKey.1.PreSharedKey"
+          ]
+          WPS {
+            Status.real = "${sv.vdmWlan2.toParameterKey}.WPS.ConfigurationState"
+            Enable.real = "${sv.vdmWlan2.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan2.toParameterKey}.WPS.DevicePassword"
+          }
+        }
+        3 = {
+          Enable.real = "${sv.vdmWlan3.toParameterKey}.Enable"
+          Password.real = [
+            "${sv.vdmWlan3.toParameterKey}.PreSharedKey.1.KeyPassphrase",
+            "${sv.vdmWlan3.toParameterKey}.PreSharedKey.1.PreSharedKey"
+          ]
+          WPS {
+            Status.real = "${sv.vdmWlan3.toParameterKey}.WPS.ConfigurationState"
+            Enable.real = "${sv.vdmWlan3.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan3.toParameterKey}.WPS.DevicePassword"
+          }
+        }
+        4 = {
+          Enable.real = "${sv.vdmWlan4.toParameterKey}.Enable"
+          Password.real = [
+            "${sv.vdmWlan4.toParameterKey}.PreSharedKey.1.KeyPassphrase",
+            "${sv.vdmWlan4.toParameterKey}.PreSharedKey.1.PreSharedKey"
+          ]
+          WPS {
+            Status.real = "${sv.vdmWlan4.toParameterKey}.WPS.ConfigurationState"
+            Enable.real = "${sv.vdmWlan4.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan4.toParameterKey}.WPS.DevicePassword"
+          }
+        }
+        5 = {
+          Enable.real = "${sv.vdmWlan5.toParameterKey}.Enable"
+          Password.real = [
+            "${sv.vdmWlan5.toParameterKey}.PreSharedKey.1.KeyPassphrase",
+            "${sv.vdmWlan5.toParameterKey}.PreSharedKey.1.PreSharedKey"
+          ]
+          WPS {
+            Status.real = "${sv.vdmWlan5.toParameterKey}.WPS.ConfigurationState"
+            Enable.real = "${sv.vdmWlan5.toParameterKey}.WPS.Enable"
+            Pin.real = "${sv.vdmWlan5.toParameterKey}.WPS.DevicePassword"
+          }
+        }
+      }
+    }
+  }
+}
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    WiFi.1.Neighborhood.%any.ChannelBandwidth.%force-value = "20"
+    WiFi.2.Neighborhood.%any.ChannelBandwidth.%force-value = "20"
+  }
+}
+remappingStrategy {
+  write_converter {
+    Diagnostics.IPPing.Timeout {
+      expression : "50000",
+      type : "expression"
+    }
+  }
+}

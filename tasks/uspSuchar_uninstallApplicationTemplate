@@ -1,0 +1,5 @@
+val name = task.parameters.applicationName.get
+val currentVersion = task.parameters.currentVersion.get
+val uuid = task.parameters.uuid.get
+
+device.dm.SoftwareModules.DeploymentUnit.any.Name.whereValueIs(name).key.parent.deleteObject()

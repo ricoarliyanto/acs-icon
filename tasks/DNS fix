@@ -1,0 +1,15 @@
+<config>
+  <log message="Checking DNS configuration..." />
+  <get key="${sv.activeWan}DNSServers" output="DNSServers" />
+  <store type="devProp" target="DNSServers" value="${#DNSServers}" />
+  <if expr="${#DNSServers != '8.8.8.8'}">
+    <log message="Fixing DNS configuration..." />
+    <set key="${sv.activeWan}DNSServers" value="8.8.8.8" />
+    <log message="DNS configuration fixed!" />
+    <finish />
+    <else>
+      <log message="DNS configuration OK!" />
+      <finish />
+    </else>
+  </if>
+</config>

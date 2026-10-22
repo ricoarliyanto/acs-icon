@@ -1,0 +1,24 @@
+<config>
+  <defaults get.flush="false" set.flush="false">
+    <get key="Root.X_AVS_EXT.WAN.Enable" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.Status" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.LastConnectionError" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.MACAddress" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.NATEnabled" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.Name" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.IP.Address" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.IP.DNSServers" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.PPP.Username" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.Stats.Downstream.MaxBitRate" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.Stats.Upstream.MaxBitRate" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.IP.1.Stats.Downstream.Bytes" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.IP.1.Stats.Upstream.Bytes" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.Ethernet.1.Stats.BytesReceived" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.Ethernet.1.Stats.BytesSent" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.Stats.Downstream.Bytes" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.Stats.Downstream.Packets" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.Stats.Upstream.Bytes" ignoreFaults="true" />
+    <get key="Root.X_AVS_EXT.WAN.Stats.Upstream.Packets" ignoreFaults="true" />
+  </defaults>
+  <flush />
+</config>

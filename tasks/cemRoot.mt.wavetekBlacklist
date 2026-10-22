@@ -1,0 +1,34 @@
+var alreadyWhitelisted = Set.apply[String]()
+val macsQuery = ldm.root.X_AVS_EXT.WiFi.any(true).AssociatedDevice.any.MACAddress
+ldm.foreach(macsQuery)(macKey => {
+  val macValue = macKey.get(true).toMAC.printUnix
+  alreadyWhitelisted = alreadyWhitelisted.add(macValue)
+})
+ldm.foreach(ldm.root.X_AVS_EXT.WiFi.any(true).MACAddressControl.AccessList)(accessList => {
+  accessList.get().splitBy(",").map(_.toMAC.printUnix).foreach(mac => {
+  	alreadyWhitelisted = alreadyWhitelisted.add(mac)
+  })
+})
+
+
+val blacklist = task.parameters.blacklist.getOr("").splitBy(",").map(_.toMAC.printUnix).toSet
+val whitelist = alreadyWhitelisted.diff(blacklist).join(",")
+
+val whitelistTaskTemplate = sv.cemWhitelist.getOr("cemRoot.mt.wavetekWhitelist")
+session.spawnTask(whitelistTaskTemplate, Map("whitelist" -> whitelist))
+
+// shedule cleanup
+sv.whitelistToRestore.set(alreadyWhitelisted.join(","))
+val blacklistDuration = sv.blacklistDuration.getOpt.flatMap(_.toDurationOpt).getOr(Duration.apply("5m"))
+val clenupTimsetamp = Timestamp.now().add(blacklistDuration)
+sv.clearBlacklistAfter.set(clenupTimsetamp.millis.toString)
+
+val cleanupContent = Json.object(
+  "templateName" -> Json.string(sv.cemClearBlacklist.getOr("cemRoot.mt.wavetekClearBlacklist")),
+  "config" -> Json.object(
+    "taskName" -> Json.string("cemClearBlacklist"),
+  )
+)
+http.localRest("/tasksFromTemplates/device/${device.id}", uriParameters=Seq(("exactId", "true")), method = "POST", content = cleanupContent)
+
+session.requestConnectionIn(blacklistDuration)

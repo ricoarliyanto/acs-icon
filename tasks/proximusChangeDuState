@@ -1,0 +1,28 @@
+val json = task.parameters.changeDuStateJson.get.parseJson.asArray
+val installTemplate = """  <install URL="url" UUID="uuid" Username="username" Password="password" ExecutionEnvRef="executionEnvRef" />\n"""
+val updateTemplate = """  <update UUID="uuid" Version="version" URL="url" Username="username" Password="password" />\n"""
+val uninstallTemplate =  """  <uninstall UUID="uuid" Version="version" ExecutionEnvRef="executionEnvRef" />\n"""
+
+val config = "<config>" + json.map{j =>
+  val jsonObj = j.asObject
+  val struct = jsonObj("operationStruct").asObject
+  val opType = jsonObj("type").asString
+  log.info(struct)
+  if(opType == "install"){
+    Seq("url", "uuid", "username", "password", "executionEnvRef").foldLeft(installTemplate){(string, attr) =>
+      string.replace(attr, struct.get(attr).filter(_.isString).map(_.asString).getOr(""))
+    }
+  } else if(opType == "update"){
+    Seq("url", "uuid", "username", "password", "version").foldLeft(updateTemplate){(string, attr) =>
+      string.replace(attr, struct.get(attr).filter(_.isString).map(_.asString).getOr(""))
+    }
+  } else if(opType == "uninstall"){
+     Seq("version", "uuid", "executionEnvRef").foldLeft(uninstallTemplate){(string, attr) =>
+      string.replace(attr, struct.get(attr).filter(_.isString).map(_.asString).getOr(""))
+    }
+  } else {
+    ""
+  }
+} + "</config>"
+
+session.spawnTask(taskTemplates.emptyDuTemplate, config = config.opt)

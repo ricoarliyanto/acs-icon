@@ -1,0 +1,7 @@
+<config>
+  <in key="Root.X_AVS_EXT.DHCP">
+    <set key="MinAddress" value="${#defaultMinAddress}" />
+    <set key="MaxAddress" value="${#defaultMaxAddress}" />
+  </in>
+  <workflowStatus value="Success" desc="workflows.onlineStepTemplate.workflowSetDefaultDhcpPool.status.1.descriptionworkflowTranslatable${#minAddress}workflowTranslatable${#maxAddress}workflowTranslatable" />
+</config>  

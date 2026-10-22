@@ -1,0 +1,80 @@
+// This script sets the parameters for a speedtest diagnostic on a device,
+// using an updated data model. It includes a queuing mechanism to ensure
+// that only one device runs the test at a time.
+
+var executed = false
+
+val CEMCurrentSpeedTestRole = sv.CEMCurrentSpeedTestRole.getOpt.fold("Receiver")(role=>role)
+// Loop until the speedtest execution has been successfully initiated.
+while(!executed){
+  
+  // Access the Work Order Request list for the speedtest execution queue.
+  val worList = wor("speedTest").list("speedTestExection")
+    
+  // Update device properties to indicate a test is in progress.
+  device.property.speedTestLastExecTime.set(Timestamp.now().millis.toString)
+  device.property.speedTestInProgress.set("true")
+    
+  // Calculate the expiration time for old queue entries (2 minutes).
+  val expired = Timestamp.now().addSeconds(-120).millis
+    
+  // Filter out and remove any expired entries from the queue.
+  val toRemove = worList.getOpt.getOr(Seq.empty).filter(v => v.splitBy("@")(1).toLong < expired)
+  toRemove.foreach(worList.remove(_))
+    
+  val worListValue = worList.getOpt.getOr(Seq.empty)
+
+  // Check if this device is at the head of the queue.
+  if(worListValue.headOpt.exists(_.contains(device.id))){
+    // It's our turn to execute.
+    // Determine the role (Sender/Receiver) based on the task property.
+    val role = if(task.property.buttonIdentifier.is("upload")) "Sender" else CEMCurrentSpeedTestRole
+    
+    // Invoke the IPLayerCapacity diagnostic using the operation() method.
+    // The arguments are passed as a map with short key names, as requested.
+    dmkey.root.IP.Diagnostics.`IPLayerCapacity()`.operation(
+      argumentsMap = Map(
+        "X_AuthKey" -> "q9SJc1xGwT70o9yEB4OQ7NDqBZA",
+        "Host" -> "uk.speedtest.avsystem.cloud",
+        "Role" -> role,
+        "Port" -> "25000",
+        "ProtocolVersion" -> "IPv4"
+      )
+    )
+      
+    executed = true
+  } else {
+    // This device is not at the head of the queue.
+    // If the device is not in the queue at all, add it.
+    if(!worListValue.exists(_.contains(device.id))){
+      worList.append("${device.id}@${Timestamp.now().millis}")
+    }
+
+    // Double-check if the queue was empty before we added ourselves.
+    if(worList.get(0).contains(device.id)){
+      // The queue was empty, so we can execute immediately.
+      val role = if(task.property.buttonIdentifier.is("upload")) "Sender" else CEMCurrentSpeedTestRole
+      
+      // Invoke the IPLayerCapacity diagnostic using the operation() method.
+      // The arguments are passed as a map with short key names, as requested.
+      dmkey.root.IP.Diagnostics.`IPLayerCapacity()`.operation(
+        argumentsMap = Map(
+          "X_AuthKey" -> "q9SJc1xGwT70o9yEB4OQ7NDqBZA",
+          "Host" -> "uk.speedtest.avsystem.cloud",
+          "Role" -> role,
+          "Port" -> "25000",
+          "ProtocolVersion" -> "IPv4"
+        )
+      )
+
+      executed = true
+    } else {
+      // We have to wait for our turn.
+      // Schedule a connection request to re-run this script in 30 seconds.
+      session.requestConnectionIn(30.seconds)
+      session.wait(false, summary = "Waiting for other speedtest to finish")
+    }
+  }
+}
+val CEMCurrentSpeedTestRoleChange = if(CEMCurrentSpeedTestRole == "Receiver") {"Sender"} else {"Receiver"}
+sv.CEMCurrentSpeedTestRole.set(CEMCurrentSpeedTestRoleChange)

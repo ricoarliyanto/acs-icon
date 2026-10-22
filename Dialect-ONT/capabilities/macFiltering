@@ -1,0 +1,7 @@
+# MAC Filtering capapbility
+# A device is able to filter devices connected by WiFi using their MAC addresses.
+# Only allowed devices can connect to the Network.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.MACFiltering.%force-value = "true"
+}

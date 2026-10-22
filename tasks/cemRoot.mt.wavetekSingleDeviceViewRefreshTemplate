@@ -1,0 +1,11 @@
+val smallConnectionRequestTasks = sv.smallConnectionRequestTasks.getOpt
+
+smallConnectionRequestTasks.foreach{tasks=>
+	tasks.splitBy(",").foreach{taskName=>
+    try {
+      session.spawnTask(taskName)
+    } catch {  e  =>
+        log.error("Failed to spawn task $taskName: ${e.toString}")
+    }
+  }
+} 

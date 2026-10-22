@@ -1,0 +1,6 @@
+# DOCSIS eSAFE eRouter capability
+# A device is connected over DOCSIS/HFC and presents basic information about eRouter eSAFE module
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.eRouter.%force-value = "true"
+}

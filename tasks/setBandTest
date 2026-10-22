@@ -1,0 +1,4 @@
+<config>
+  <store target="bandToChange" value="Device.X_AVS_EXT.WiFi.${#band}.Channel" />
+  <set key="${#bandToChange}" value="${#channel}" />
+</config>

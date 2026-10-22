@@ -1,0 +1,47 @@
+val lanHosts = ldm.root.X_AVS_EXT.LAN.Devices.any(true).valueOf("Active").is("true", temporaryResults = true).keys
+var propertyToDMKeyMapWifi = Map.empty[String, DMKey]
+var propertyToDMKeyMapLan = Map.empty[String, DMKey]
+ldm.foreach(ldm.root.X_AVS_EXT.LAN.Devices.any(true)) { devicePath =>
+  propertyToDMKeyMapLan = propertyToDMKeyMapLan ++ Map(
+    "MACAddressLAN.${devicePath.name}"->devicePath.MACAddress,
+    "IPAddressLAN.${devicePath.name}"->devicePath.IPAddress,
+    "hostName.${devicePath.name}"->devicePath.HostName
+  )
+}
+val DMLANData = ldm.getLabelled(propertyToDMKeyMapLan, temporaryResults = true, ignoreFaults = true)
+ldm.foreach(ldm.root.X_AVS_EXT.WiFi.any(true)) { wifi =>
+  ldm.foreach(wifi.query.AssociatedDevice.any(true)) { deviceKey =>
+    propertyToDMKeyMapWifi = propertyToDMKeyMapWifi ++ Map(
+      "MACAddress.${wifi.name}.${deviceKey.name}"->deviceKey.MACAddress,
+
+    )
+  }
+}
+
+var DMWifiDataLiveDataModel = ldm.getLabelled(propertyToDMKeyMapWifi, temporaryResults = true, ignoreFaults = true)
+val wifiFiltered = DMWifiDataLiveDataModel.filter((k, v) => k.contains("MACAddress")).toValueSeq.toSet
+val wifiFilteredUpstream = ldm.getAll(ldm.root.X_AVS_EXT.WiFi.any.Stats.Upstream.keys.map(k => k.Bytes), ignoreFaults = true).toValueSeq.map(v => v.toLong).sum.toString
+val wifiFilteredDownstream = ldm.getAll(ldm.root.X_AVS_EXT.WiFi.any.Stats.Downstream.keys.map(k => k.Bytes), ignoreFaults = true).toValueSeq.map(v => v.toLong).sum.toString
+val hostsInfo = DMLANData.filter((k, v) => k.contains("MACAddressLAN")).map((k, v) => v -> {
+  val devicePath = k.splitAtSep(".")._2
+  Map(
+    "mac"->DMLANData.get("MACAddressLAN.${devicePath}").get,
+    "hostname"->DMLANData.get("hostName.${devicePath}").get,
+    "connectionType"-> if(wifiFiltered.contains(v)) "wifi" else "lan"
+)
+})
+Seq(
+	"deviceId" -> device.deviceId.raw.tryAsOpt,
+  "serialNumber" -> device.serialNumber.tryAsOpt,
+  "model" -> device.modelName.tryAsOpt,
+  "TXPower" -> ldm.get(dmkey.root.X_AVS_EXT.WAN.GPON.`1`.TXPower).tryAsOpt,
+  "RXPower" -> ldm.get(dmkey.root.X_AVS_EXT.WAN.GPON.`1`.RXPower).tryAsOpt,
+  "ServiceType" -> ldm.get(dmkey.root.selectDynamic(device.property.activeWan.get).Name).tryAsOpt,
+  "MACAddress" -> device.mac.toString.tryAsOpt,
+  "IPAddress" -> device.currentWanIP.toString.tryAsOpt,
+  "connectedHosts" -> hostsInfo.map((macAddress, info) => macAddress -> "${info.get("hostname").get} (${info.get("connectionType").get})").toValueSeq.encodeJsonString,
+  "LANDownload" -> ldm.get(dmkey.root.X_AVS_EXT.LAN.Stats.Downstream.Bytes).tryAsOpt,
+  "LANUpload" -> ldm.get(dmkey.root.X_AVS_EXT.LAN.Stats.Upstream.Bytes).tryAsOpt,
+  "WLANDownload" -> wifiFilteredDownstream,
+  "WLANUpload" -> wifiFilteredUpstream,
+).map((k, v) => taskReport.property.selectDynamic(k).set(v.getOr("unavailable"))) 

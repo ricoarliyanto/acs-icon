@@ -1,0 +1,164 @@
+var nodes = Seq.empty[Json]
+var links = Seq.empty[Json]
+
+val IEEE1905Datamodel = ldm.getObject(dmkey.root.IEEE1905)
+val hostsDatamodel = ldm.getObject(dmkey.root.Hosts)
+
+val hosts = device.dm.Hosts.Host.any.keys.map { hostPath =>
+  hostPath -> Seq("AssociatedDevice", "PhysAddress", "HostName", "InterfaceType").map { parameter =>
+    parameter -> device.cachedDm.getByKey(hostPath.selectDynamic(parameter))
+  }.toMap
+  // filter because we based on the 'AssociatedDevice'
+}.filter((_, value) => value("AssociatedDevice").nonEmpty)
+
+val associatedDeviceToHost = device.dm.Hosts.Host.any.keys.map { hostPath =>
+  device.cachedDm.getByKey(hostPath.AssociatedDevice) -> Seq("PhysAddress", "HostName", "InterfaceType", "IPAddress").map { parameter =>
+    parameter -> device.cachedDm.getByKey(hostPath.selectDynamic(parameter))
+  }.toMap
+  // filter because we based on the 'AssociatedDevice'
+}.toMap
+//.filter((_, value) => value("AssociatedDevice").nonEmpty)
+
+val serialNumberToInterfacePath = device.dm.IEEE1905.AL.NetworkTopology.IEEE1905Device.any.Interface.any.keys.map { interfacePath =>
+  // InterfaceId it is a serialNumber
+  // Here can be problem when there are multiple interfaces with the same serialNumber
+  device.cachedDm.getByKey(interfacePath.InterfaceId) -> interfacePath.split.join(".")
+}.toMap
+
+
+val wifiInterfacesData = device.dm.X_AVS_EXT.WiFi.any.keys.headOpt.map { wifiPath =>
+  Seq("Band", "Channel", "SSID")
+    .map(parameter => parameter -> device.cachedDm.getByKeyOpt(wifiPath.selectDynamic(parameter)))
+    .flatMap((parameter, valueOpt) => valueOpt.map(value => parameter -> value ))
+    .toMap
+}
+
+device.dm.IEEE1905.AL.NetworkTopology.IEEE1905Device.any.keys.foreach { IEEE1905DevicePath =>
+  val name = device.cachedDm.getByKey(IEEE1905DevicePath.FriendlyName)
+  val model = device.cachedDm.getByKey(IEEE1905DevicePath.ManufacturerModel)
+  val manufacturer = device.cachedDm.getByKey(IEEE1905DevicePath.ManufacturerName)
+
+  val (ip, mac, wifiDataOpt) = {
+    val hostData = associatedDeviceToHost(IEEE1905DevicePath.split.join("."))
+    val mac = hostData("PhysAddress")
+    val ip = hostData("IPAddress")
+    // showing first Wifi on CPE
+    val wifiData = wifiInterfacesData.filter(_ => IEEE1905DevicePath.split.join(".").endsWith(".1")).map { wifiData =>
+      Json.object(Seq(
+        "networkDataType" -> "NetworkWiFiDataNode".opt,
+        "ssid" -> wifiData.get("SSID"),
+        "band" -> wifiData.get("Band"),
+        "channel" -> wifiData.get("Channel"),
+        "hostname" -> wifiData.get("SSID"),
+        "ip" -> ip.opt,
+        "mac" -> mac.opt,
+        "manufacturer" -> "".opt,
+      ).flatMap((key, valueOpt) => valueOpt.map(value => key -> Json.string(value))))
+    }
+
+    (hostData("IPAddress"), hostData("PhysAddress"), wifiData)
+  }
+
+  val IEEE1905DeviceNode =  Json.object(Seq(
+    "nodeType" -> "MeshDeviceNode",
+    "id" -> IEEE1905DevicePath.split.join("."),
+    "role" -> if(IEEE1905DevicePath.split.join(".").endsWith(".1")) "master" else "slave",
+    "ip" -> ip,
+    "mac" -> mac,
+    "deviceName" -> name,
+  ).map { (k, v) => (k, Json.string(v)) } ++ wifiDataOpt.map(wifiData => Seq("details" -> wifiData)).getOr(Seq.empty))
+
+  nodes ++= Seq(IEEE1905DeviceNode)
+
+  val devicePathQueryDM = device.dm.IEEE1905.AL.NetworkTopology.IEEE1905Device.selectDynamic(IEEE1905DevicePath.split.last)
+
+  val interfacesPath = IEEE1905DevicePath.Interface
+  val IEEE1905NeighborsPath = IEEE1905DevicePath.IEEE1905Neighbor
+  val NonIEEE1905NeighborsPath = IEEE1905DevicePath.NonIEEE1905Neighbor
+
+  devicePathQueryDM.IEEE1905Neighbor.any.keys.foreach { IEEE1905NeighborPath =>
+    val localInterface = device.cachedDm.getByKey(IEEE1905NeighborPath.LocalInterface)
+    val neighborDeviceId = device.cachedDm.getByKey(IEEE1905NeighborPath.NeighborDeviceId)
+
+    val metric = IEEE1905NeighborPath.Metric.`1` |> { metricPath =>
+      Seq("RSSI", "X_AVM-DE_PHYRateRX", "X_AVM-DE_PHYRateTX").map { parameter =>
+        parameter -> device.cachedDm.getByKeyOpt(metricPath.selectDynamic(parameter))
+      }.flatMap((key, valueOpt) => valueOpt.map(value => key -> value)).toMap
+    }
+
+    val interfaceInterfaceLink = Json.object(Seq(
+      "linkType" -> "MeshInterfaceInterfaceLink",
+      "source" -> serialNumberToInterfacePath(neighborDeviceId),
+      "target" -> localInterface.dropRight(1),
+      "label" -> "LabelBasedOnSerialNumber",
+      "connectionState" -> "connected",
+    ).map { (k, v) => (k, Json.string(v)) } + (
+        "connectionInformation" -> Json.object(Seq(
+          "snr" -> metric.get("RSSI").map(_.toLong),
+          "rx" -> metric.get("X_AVM-DE_PHYRateRX").map(_.toLong),
+          "tx" -> metric.get("X_AVM-DE_PHYRateRX").map(_.toLong),
+        ).flatMap((key, valueOpt) => valueOpt.map(value => key -> Json.number(value)))
+        )
+      )
+    )
+    links ++= Seq(interfaceInterfaceLink)
+  }
+
+  devicePathQueryDM.NonIEEE1905Neighbor.any.keys.foreach { NonIEEE1905NeighborPath =>
+    val localInterface = device.cachedDm.getByKey(NonIEEE1905NeighborPath.LocalInterface)
+    val neighborDeviceId = device.cachedDm.getByKey(NonIEEE1905NeighborPath.NeighborDeviceId)
+
+    val metric = NonIEEE1905NeighborPath.`X_AVM-DE_Metric`.`1` |> { metricPath =>
+      Seq("RSSI", "X_AVM-DE_PHYRateRX", "X_AVM-DE_PHYRateTX").map { parameter =>
+        parameter -> device.cachedDm.getByKeyOpt(metricPath.selectDynamic(parameter))
+      }.flatMap((key, valueOpt) => valueOpt.map(value => key -> value)).toMap
+    }
+
+    val interfaceInterfaceLink = Json.object(Seq(
+      "linkType" -> "MeshInterfaceInterfaceLink",
+      "source" -> serialNumberToInterfacePath(neighborDeviceId).tryAndFold(e => neighborDeviceId, s => s),
+      "target" -> localInterface.dropRight(1),
+      "label" -> "NonLabelBasedOnSerialNumber",
+      "connectionState" -> "connected",
+    ).map { (k, v) => (k, Json.string(v)) } + (
+        "connectionInformation" -> Json.object(Seq(
+          "snr" -> metric.get("RSSI").map(_.toLong),
+          "rx" -> metric.get("X_AVM-DE_PHYRateRX").map(_.toLong),
+          "tx" -> metric.get("X_AVM-DE_PHYRateTX").map(_.toLong),
+        ).flatMap((key, valueOpt) => valueOpt.map(value => key -> Json.number(value)))
+        )
+      )
+    )
+    links ++= Seq(interfaceInterfaceLink)
+  }
+
+  val interfaces = devicePathQueryDM.Interface.any.keys.map { interfacePath =>
+    interfacePath -> Seq("InterfaceId", "MediaType", "X_AVM-DE_Name").map { parameter =>
+      parameter -> device.cachedDm.getByKeyOpt(interfacePath.selectDynamic(parameter))
+    }.flatMap((key, valueOpt) => valueOpt.map(value => key -> value)).toMap
+  }
+
+  interfaces.foreach { (key, value) =>
+    val interface = Json.object(Seq(
+      "nodeType" -> "MeshInterfaceNode",
+      "id" -> key.split.join("."),
+      "mac" -> value.get("InterfaceId").getOr("-"),
+      "interfaceType" -> value.get("MediaType").map(mediaType => if(mediaType.contains("802")) "WLAN" else "LAN").getOr("LAN"),
+      "name" -> value.get("X_AVM-DE_Name").or(value.get("InterfaceId")).getOr("-"),
+    ).map { (k, v) => (k, Json.string(v)) })
+
+    val link =  Json.object(Seq(
+      "linkType" -> "MeshDeviceInterfaceLink",
+      "source" -> IEEE1905DevicePath.split.join("."),
+      "target" -> key.split.join("."),
+      "connectionState" -> "CONNECTED",
+    ).map { (k, v) => (k, Json.string(v)) })
+
+    nodes ++= Seq(interface)
+    links ++= Seq(link)
+  }
+}
+
+val result = Json.object("nodes" -> Json.array(nodes), "links" ->  Json.array(links))
+log.debug(result.renderPretty())
+sv.networkMeshMap.set(result.renderPretty())

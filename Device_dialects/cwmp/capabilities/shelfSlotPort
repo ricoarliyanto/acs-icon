@@ -1,0 +1,6 @@
+# ShelfSlotPort capability
+# A device exposes shelf/slot/port information
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.ShelfSlotPort.%force-value = "true"
+}

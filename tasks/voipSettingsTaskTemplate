@@ -1,0 +1,32 @@
+<config>
+  <if expr="${sv.voipLine1Root != null and sv.voipLine1SettingsUsername != null}">
+    <if expr="${sv.voipLine1SettingsDirectoryName != null}">
+      <set key="${sv.voipLine1Root}DirectoryNumber" value="${sv.voipLine1SettingsDirectoryName}" />
+    </if>
+    <set key="${sv.voipLine1Root}SIP.AuthUserName" value="${sv.voipLine1SettingsUsername}" />
+    <if expr="${sv.voipLine1SettingsPassword != null}">
+      <set key="${sv.voipLine1Root}SIP.AuthPassword" value="${sv.voipLine1SettingsPassword}" />
+    </if>
+    <if expr="${sv.voipLine1EnabledValue.toBoolean}">
+      <set key="${sv.voipLine1Root}Enable" value="Enabled" />
+      <else>
+        <set key="${sv.voipLine1Root}Enable" value="Disabled" />
+      </else>
+    </if>
+  </if>
+  <if expr="${sv.voipLine2Root != null and sv.voipLine2SettingsUsername != null}">
+    <if expr="${sv.voipLine2SettingsDirectoryName != null}">
+      <set key="${sv.voipLine2Root}DirectoryNumber" value="${sv.voipLine2SettingsDirectoryName}" />
+    </if>
+    <set key="${sv.voipLine2Root}SIP.AuthUserName" value="${sv.voipLine2SettingsUsername}" />
+    <if expr="${sv.voipLine2SettingsPassword != null}">
+      <set key="${sv.voipLine2Root}SIP.AuthPassword" value="${sv.voipLine2SettingsPassword}" />
+    </if>
+    <if expr="${sv.voipLine2EnabledValue.toBoolean}">
+      <set key="${sv.voipLine2Root}Enable" value="Enabled" />
+      <else>
+        <set key="${sv.voipLine2Root}Enable" value="Disabled" />
+      </else>
+    </if>
+  </if>
+</config>

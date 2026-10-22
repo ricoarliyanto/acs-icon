@@ -1,0 +1,25 @@
+<config>
+  <!-- Task inputpass untuk mengubah PPPoE Password -->
+  <!-- Mendukung: Huawei, ZTE, Fiberhome, Raisecom -->
+  <!-- Membutuhkan task 'activewanfinder' untuk mengisi variabel sv.activeWan terlebih dahulu -->
+
+  <!-- ========================= HUAWEI ========================= -->
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('huawei')}">
+     <set key="${sv.activeWan}Password" value="${#inputpass}" type="xsd:string" ignoreFaults="true" />
+  </if>
+
+  <!-- ========================= ZTE ========================= -->
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('zte')}">
+     <set key="${sv.activeWan}Password" value="${#inputpass}" type="xsd:string" ignoreFaults="true" />
+  </if>
+
+  <!-- ========================= FIBERHOME ========================= -->
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('fiberhome')}">
+     <set key="${sv.activeWan}Password" value="${#inputpass}" type="xsd:string" ignoreFaults="true" />
+  </if>
+
+  <!-- ========================= RAISECOM ========================= -->
+  <if expr="${device.manufacturer.toLowerCaseEnglish.contains('raisecom')}">
+     <set key="${sv.activeWan}Password" value="${#inputpass}" type="xsd:string" ignoreFaults="true" />
+  </if>
+</config>

@@ -1,0 +1,6 @@
+# List of all processes running on the device
+# A device is able to return list of curently running processes
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Process.%force-value = "true"
+}

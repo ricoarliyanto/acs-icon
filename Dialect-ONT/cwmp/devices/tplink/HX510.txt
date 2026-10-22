@@ -1,0 +1,472 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic.dm2"
+include "cwmp.capabilities.management.dm2"
+include "cwmp.capabilities.resources.dm2"
+include "cwmp.capabilities.status.dm2"
+include "cwmp.capabilities.syslog.dm2"
+include "cwmp.ext.syslog.avsystem"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet.dm2"
+include "cwmp.capabilities.ppp.dm2"
+include "cwmp.capabilities.wan.dm2"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging.dm2"
+include "cwmp.capabilities.dhcp.dm2"
+include "cwmp.capabilities.dns.dm2"
+include "cwmp.capabilities.firewall.dm2"
+include "cwmp.capabilities.forwarding.dm2"
+include "cwmp.capabilities.lan.dm2"
+include "cwmp.ext.lan.devices.dm2"
+include "cwmp.capabilities.macFiltering.dm2"
+include "cwmp.capabilities.ntp.dm2"
+include "cwmp.capabilities.process.dm2"
+include "cwmp.capabilities.radius.dm2"
+include "cwmp.capabilities.storage.dm2"
+include "cwmp.capabilities.wifi.dm2"
+include "cwmp.capabilities.bulkData.dm2"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood.dm2"
+#include "cwmp.ext.wifi.neighborhood.properties"
+#include "tools.patching.wifiNeighborhood"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics.dm2"
+
+# MESH
+include "cwmp.capabilities.mesh.dm2.local"
+
+include "tools.readConverters"
+
+
+cwmp.messageTimeout = 120000
+
+remappingStrategy {
+  read_converter {
+    LAN.Devices.%i {
+      MACAddress = ${tools.readConverters.oneToOne.stripMAC}
+      # InterfaceType = ${tools.expression} {
+      #   expression = """${if(singleValue.contains('Ethernet')) 'Ethernet'
+      #   else if(singleValue.contains('Wi-Fi')) '802.11'
+      #   else 'Unknown'}"""
+      # }
+    }
+  }
+  mapping {
+    root.X_AVS_EXT {
+      BulkData {
+        Enable.real = "root.BulkData.Enable"
+        Profile {
+          %i {
+            Enable.real = "root.BulkData.Profile.%i.Enable"
+            Alias.real = "root.BulkData.Profile.%i.Alias"
+            Protocol.real = "root.BulkData.Profile.%i.Protocol"
+            EncodingType.real = "root.BulkData.Profile.%i.EncodingType"
+            ReportingInterval.real = "root.BulkData.Profile.%i.ReportingInterval"
+            TimeReference.real = "root.BulkData.Profile.%i.TimeReference"
+            HTTP {
+              URL.real = "root.BulkData.Profile.%i.HTTP.URL"
+              Username.real = "root.BulkData.Profile.%i.HTTP.Username"
+              Password.real = "root.BulkData.Profile.%i.HTTP.Password"
+            }
+            JSONEncoding {
+              ReportFormat.real = "root.BulkData.Profile.%i.JSONEncoding.ReportFormat"
+            }
+            Parameter {
+              %j {
+                Name.real = "root.BulkData.Profile.%i.Parameter.%j.Name"
+                Reference.real = "root.BulkData.Profile.%i.Parameter.%j.Reference"
+              }
+            }
+          }
+        }
+      }
+      LAN {
+        Devices.%i {
+          InterfaceType.real = "root.Hosts.Host.%i.InterfaceType"
+        }
+        Port.%i {
+          DuplexMode.real = "root.Ethernet.Interface.%i.DuplexMode"
+          MaxBitRate.real = "root.Ethernet.Interface.%i.MaxBitRate"
+          Stats {
+            Downstream {
+              Errors.real = "root.Ethernet.Interface.%i.Stats.ErrorsReceived"
+            }
+            Upstream = {
+              Errors.real = "root.Ethernet.Interface.%i.Stats.ErrorsSent"
+            }
+          }
+        }
+      }
+      DHCP {
+        Gateway.real = "root.DHCPv4.Client.1.IPRouters"
+        DNSServersList {
+          %i {
+            DNSServer.real = "root.DNS.Client.Server.%i.DNSServer"
+          }
+        }
+      }
+      Firewall {
+        Enabled.real = "root.Firewall.Enable"
+        Level {
+          %i {
+            Name.real = "root.Firewall.Level.%i.Name"
+          }
+        }
+      }
+      Users {
+        %i {
+          Password.real = "root.Users.User.%i.Password"
+          Username.real = "root.Users.User.%i.Username"
+        }
+      }
+      WiFi {
+        # 2.4 GHz Band SSIDs
+        1 {
+          # Primary 2.4 GHz SSID
+          ssidKey = "${sv.vdmWlan1.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan1.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan1.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan1.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan1.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Downstream.Retransmissions = null
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan1.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        2 {
+          ssidKey = "${sv.vdmWlan2.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan2.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan2.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan2.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan2.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Downstream.Retransmissions = null
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan2.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        3 {
+          ssidKey = "${sv.vdmWlan3.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan3.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan3.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan3.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan3.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan3.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        4 {
+          ssidKey = "${sv.vdmWlan4.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan4.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan4.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan4.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan4.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan4.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        5 {
+          ssidKey = "${sv.vdmWlan5.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan5.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan5.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan5.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan5.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan5.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        6 {
+          ssidKey = "${sv.vdmWlan6.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan6.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan6.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan6.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan6.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan6.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        7 {
+          ssidKey = "${sv.vdmWlan7.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan7.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan7.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan7.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan7.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan7.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        8 {
+          ssidKey = "${sv.vdmWlan8.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan8.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan8.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan8.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan8.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan8.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        # 5.0 GHz Band SSIDs
+        9 {
+          # Primary 5.0 GHz SSID
+          ssidKey = "${sv.vdmWlan9.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan9.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan9.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan9.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan9.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan9.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        10 {
+          ssidKey = "${sv.vdmWlan10.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan10.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan10.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan10.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan10.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan10.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        11 {
+          ssidKey = "${sv.vdmWlan11.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan11.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan11.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan11.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan11.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan11.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        12 {
+          ssidKey = "${sv.vdmWlan12.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan12.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan12.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan12.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan12.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan12.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        13 {
+          ssidKey = "${sv.vdmWlan13.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan13.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan13.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan13.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan13.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan13.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        14 {
+          ssidKey = "${sv.vdmWlan14.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan14.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan14.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan14.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan14.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan14.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        15 {
+          ssidKey = "${sv.vdmWlan15.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan15.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan15.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan15.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan15.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan15.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }
+        16 {
+          ssidKey = "${sv.vdmWlan16.parseJson.ssidKey.asString}"
+          radioKey = "${sv.vdmWlan16.parseJson.radioKey.asString}"
+          accessPointKey = "${sv.vdmWlan16.parseJson.accessPointKey.asString}"
+          include "cwmp.ext.wifi.profile.dm2"
+          include "cwmp.ext.wifi.profile.associatedDevice.dm2"
+          AssociatedDevice.%i {
+            Active.real = "${sv.vdmWlan16.parseJson.accessPointKey.asString}.AssociatedDevice.%i.AuthenticationState"
+            # for some reason we cannot use variable defined above: Active.real = ${accessPointKey}.AssociatedDevice.%i.AuthenticationState
+            Stats.Downstream.Retransmissions = null
+            Stats.Downstream.LastDataRate.real = "${sv.vdmWlan16.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataDownlinkRate"
+            Stats.Upstream.LastDataRate.real = "${sv.vdmWlan16.parseJson.accessPointKey.asString}.AssociatedDevice.%i.LastDataUplinkRate"
+          }
+        }    
+      }
+      WiFiNeighborhood {
+        State.real = "root.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState"
+      }
+    }
+  }
+} 
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    WiFiMesh {
+      %force-object-exists = true
+      %any {
+        Backhaul.SignalStrength.%patch-value = "${'-' + node.value}"
+        Radio.%any.WiFi.%any.AssociatedDevice.%any.SignalStrength.%patch-value = "${'-' + node.value}"
+      }
+    }
+    BulkData {
+      %force-object-exists = true
+    }
+    WAN {
+      IP {
+        %force-object-exists = true
+        %any {
+          IPv4 {
+            %force-object-exists = true
+          }
+          IPv6 {
+            %force-object-exists = true
+          }
+        }
+      }
+      Stats {
+        %force-object-exists = true
+        Downstream {
+          %force-object-exists = true
+        }
+        Upstream {
+          %force-object-exists = true
+        }
+      }
+    }
+    LAN {
+      Port.%any {
+        Stats {
+          %force-object-exists = true
+          Downstream {
+            %force-object-exists = true
+          }
+          Upstream {
+            %force-object-exists = true
+          }
+        }
+      }
+      Stats {
+        %force-object-exists = true
+        Downstream {
+          %force-object-exists = true
+        }
+        Upstream {
+          %force-object-exists = true
+        }
+      }
+    }
+  }
+}
+
+include "tools.remapping"
+
+remappingStrategy {
+  read_converter {
+    LAN.Devices.%i {
+      MACAddress = ${tools.readConverters.oneToOne.stripMAC}
+      InterfaceType = ${tools.expression} {
+        expression = """${
+          if(realValue('InterfaceType').contains('Wi-Fi') or realValue('PhysAddress').stripMac == '3C52A156447A')
+            '802.11'
+          else if(realValue('InterfaceType').contains('Ethernet'))
+            'Ethernet'
+          else
+            'Unknown'}"""
+      }
+      AddressSource = ${tools.expression} {
+        expression = """${if (singleValue == '')
+            'None'
+          else 'DHCP'}"""
+      }
+    }
+  }
+  mapping {
+    root.X_AVS_EXT.LAN {
+      DevicesCount.real = "root.Hosts.HostNumberOfEntries"
+      Devices.realObject = "root.Hosts.Host"
+      Devices.%i.realObject = "root.Hosts.Host.%i"
+      Devices.%i {
+        Active.real = "root.Hosts.Host.%i.Active"
+        AddressSource.real = "root.Hosts.Host.%i.DHCPClient"
+        HostName.real = "root.Hosts.Host.%i.HostName"
+        IPAddress.real = "root.Hosts.Host.%i.IPAddress"
+        InterfaceType.real = ["root.Hosts.Host.%i.InterfaceType","root.Hosts.Host.%i.PhysAddress"]
+        LeaseTimeRemaining.real = "root.Hosts.Host.%i.LeaseTimeRemaining"
+        MACAddress.real = "root.Hosts.Host.%i.PhysAddress"
+        Layer1Interface.real = "root.Hosts.Host.%i.Layer1Interface"
+        Layer3Interface.real = "root.Hosts.Host.%i.Layer3Interface"
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+# Reboot capability
+# A device is able to reboot
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Reboot.%force-value = "true"
+}

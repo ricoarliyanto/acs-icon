@@ -1,0 +1,29 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet"
+// Include whole Ethernet form DM1 and override ethernet key only
+include "cwmp.capabilities.wan.dm2"
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging.dm2"
+include "cwmp.capabilities.ethernet.dm2"
+include "cwmp.capabilities.wan.dm2"
+include "cwmp.capabilities.wifi.dm2"
+include "cwmp.capabilities.ppp.dm2"
+# DIAGNOSTICS
+include "cwmp.capabilities.neighborhood"
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+# FIXES
+
+remappingStrategy {
+  activeKey.ethernet = "${sv.activeEthernet.toParameterKey ? 'root.Ethernet.Interface.1'}"
+  activeKey.ppp = "${sv.activePpp.toParameterKey ? 'root.PPP.Interface.1'}"
+}

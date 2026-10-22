@@ -1,0 +1,21 @@
+<config>
+  <log message="Scheduling backup..." />
+  <task class="com.avsystem.ump.acs.task.UploadTask">
+    <config fileType="1 Vendor Configuration File" />
+    <output var="resourceId" />
+  </task>
+  <log message="Backup completed." />
+  <log message="Upgrading firmware..." />
+  <task class="com.avsystem.ump.acs.task.FirmwareUpgradeTask">
+    <config resourceId="${sv.get('quickFix.preferedFW')}" />
+  </task>
+  <log message="Device upgraded." />
+  <log message="Restoring settings..." />
+  <task class="com.avsystem.ump.acs.task.DownloadTask">
+    <input var="resourceId" />
+    <config resourceId="${#resourceId}" fileType="3 Vendor Configuration File" />
+  </task>
+  <store type="devProp" target="lastFirmwareUpgrade" value="${date.now}" />
+  <log message="Upgrade procedure completed." />
+</config>
+ 

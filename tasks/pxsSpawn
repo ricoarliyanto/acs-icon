@@ -1,0 +1,5 @@
+log.warn("this is the first spawn")
+
+session.spawnTask(taskTemplates.pxsSpawnNested)
+
+log.warn("finished exectuion of first spawn")

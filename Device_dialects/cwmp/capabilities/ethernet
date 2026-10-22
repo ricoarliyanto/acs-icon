@@ -1,0 +1,6 @@
+# Ethernet capability
+# A device has Ethernet capabilities
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Ethernet.%force-value = "true"
+}

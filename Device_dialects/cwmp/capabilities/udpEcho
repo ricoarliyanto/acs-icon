@@ -1,0 +1,6 @@
+# UDPEcho capability
+# A device supports UDP Echo diagnostics
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.UDPEcho.%force-value = "true"
+}

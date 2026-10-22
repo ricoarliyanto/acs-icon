@@ -1,0 +1,207 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.voip"
+include "cwmp.capabilities.wifi"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+include "tools.remapping"
+
+remappingStrategy {
+  wifiSecurity {
+    // Expression check if all real key values are set to NONE
+    isNone = """if(
+      realValue('BeaconType') == 'None' and
+      realValue('BasicEncryptionModes') == 'None' and
+      realValue('BasicAuthenticationMode') == 'None'
+    ) 'NONE'"""
+
+    // Expresion return proper value for relevant real key to set NONE
+    setNone = """if(value == 'NONE')(
+      map('BeaconType' -> 'None',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+
+    // Expression check if all real key values are set to WPA
+    isWpa = """if(
+      realValue('BeaconType') == 'WPA'
+    ) 'WPA'"""
+
+    // Expresion return proper value for relevant real key to set WPA
+    setWpa = """if(value == 'WPA')(
+      map('BeaconType' -> 'WPA',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+
+    // Expression check if all real key values are set to WPA2
+    isWpa2 = """if(
+      realValue('BeaconType') == '11i'
+    ) 'WPA2'"""
+
+    // Expresion return proper value for relevant real key to set WPA2
+    setWpa2 = """if(value == 'WPA2')(
+      map('BeaconType' -> '11i',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+
+    // Expression check if all real key values are set to WPA_WPA2
+    isWpa_Wpa2 = """if(
+      realValue('BeaconType') == 'WPAand11i'
+    ) 'WPA_WPA2'"""
+
+    // Expresion return proper value for relevant real key to set WPA_WPA2
+    setWpa_Wpa2 = """if(value == 'WPA_WPA2')(
+      map('BeaconType' -> 'WPAand11i',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+  }
+  read_converter {
+    WiFi.%i {
+      Security = ${tools.expression} {
+        expression = """${
+          """${remappingStrategy.wifiSecurity.isNone}""" else
+          """${remappingStrategy.wifiSecurity.isWpa}""" else
+          """${remappingStrategy.wifiSecurity.isWpa2}""" else
+          """${remappingStrategy.wifiSecurity.isWpa_Wpa2}""" else 'CUSTOM' }"""
+      }
+    }
+  }
+  write_converter {
+    WiFi.%i {
+      Security = ${tools.expression} {
+        expression = """${
+            """${remappingStrategy.wifiSecurity.setNone}""" else
+            """${remappingStrategy.wifiSecurity.setWpa}""" else
+            """${remappingStrategy.wifiSecurity.setWpa2}""" else
+            """${remappingStrategy.wifiSecurity.setWpa_Wpa2}""" else null}"""
+      }
+    }
+  }
+  
+  mapping {
+    root.X_AVS_EXT.Diagnostics.Download.DownloadURL.real = ["root.DownloadDiagnostics.DownloadURL"]
+    root.X_AVS_EXT.Diagnostics.Upload.UploadURL.real = ["root.UploadDiagnostics.UploadURL"]
+    
+    root.X_AVS_EXT.Diagnostics.Download {
+        State.real = "root.DownloadDiagnostics.DiagnosticsState"
+        Run.real = "root.DownloadDiagnostics.DiagnosticsState"
+    }
+    root.X_AVS_EXT.Diagnostics.Upload {
+        State.real = "root.UploadDiagnostics.DiagnosticsState"
+        Run.real = "root.UploadDiagnostics.DiagnosticsState"
+    }
+
+    root.X_AVS_EXT.System {
+      HardwareVersion.real = "root.DeviceInfo.HardwareVersion"
+      SoftwareVersion.real = "root.DeviceInfo.SoftwareVersion"
+      Uptime.real = "root.DeviceInfo.UpTime"
+    }
+
+    root.X_AVS_EXT.LAN {
+      Port.%i {
+        DuplexMode.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.DuplexMode"
+        Enable.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Enable"
+        Status.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Status"
+        MACAddress.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.MACAddress"
+        Stats {
+             Upstream.Bytes.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Stats.BytesSent"
+             Downstream.Bytes.real = "root.LANDevice.1.LANEthernetInterfaceConfig.%i.Stats.BytesReceived"
+        }
+      }
+      Devices.%i {
+           HostName.real = "root.LANDevice.1.Hosts.Host.%i.HostName"
+           IPAddress.real = "root.LANDevice.1.Hosts.Host.%i.IPAddress"
+           MACAddress.real = "root.LANDevice.1.Hosts.Host.%i.MACAddress"
+           Active.real = "root.LANDevice.1.Hosts.Host.%i.Active"
+      }
+    }
+
+    root.X_AVS_EXT.WiFi {
+      %i {
+        Enable.real = "root.LANDevice.1.WLANConfiguration.%i.RadioEnabled"
+        SSID.real = "root.LANDevice.1.WLANConfiguration.%i.SSID"
+        Password.real = "root.LANDevice.1.WLANConfiguration.%i.KeyPassphrase"
+        Security.real = "root.LANDevice.1.WLANConfiguration.%i.BeaconType"
+        Channel.real = "root.LANDevice.1.WLANConfiguration.%i.Channel"
+        
+        // WiFi Stats
+        Stats {
+           Upstream.Bytes.real = "root.LANDevice.1.WLANConfiguration.%i.TotalBytesSent"
+           Downstream.Bytes.real = "root.LANDevice.1.WLANConfiguration.%i.TotalBytesReceived"
+        }
+        
+        AssociatedDevice.%j {
+           MACAddress.real = "root.LANDevice.1.WLANConfiguration.%i.AssociatedDevice.%j.AssociatedDeviceMACAddress"
+           IPAddress.real = "root.LANDevice.1.WLANConfiguration.%i.AssociatedDevice.%j.AssociatedDeviceIPAddress"
+        }
+      }
+    }
+    
+    root.X_AVS_EXT.WAN {
+      PPP.1 {
+         Username.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username"
+         Status.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionStatus"
+      }
+      IP.1 {
+         IPv4.1 {
+            Address.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.ExternalIPAddress"
+         }
+      }
+    }
+  }
+}
+
+cwmp.messageTimeout = 180000
+cwmp.sessionTimeout = 180000

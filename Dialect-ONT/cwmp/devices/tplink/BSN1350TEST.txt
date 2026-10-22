@@ -1,0 +1,241 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic.dm2"
+include "cwmp.capabilities.management.dm2"
+include "cwmp.capabilities.resources.dm2"
+include "cwmp.capabilities.status.dm2"
+include "cwmp.capabilities.syslog.dm2"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet.dm2"
+include "cwmp.capabilities.ppp.dm2"
+include "cwmp.capabilities.wan.dm2"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging.dm2"
+include "cwmp.capabilities.dhcp.dm2"
+include "cwmp.capabilities.dns.dm2"
+include "cwmp.capabilities.firewall.dm2"
+include "cwmp.capabilities.forwarding.dm2"
+include "cwmp.capabilities.lan.dm2"
+include "cwmp.capabilities.ntp.dm2"
+include "cwmp.capabilities.process.dm2"
+include "cwmp.capabilities.radius.dm2"
+include "cwmp.capabilities.routing.dm2"
+include "cwmp.capabilities.usb.dm2"
+include "cwmp.capabilities.users.dm2"
+include "cwmp.capabilities.vlan.dm2"
+include "cwmp.capabilities.wifi.dm2"
+include "cwmp.capabilities.xmpp.dm2"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics.dm2"
+include "cwmp.capabilities.neighborhood.dm2"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+remappingStrategy {
+  
+  read_converter {
+    LAN.Devices.%i {
+      InterfaceType = ${tools.expression} {
+        expression = """${
+          if(singleValue.contains('1'))
+            '802.11'
+          else if(singleValue.contains('0'))
+            'Ethernet'
+          else
+            'Unknown'}"""
+      }
+    }
+    WiFi.1.AssociatedDevice.%i {
+      SignalStrength = ${tools.expression}{
+        expression = """${
+         singleValue.toInt - 95}"""
+      }
+    }
+  }
+  
+  
+  mapping {
+    root.X_AVS_EXT {
+      WAN {
+        UpTime.real = "root.IP.Interface.2.Uptime"
+        IP.1.IPv4.1 {
+          Status.real = "root.IP.Interface.2.Status"
+          Enable.real = "root.IP.Interface.2.Enable"
+          Name.real = "root.IP.Interface.2.Name"
+          Alias.real = "root.IP.Interface.2.Alias"
+          Address.real = "root.IP.Interface.2.IPv4Address.1.IPAddress"
+          SubnetMask.real = "root.IP.Interface.2.IPv4Address.1.SubnetMask"
+          //DefaultGateway.real = "root.IP.Interface.2.IPv4Address.1.X_TP_Gateway"
+          AddressingType.real = "root.IP.Interface.2.IPv4Address.1.AddressingType"
+          DNSServers.real = "root.DHCPv4.Client.1.DNSServers"
+          DNSEnable.real = "root.DHCPv4.Server.Pool.1.Enable"
+          ConnectionType.real = "root.IP.Interface.2.Type"
+          LowerLayerKey.real = "root.IP.Interface.2.LowerLayers"
+          Stats {
+            Downstream {
+              Bytes.real = "root.IP.Interface.2.Stats.BytesReceived"
+              Packets.real = "root.IP.Interface.2.Stats.PacketsReceived"
+            }
+            Upstream {
+              Bytes.real = "root.IP.Interface.2.Stats.BytesSent"
+              Packets.real = "root.IP.Interface.2.Stats.PacketsSent"
+            }
+          }
+        }
+        Stats {
+          Downstream {
+            Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesReceived"
+            Packets.real = "root.Ethernet.Link.2.Stats.PacketsReceived"
+            Errors.real = "root.Ethernet.Link.2.Stats.ErrorsReceived"
+            Discard.real = "root.Ethernet.Link.2.Stats.DiscardPacketsReceived"
+            
+          }
+          Upstream {
+            Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesSent"
+            Packets.real = "root.Ethernet.Link.2.Stats.PacketsSent"
+            Errors.real = "root.Ethernet.Link.2.Stats.ErrorsReceived"
+            Discard.real = "root.Ethernet.Link.2.Stats.DiscardPacketsReceived"
+          }
+        }
+      }
+      LAN {
+        Devices.%i {
+          AddressSource.real = "root.Hosts.Host.%i.AddressSource"
+          InterfaceType.real = "root.Hosts.Host.%i.X_TP_LanConnType"
+          
+        }
+      }
+      DHCP {
+        Gateway.real = "root.DHCPv4.Client.1.IPRouters"
+      }
+      WiFi {
+       
+        1 {
+          OperatingChannelBandwidth.real = "root.WiFi.Radio.1.OperatingChannelBandwidth"
+          TransmitPower.real = "root.WiFi.Radio.1.TransmitPower"
+          AssociatedDevice.%i {
+            MACAddress.real = "root.WiFi.AccessPoint.1.AssociatedDevice.%i.MACAddress"
+            Stats {
+              Bytes.real = "root.WiFi.AccessPoint.1.AssociatedDevice.%i.Stats.PacketsReceived"
+              Packets.real = "root.WiFi.AccessPoint.1.AssociatedDevice.%i.Stats.PacketsSent"
+            }
+          }
+          AssociatedDevice.%i.SignalStrength.real = "root.Hosts.Host.%i.X_TP_Rssi"
+          MACAddressControl {
+            Enable.real = "root.WiFi.AccessPoint.2.X_TP_MACAddressControl.Enable"
+            MACTable.%j {
+              MACAddress.real = "root.WiFi.AccessPoint.2.X_TP_MACAddressControl.MACTable.%j.MACAddress"
+            }
+          }
+          Stats {
+            Downstream {
+              Bytes.real = "root.WiFi.Radio.1.Stats.BytesReceived"
+              Packets.real = "root.WiFi.Radio.1.Stats.PacketsReceived"
+              Errors.real = "root.WiFi.Radio.1.Stats.ErrorsReceived"
+              Discard.real = "root.WiFi.Radio.1.Stats.DiscardPacketsReceived"
+              
+            }
+            Upstream {
+              Bytes.real = "root.WiFi.Radio.1.Stats.BytesSent"
+              Packets.real = "root.WiFi.Radio.1.Stats.PacketsSent"
+              Errors.real = "root.WiFi.Radio.1.Stats.ErrorsSent"
+              Discard.real = "root.WiFi.Radio.1.Stats.DiscardPacketsSent"
+            }
+          }
+        }
+        5 {
+          AssociatedDevice.%i {
+            MACAddress.real = "root.WiFi.AccessPoint.3.AssociatedDevice.%i.MACAddress"
+            Stats {
+              Bytes.real = "root.WiFi.AccessPoint.3.AssociatedDevice.%i.Stats.PacketsReceived"
+              Packets.real = "root.WiFi.AccessPoint.3.AssociatedDevice.%i.Stats.PacketsSent"
+            }
+          }
+          
+          OperatingChannelBandwidth.real = "root.WiFi.Radio.2.OperatingChannelBandwidth"
+          SSID.real = "root.WiFi.SSID.3.SSID"
+          BSSID.real = "root.WiFi.SSID.3.BSSID"
+          Enable.real = "root.WiFi.SSID.3.Enable"
+          Status.real = "root.WiFi.SSID.3.Status"
+          TransmitPower.real = "root.WiFi.Radio.2.TransmitPower"
+          Channel ="root.WiFi.Radio.2.Channel"
+          AutoChannelEnable.real = "root.WiFi.Radio.2.AutoChannelEnable"
+          Standard.real = "root.WiFi.Radio.2.OperatingStandards"
+          SupportedStandards.real = "root.WiFi.Radio.2.SupportedStandards"
+          Channel.real = "root.WiFi.Radio.2.Channel"
+          PossibleChannels.real = "root.WiFi.Radio.2.PossibleChannels"
+          TransmitPowerSupported.real = "root.WiFi.Radio.2.TransmitPowerSupported"
+          RegulatoryDomain.real = "root.WiFi.Radio.2.RegulatoryDomain"
+          Security.real = "root.WiFi.AccessPoint.3.Security.ModeEnabled"
+          PossibleSecurities.real = "root.WiFi.AccessPoint.3.Security.ModesSupported"
+          Password.real = "root.WiFi.AccessPoint.3.Security.KeyPassphrase"
+          MACAddressControl {
+            Enable.real = "root.WiFi.AccessPoint.2.X_TP_MACAddressControl.Enable"
+            MACTable.%j {
+              MACAddress.real = "root.WiFi.AccessPoint.2.X_TP_MACAddressControl.MACTable.%j.MACAddress"
+            }
+          }
+          Stats {
+            Downstream {
+              Bytes.real = "root.WiFi.Radio.2.Stats.BytesReceived"
+              Packets.real = "root.WiFi.Radio.2.Stats.PacketsReceived"
+              Errors.real = "root.WiFi.Radio.2.Stats.ErrorsReceived"
+              Discard.real = "root.WiFi.Radio.2.Stats.DiscardPacketsReceived"
+              
+            }
+            Upstream {
+              Bytes.real = "root.WiFi.Radio.2.Stats.BytesSent"
+              Packets.real = "root.WiFi.Radio.2.Stats.PacketsSent"
+              Errors.real = "root.WiFi.Radio.2.Stats.ErrorsSent"
+              Discard.real = "root.WiFi.Radio.2.Stats.DiscardPacketsSent"
+            }
+          }
+        }
+        2 = null
+        3 = null
+        4 = null
+        6 = null
+        7 = null
+        8 = null
+
+      }
+    }
+  }
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+#    LAN {
+#     Devices.%any {
+#      InterfaceType {
+#       %force-object-exists = true
+#      %force-type = "xsd:string"
+#     %force-value = "Ethernet"
+#  }
+#      }
+#    }
+    WiFi {
+      %any {
+        SupportedStandards = null
+        SupportedStandards = {}
+      }
+      1 {
+        SupportedChannelBandwidth.%force-value = "20MHz,40MHz,Auto"
+      }
+      5 {
+        SupportedChannelBandwidth.%force-value = "20MHz,40MHz,80MHz,160MHz,Auto"
+        Band.%force-value = "5"
+      }
+    }
+  }
+}

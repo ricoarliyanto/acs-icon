@@ -1,0 +1,6 @@
+# XMPP capability
+# A device is able to configure and manage connection requests via XMPP protocol.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.XMPP.%force-value = "true"
+}

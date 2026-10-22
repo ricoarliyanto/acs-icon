@@ -1,0 +1,6 @@
+# Radius capability
+# A device is able to configure Radius
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Radius.%force-value = "true"
+}

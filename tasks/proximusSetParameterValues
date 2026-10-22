@@ -1,0 +1,16 @@
+val awaitDiagnosticsComplete = task.parameters.awaitDiagnosticsComplete.getOr("false").toBoolean
+val spvJson = task.parameters.spvJson.get.parseJson
+var firstSession = false;
+
+val timeout = Timestamp.now().addSeconds(180)
+
+ldm.setAll(spvJson.asFieldSeq.map{(k,v) => ldm.valueToSet(k.toDMKey, v.asString)})
+
+if(awaitDiagnosticsComplete){
+  do {
+    session.wait(false)
+  } while(!inform.diagnosticsComplete && Timestamp.now() < timeout)
+  if(Timestamp.now() > timeout){
+    fail("Timeout while waiting for diagnostics complete")
+  }
+}

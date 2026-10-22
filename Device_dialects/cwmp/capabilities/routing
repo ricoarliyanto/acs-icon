@@ -1,0 +1,6 @@
+# Routing capability
+# A device is able to configure routing
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Routing.%force-value = "true"
+}

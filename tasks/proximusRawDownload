@@ -1,0 +1,1 @@
+<config URL="${#URL}" fileSize="${#fileSize.toLong}" fileType="${#fileType}" targetFileName="${#targetFileName}" username="${#username}" password="${#password}" commandKey="${#commandKey}" delaySeconds="${#delaySeconds.toInt}" transferCompleteTimeout="${#transferCompleteTimeout.toInt}" waitForTransferComplete="${#waitForTransferComplete.toBoolean}" />

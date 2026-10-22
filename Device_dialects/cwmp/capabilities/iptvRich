@@ -1,0 +1,6 @@
+# IPTV Rich capability
+# A device supports rich IPTV features
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.IPTVRich.%force-value = "true"
+}

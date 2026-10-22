@@ -1,0 +1,71 @@
+include "cwmp.default"
+include "cwmp.capabilities.neighborhood"
+
+
+remappingStrategy {
+  mapping {
+    root.X_AVS_EXT {
+      WiFi.1 {
+        Neighborhood.%i {
+          BSSID.real = "${sv.vdmWlan1.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborBSSID"
+          Channel.real = "${sv.vdmWlan1.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborChannel"
+          SSID.real = "${sv.vdmWlan1.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborSSID"
+          SignalStrength.real = "${sv.vdmWlan1.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborSignalStrength"
+          Standard.real = "${sv.vdmWlan1.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborMode"
+          Security.real = "${sv.vdmWlan1.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborSecurity"
+        }
+        RegulatoryDomain = null
+      }
+      WiFi.2 {
+        Neighborhood.%i {
+          BSSID.real = "${sv.vdmWlan2.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborBSSID"
+          Channel.real = "${sv.vdmWlan2.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborChannel"
+          SSID.real = "${sv.vdmWlan2.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborSSID"
+          SignalStrength.real = "${sv.vdmWlan2.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborSignalStrength"
+          Standard.real = "${sv.vdmWlan2.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborMode"
+          Security.real = "${sv.vdmWlan2.toParameterKey}.Neighbor.%i.X_FIB_WLAN_NeighborSecurity"
+        }
+        RegulatoryDomain = null
+      }
+      WiFi.3.Neighborhood = null
+      WiFi.4.Neighborhood = null
+      WiFi.5 = null
+    }
+  }
+}
+
+cwmp {
+  # List of parameters for which values will NOT be fetched when performing data model refresh.
+  # Applies ONLY when 'dotGpv' SV is set to false.
+  # Keys may contain the '{i}' placeholder to match arbitrary instance numbers.
+  //  parametersExcludedFromRefresh = ["InternetGatewayDevice.Services","Services","root.Services","InternetGatewayDevice.WANDevice","InternetGatewayDevice.LANDevice"]
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    WiFi.1.SupportedStandards.%force-value = "b,g,g-only,n"
+    WiFi.2.SupportedStandards.%force-value = "a,n,an,ac"  //WiFi 5G real interface 5 is mapped to vdmWlan2 by group property "root.devicetypes.fiberhome.an5506_04_fa"
+    WiFi.3.SupportedStandards.%force-value = "b,g,g-only,n"
+    WiFi.4.SupportedStandards.%force-value = "b,g,g-only,n"
+    WiFi.5.SupportedStandards.%force-value = "b,g,g-only,n"
+    WiFi.6.SupportedStandards.%force-value = "a,n,an,ac"
+    WiFi.7.SupportedStandards.%force-value = "a,n,an,ac"
+    WiFi.8.SupportedStandards.%force-value = "a,n,an,ac"
+    WiFi.%any.Neighborhood.%force-object-exists = false
+    WiFi.1.Neighborhood.%force-object-exists = true
+    WiFi.2.Neighborhood.%force-object-exists = true
+  }
+}
+
+remappingStrategy.mapping {
+  root.X_AVS_EXT.WiFi {
+    1.Password.real = "${sv.vdmWlan1.toParameterKey}.PreSharedKey.1.PreSharedKey"
+    2.Password.real = "${sv.vdmWlan2.toParameterKey}.PreSharedKey.1.PreSharedKey"
+    3.Password.real = "${sv.vdmWlan3.toParameterKey}.PreSharedKey.1.PreSharedKey"
+    4.Password.real = "${sv.vdmWlan4.toParameterKey}.PreSharedKey.1.PreSharedKey"
+  }
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT.WiFi.1.Neighborhood.%any.SignalStrength.%patch-value = "${node.value.ensureStart('-')}"
+}

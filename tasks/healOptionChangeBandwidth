@@ -1,0 +1,8 @@
+<config>
+  <set key="Root.X_AVS_EXT.WiFi.${#radio}.ChannelBandwidth" value="${#bandwidth}" />
+  <log message="Bandwidth changed to ${#bandwidth} on radio ${#radio} by Heal Action" />
+  <store target="smartWifiDisableReason" value="Manual change of channel" />
+  <task template="smartWifiDisable">
+    <input var="smartWifiDisableReason" />
+  </task>
+</config>

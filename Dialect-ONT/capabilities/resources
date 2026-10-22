@@ -1,0 +1,6 @@
+# Report resource consumption capability
+# A device is able to report consumption of basic resources - CPU and RAM.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Resources.%force-value = "true"
+}

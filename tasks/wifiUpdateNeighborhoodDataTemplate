@@ -1,0 +1,23 @@
+<config>
+  <removeProperty target="wifiNeighborhoodData" />
+  <task template="${ sv.wifiScanTemplate }" />
+  <store target="wifiNeighborhoodData" value="${ &quot;&quot; }" />
+  <foreach iterator="neighborhoodPath" in="true" list="${dm.getByPath(&quot;X_AVS_EXT.WiFiNeighborhood&quot;).any.keys}">
+    <store target="ssid" value="${ dm.getByPath(#neighborhoodPath).SSID.value }" />
+    <store target="bssid" value="${ dm.getByPath(#neighborhoodPath).BSSID.value }" />
+    <store target="channel" value="${ dm.getByPath(#neighborhoodPath).Channel.value }" />
+    <store target="security" value="${ dm.getByPath(#neighborhoodPath).Security.value }" />
+    <store target="signalStrength" value="${ dm.getByPath(#neighborhoodPath).SignalStrength.value }" />
+    <store target="standard" value="${ dm.getByPath(#neighborhoodPath).Standard.value }" />
+    <store target="frequency" value="${ dm.getByPath(#neighborhoodPath).Frequency.value }" />
+    <store target="operatingChannelBandwidth" value="${ dm.getByPath(#neighborhoodPath).OperatingChannelBandwidth.value }" />
+    <store target="stationCount" value="${ dm.getByPath(#neighborhoodPath).StationCount.value }" />
+    <store target="channelUtilisation" value="${ dm.getByPath(#neighborhoodPath).ChannelUtilisation.value }" />
+    <store target="authentication" value="${ dm.getByPath(#neighborhoodPath).Authentication.value }" />
+    <store target="regulatoryDomain" value="${ dm.getByPath(#neighborhoodPath).RegulatoryDomain.value }" />
+    <store target="json" value="${js.value(map(&#xA;&quot;BSSID&quot; -&gt; #bssid,&#xA;&quot;Channel&quot; -&gt; #channel,&#xA;&quot;SSID&quot; -&gt; #ssid,&#xA;&quot;Frequency&quot; -&gt; #frequency,&#xA;&quot;OperatingChannelBandwidth&quot; -&gt; #operatingChannelBandwidth,&#xA;&quot;Standard&quot; -&gt; #standard,&#xA;&quot;SignalStrength&quot; -&gt; #signalStrength,&#xA;&quot;StationCount&quot; -&gt; #stationCount,&#xA;&quot;ChannelUtilisation&quot; -&gt; #channelUtilisation,&#xA;&quot;Security&quot; -&gt; #security,&#xA;&quot;Authentication&quot; -&gt; #authentication,&#xA;&quot;RegulatoryDomain&quot; -&gt; #regulatoryDomain&#xA;)).render }" />
+    <store target="wifiNeighborhoodData" value="${ #wifiNeighborhoodData + ',' +  #json }" />
+  </foreach>
+  <log message="${ #wifiNeighborhoodData }" />
+  <store target="wifiNeighborhoodData" value="${'[' + #wifiNeighborhoodData.drop(1) + ']'}" type="devProp" />
+</config>

@@ -1,0 +1,6 @@
+# IPTV capability
+# A device is able to configure IPTV
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.IPTV.%force-value = "true"
+}

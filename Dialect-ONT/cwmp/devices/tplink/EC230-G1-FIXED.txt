@@ -1,0 +1,88 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS
+include "cwmp.capabilities.generic.dm2"
+include "cwmp.capabilities.localization.dm2"
+include "cwmp.capabilities.management.dm2"
+include "cwmp.capabilities.resources.dm2"
+
+# WAN - INTERNET ACCESS
+include "cwmp.capabilities.ethernet.dm2"
+include "cwmp.capabilities.wan.dm2"
+
+# LAN
+include "cwmp.capabilities.dhcp.dm2"
+include "cwmp.capabilities.dns.dm2"
+include "cwmp.capabilities.lan.dm2"
+
+# LAN - WI-FI
+include "cwmp.capabilities.wifi.dm2"
+include "cwmp.capabilities.macFiltering.dm2"
+include "cwmp.capabilities.radius.dm2"
+
+# SERVICES
+include "cwmp.capabilities.forwarding.dm2"
+include "cwmp.capabilities.ntp.dm2"
+include "cwmp.capabilities.routing.dm2"
+include "cwmp.capabilities.xmpp.dm2"
+
+# DIAGNOSTICS & MONITORING
+include "cwmp.capabilities.diagnostics.dm2"
+include "cwmp.capabilities.neighborhood.dm2"
+include "cwmp.capabilities.status.dm2"
+include "cwmp.capabilities.temperature.dm2"
+
+# MAINTENANCE
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.reboot"
+include "cwmp.capabilities.restore"
+include "cwmp.capabilities.schedule"
+
+remappingStrategy {
+    read_converter {
+#    WAN.UpTime = ${tools.expression} {
+#      expression = "${singleValue}"
+#    }
+  }
+  mapping {
+    root.X_AVS_EXT {
+        WAN {
+          UpTime.real = "${sv.vdmWan1.parseJson.interfaceKey.asString.toParameterKey}.Uptime"
+          IP.1.IPv6 = null
+          IP.1.IPv6Prefix = null
+        Stats {
+          Downstream {
+            Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesReceived"
+            Packets.real = "root.Ethernet.VLANTermination.1.Stats.PacketsReceived"
+          }
+          Upstream {
+            Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesSent"
+            Packets.real = "root.Ethernet.VLANTermination.1.Stats.PacketsSent"
+          }
+        }
+          IP.1.Stats.Downstream {
+            Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesReceived"
+            Packets.real = "root.Ethernet.VLANTermination.1.Stats.PacketsReceived"
+          }
+          IP.1.Stats.Upstream {
+            Bytes.real = "root.Ethernet.VLANTermination.1.Stats.BytesSent"
+            Packets.real = "root.Ethernet.VLANTermination.1.Stats.PacketsSent"
+          }
+        }
+    }
+   WAN.UpTime.real = "${sv.vdmWan1.parseJson.interfaceKey.asString.toParameterKey}.Uptime"
+  }
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    WiFi.%any.SupportedStandards = null
+    WAN.UpTime.%force-value = "1555"
+    Capabilities {
+    Backup.%force-value = "true"
+    Reboot.%force-value = "true"
+    Restore.%force-value = "true"
+  }
+}
+}

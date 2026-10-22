@@ -1,0 +1,42 @@
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.dsl"
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.forwarding"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.wifi"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.ping"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+
+remappingStrategy.mapping {
+  root.X_AVS_EXT.WiFi {
+    1.Password.real = "${sv.vdmWlan1.toParameterKey}.PreSharedKey.1.PreSharedKey"
+    2.Password.real = "${sv.vdmWlan2.toParameterKey}.PreSharedKey.1.PreSharedKey"
+    3.Password.real = "${sv.vdmWlan3.toParameterKey}.PreSharedKey.1.PreSharedKey"
+    4.Password.real = "${sv.vdmWlan4.toParameterKey}.PreSharedKey.1.PreSharedKey"
+    5 = null
+  }
+}

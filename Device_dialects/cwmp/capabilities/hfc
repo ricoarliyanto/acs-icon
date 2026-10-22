@@ -1,0 +1,6 @@
+# HFC capability
+# A device is able to connect via HFC (Hybrid Fiber Coaxial)
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.HFC.%force-value = "true"
+}

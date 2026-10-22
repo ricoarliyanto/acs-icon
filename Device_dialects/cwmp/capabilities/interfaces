@@ -1,0 +1,6 @@
+# Interfaces capability
+# A device exposes interface statistics
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Interfaces.%force-value = "true"
+}

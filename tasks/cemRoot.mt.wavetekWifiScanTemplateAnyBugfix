@@ -1,0 +1,12 @@
+<config>
+  <log message="Refreshing WiFi neighborhood" />
+  <find query="${root.X_AVS_EXT.WiFiNeighborhood.`1`.Channel}" output="wifiNeighborhood" />
+  <if expr="${#wifiNeighborhood != null}">
+    <getParameters key="${device.rootObject.toParameterKey}.X_AVS_EXT.WiFiNeighborhood." />
+    <else>
+      <foreach query="${root.X_AVS_EXT.WiFi.any}" iterator="wifi">
+        <getParameters key="${#wifi}.Neighborhood." />
+      </foreach>
+    </else>
+  </if>
+</config>

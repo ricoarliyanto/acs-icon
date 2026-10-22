@@ -1,0 +1,93 @@
+val wan = ldm.root.Ethernet.Interface.any.parameterValue("Alias", "WAN").first.parameterKey
+val lan1 = ldm.root.Ethernet.Interface.any.parameterValue("Alias", "LAN1").first.parameterKey
+val lan2 = ldm.root.Ethernet.Interface.any.parameterValue("Alias", "LAN2").first.parameterKey
+val lan3 = ldm.root.Ethernet.Interface.any.parameterValue("Alias", "LAN3").first.parameterKey
+val lan4 = ldm.root.Ethernet.Interface.any.parameterValue("Alias", "LAN4").first.parameterKey
+
+val indexMap = Map(lan1.raw -> "0", lan2.raw -> "1", lan3.raw -> "2", lan4.raw -> "3", wan.raw -> "4")
+
+val triples = Seq(lan1, lan2, lan3, lan4, wan).map{dmkey => 
+  ldm.root.Bridging.Bridge.any.Port.any.parameterValue("LowerLayers", dmkey.raw).keys
+  .foldLeft(("NO VLAN", "0", "0")){(triple, key) =>
+  val (vlanName, vid, prio) = triple
+
+  val pvid = key.ancestor(7).PVID.get()
+  if(vid != "0"){
+		triple
+  } else {
+    val priority = key.ancestor(7).DefaultUserPriority.get()
+    val vlanId = key.ancestor(4).VLAN.`1`.VLANID.get()
+    val name = key.ancestor(4).VLAN.`1`.Name.get()
+    (name, vlanId, priority)
+  }
+ }
+}
+
+triples.zip(Seq(0,1,2,3,4,5)).foreach{((triple), i) =>
+   val (vlanName, vid, prio) = triple
+   device.property("portConfig${i}Name").set(vlanName)
+   device.property("portConfig${i}VlanId").set(vid)
+   device.property("portConfig${i}Priority").set(prio)
+   device.property("portConfig${i}Mode").set("1")
+}
+
+var index = 0
+
+while(index < 16){
+  device.property("vlanGroup${index}VlanId").set("0")
+  device.property("vlanGroup${index}Name").set("None")
+  device.property("vlanGroup${index}Lan0").set("0")
+  device.property("vlanGroup${index}Lan1").set("0")
+  device.property("vlanGroup${index}Lan2").set("0")
+  device.property("vlanGroup${index}Lan3").set("0")
+  device.property("vlanGroup${index}Wan").set("0")
+  index = index + 1
+}
+
+
+index = 0
+
+ldm.root.Bridging.Bridge.any.keys.foreach{ bridgeKey =>
+  try {
+    val name = bridgeKey.VLAN.`1`.Name.get()
+    val vlanId = bridgeKey.VLAN.`1`.VLANID.get()
+      device.property("vlanGroup${index}VlanId").set(vlanId)
+      device.property("vlanGroup${index}Name").set(name)
+      val portKeys = bridgeKey.Port.query.any.keys
+      val vlanPortKeys = bridgeKey.VLANPort.query.any.keys
+      val zipped = if(portKeys.size > vlanPortKeys.size) portKeys.drop(1).zip(vlanPortKeys) else portKeys.zip(vlanPortKeys) 
+      zipped.foreach{(port, vlanPort) => 
+        val vlan = vlanPort.VLAN.get()
+        val portPath = vlanPort.Port.get()
+        if(vlan.opt.exists(_.startsWith("Device")) || portPath.opt.exists(_.startsWith("Device"))){
+          val untagged = if(vlanPort.Untagged.get() == "true") "1" else "2"
+          val lowerLayers = port.LowerLayers.get()
+          indexMap.get(lowerLayers).foreach{ind => 
+            if(ind == "4"){
+              device.property("vlanGroup${index}Wan").set(untagged)
+            } else {
+              device.property("vlanGroup${index}Lan$ind").set(untagged)
+            }
+          }
+        }
+      }
+      index = index + 1
+  } catch {
+    exception => log.error(exception)
+    index = index + 1
+  }
+}
+
+try {
+  val vid = dmkey.root.Ethernet.VLANTermination.`1`.VLANID.get()
+  device.property("portConfig5Name").set("Management")
+  device.property("portConfig5VlanId").set(vid)
+  device.property("portConfig5Priority").set("0")
+  device.property("portConfig5Mode").set("1")
+} catch {
+  ex => log.error(ex)
+  device.property("portConfig5Name").set("Management")
+  device.property("portConfig5VlanId").set("666")
+  device.property("portConfig5Priority").set("0")
+  device.property("portConfig5Mode").set("1")
+}

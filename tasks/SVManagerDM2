@@ -1,0 +1,76 @@
+<config>
+  <store value="0" target="counter" />
+  <if expr="${device.rootObject == 'Device.'}">
+    <store value="Optical,Ethernet" target="interfaces" />
+    <foreach list="${#interfaces.splitBy(',')}" iterator="interfaceType">
+      <foreach query="${root.get(#interfaceType+'.Interface').any}" iterator="interface">
+        <get key="${#interface}Upstream" output="upstream" />
+        <if expr="${#upstream.toBoolean}">
+          <store value="${#counter.toInt + 1}" target="counter" />
+          <store type="devProp" target="wanInterface${#counter}" value="${#interface}" />
+        </if>
+      </foreach>
+    </foreach>
+    <flush />
+    <store value="${''}" target="lowerStack" />
+    <store value="${''}" target="higherStack" />
+    <foreach query="${root.InterfaceStack.any}" in="true">
+      <get key="LowerLayer" output="lowerLayer" fromCache="true" />
+      <get key="HigherLayer" output="higherLayer" fromCache="true" />
+      <store value="${''}" target="${#lowerLayer}" type="devProp" />
+      <store value="${''}" target="${'higher.'+#higherLayer}" type="devProp" />
+    </foreach>
+    <foreach query="${root.InterfaceStack.any}" in="true">
+      <get key="LowerLayer" output="lowerLayer" fromCache="true" />
+      <get key="HigherLayer" output="higherLayer" fromCache="true" />
+      <store value="${#lowerLayer};${#lowerStack}" target="lowerStack" />
+      <store value="${#higherLayer};${#higherStack}" target="higherStack" />
+      <if expr="${sv.get(#lowerLayer) != null and !sv.get(#lowerLayer).empty}">
+        <store value="${sv.get(#lowerLayer)+','+#higherLayer}" target="${#lowerLayer}" type="devProp" />
+        <else>
+          <store value="${#higherLayer}" target="${#lowerLayer}" type="devProp" />
+        </else>
+      </if>
+      <if expr="${sv.get('higher.'+#higherLayer) != null and !sv.get('higher.'+#higherLayer).empty}">
+        <store value="${sv.get('higher.'+#higherLayer)+','+#lowerLayer}" target="${'higher.'+#higherLayer}" type="devProp" />
+        <else>
+          <store value="${#lowerLayer}" target="${'higher.'+#higherLayer}" type="devProp" />
+        </else>
+      </if>
+    </foreach>
+    <log message="Lower stack: ${#lowerStack}" level="INFO" />
+    <log message="Higher stack: ${#higherStack}" level="INFO" />
+    <foreach list="${'1,2,3,4,5'.splitBy(',')}">
+      <foreach list="${#lowerStack.splitBy(';')}">
+        <foreach list="${sv.get(#i).splitBy(',')}" iterator="single">
+          <if expr="${sv.get(#single)!=null}">
+            <store value="${sv.get(#i).splitBy(',').toSet.union(sv.get(#single).splitBy(',').toSet).join(',')}" target="${#i}" type="devProp" />
+          </if>
+        </foreach>
+      </foreach>
+      <foreach list="${#higherStack.splitBy(';')}">
+        <foreach list="${sv.get('higher.'+#i).splitBy(',')}" iterator="single">
+          <if expr="${sv.get('higher.'+#single)!=null}">
+            <store value="${sv.get('higher.'+#i).splitBy(',').toSet.union(sv.get('higher.'+#single).splitBy(',').toSet).join(',')}" target="${'higher.'+#i}" type="devProp" />
+          </if>
+        </foreach>
+      </foreach>
+    </foreach>
+    <store value="${sv.get(sv.wanInterface).splitBy(',').filter(x =&gt; x.contains('Device.IP.Interface')).join}" target="activeWanIPInterface" type="devProp" />
+    <store value="${sv.get('Device.Ethernet.Interface.1').splitBy(',').filter(x =&gt; x.contains('Device.IP.Interface')).join}" target="lanIPInterface" type="devProp" />
+    <foreach query="${root.WiFi.AccessPoint.any}" in="true" iterator="apKey">
+      <store value="${#apKey.splitBy('.').get(3)}" target="instance" />
+      <get key="SSIDReference" output="ssid" fromCache="true" />
+      <get key="SSIDReference" output="ssid" fromCache="true" />
+      <store value="${#ssid}" target="ssidKey${#instance}" type="devProp" />
+      <store value="${sv.get('higher.'+#ssid).splitBy(',').filter(x =&gt; x.contains('Device.WiFi.Radio')).join}" target="radioKey${#instance}" type="devProp" />
+    </foreach>
+    <store value="${sv.get('higher.'+sv.activeWanIPInterface).splitBy(',').filter(x =&gt; x.contains('Device.Ethernet.Link'))(0)}" target="activeWanLinkInterface" type="devProp" />
+    <foreach query="${root.DHCPv4.Client.any}" in="true" iterator="dhcpKey">
+      <get key="Interface" output="interface" fromCache="true" />
+      <if expr="${#interface == sv.activeWanIPInterface}">
+        <store value="${#dhcpKey}" target="activeWanDHCPClient" type="devProp" />
+      </if>
+    </foreach>
+  </if>
+</config>

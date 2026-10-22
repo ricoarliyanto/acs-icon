@@ -1,0 +1,6 @@
+# WiMAX capability
+# A device supports WiMAX
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.WiMAX.%force-value = "true"
+}

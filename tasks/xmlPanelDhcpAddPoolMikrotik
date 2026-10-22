@@ -1,0 +1,17 @@
+<config>
+  <store target="name" value="name=${task.property.Name}" />
+  <store target="ranges" value="ranges=${task.property.Ranges}" />
+  <store target="next-pool" value="${if(task.property.NextPool != '') 'next-pool='+task.property.NextPool else  'next-pool=none'}" />
+  <store target="cliCommand" value="/ip pool add ${#name} ${#ranges} ${#`next-pool`}" />
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <if expr="${#output.contains('Invalid input detected')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <if expr="${#output.contains('pool with such name exists')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <getParameters key="Device.X_AVS_EXT.DHCP.Pool." />
+</config>

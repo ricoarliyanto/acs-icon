@@ -1,0 +1,6 @@
+# Alarm capability
+# A device is able to show curently rised Alarms and Faults
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Alarm.%force-value = "true"
+}

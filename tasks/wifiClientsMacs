@@ -1,0 +1,12 @@
+taskReport.property.wifiClientsMacs.set {
+  
+  ldm.getAll(
+    ldm.root.LANDevice(1)
+    .WLANConfiguration.any
+	  .AssociatedDevice.any
+    .keys.map {
+      _.AssociatedDeviceMACAddress
+ 	  }
+  ).toValueSeq.join(",")
+
+}

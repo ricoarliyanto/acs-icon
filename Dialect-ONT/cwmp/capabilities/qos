@@ -1,0 +1,5 @@
+# QoS capability
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.QoS.%force-value = "true"
+}

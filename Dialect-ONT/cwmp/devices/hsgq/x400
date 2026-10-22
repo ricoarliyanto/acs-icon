@@ -1,0 +1,100 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.gpon"
+include "cwmp.capabilities.ethernet"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.routing"
+# include "cwmp.capabilities.voip" 
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.vlan"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+# include "cwmp.capabilities.neighborhood" 
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+include "tools.remapping"
+
+remappingStrategy {
+  # define common keys for cleaner mapping
+  # Based on datamodel, valid paths:
+  # GPON: InternetGatewayDevice.WANDevice.1.X_GponInterafceConfig
+  # PPP.1: InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1
+  # IP.1: InternetGatewayDevice.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1
+
+  mapping {
+    root.X_AVS_EXT.Diagnostics.Download.DownloadURL.real = "root.DownloadDiagnostics.DownloadURL"
+
+    # Enriched GPON Status from standard WANDevice path (often more reliable or detailed)
+    root.X_AVS_EXT.WAN.GPON.1 {
+        Status.real = "root.WANDevice.1.X_GponInterafceConfig.Status"
+        TransceiverTemperature.real = "root.WANDevice.1.X_GponInterafceConfig.TransceiverTemperature"
+        BiasCurrent.real = "root.WANDevice.1.X_GponInterafceConfig.BiasCurrent"
+        RXPower.real = "root.WANDevice.1.X_GponInterafceConfig.RXPower"
+        TXPower.real = "root.WANDevice.1.X_GponInterafceConfig.TXPower"
+        SupplyVoltage.real = "root.WANDevice.1.X_GponInterafceConfig.SupplyVoltage"
+    }
+
+    # Map PPP.1 to the specific WANPPPConnection (Reference: Datamodel Line 1286)
+    root.X_AVS_EXT.WAN.PPP.1 {
+      Enable.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Enable"
+      Username.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username"
+      Password.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Password"
+      Status.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionStatus"
+      ExternalIPAddress.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress"
+      DefaultGateway.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DefaultGateway"
+      DNSServers.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DNSServers"
+      Uptime.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Uptime"
+      NATEnabled.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.NATEnabled"
+      Name.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Name"
+      Stats {
+         Upstream.Bytes.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesSent"
+         Downstream.Bytes.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesReceived"
+      }
+    }
+
+    # Map IP.1 to the specific WANIPConnection (Reference: Datamodel Line 1093)
+    root.X_AVS_EXT.WAN.IP.1 {
+      Enable.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Enable"
+      Status.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.ConnectionStatus"
+      AddressingType.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.AddressingType"
+      ExternalIPAddress.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.ExternalIPAddress"
+      SubnetMask.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.SubnetMask"
+      DefaultGateway.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.DefaultGateway"
+      DNSServers.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.DNSServers"
+      Uptime.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Uptime"
+      NATEnabled.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.NATEnabled"
+      Name.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Name"
+      Stats {
+         Upstream.Bytes.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Stats.EthernetBytesSent"
+         Downstream.Bytes.real = "root.WANDevice.1.WANConnectionDevice.2.WANIPConnection.1.Stats.EthernetBytesReceived"
+      }
+    }
+  }
+}
+
+cwmp.messageTimeout = 180000
+cwmp.sessionTimeout = 180000

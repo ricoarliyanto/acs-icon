@@ -1,0 +1,43 @@
+val agentParent = dmkey.root.X_AVS_EXT.WiFiMesh.dot
+val agentSubkeys = Seq(
+  "MACAddress",
+  "Backhaul.MACAddress"
+)
+
+val agentKeys = ldm.root.X_AVS_EXT.WiFiMesh.any(true).keys.map(_.dot).map { agent =>
+  agentSubkeys.map{ subkey =>
+    agent.selectDynamic(subkey)
+  }
+}
+
+val thisDeviceMac = dmkey.root.X_AVS_EXT.MAC.get(true)
+log.warn("this device mac: $thisDeviceMac")
+
+val agents = ldm.getAll(agentKeys.flatten: _*).toSeq.sortBy((key,value) => key).grouped(agentSubkeys.size).map(_.toMap)
+
+val relations = agents.foldLeft(Map[DeviceSvRef,Seq[String]]()) { (acc, agent) =>
+  val key = agent.keySet.any.slice(0,agentParent.depth + 1).toDMKey
+  log.warn(agent(key.MACAddress))
+  if (agent(key.Backhaul.MACAddress).isEmpty) acc ++ Map(sv.deviceRelationThisDeviceMac -> Seq(thisDeviceMac))
+  else if (agent(key.Backhaul.MACAddress) == thisDeviceMac) acc ++ Map(sv.deviceRelationDownstreamDevicesMacs -> acc.getOr(sv.deviceRelationDownstreamDevicesMacs, Seq()).append(agent(key.MACAddress)))
+  else acc
+}
+
+relations.foreach { (ref, value) =>
+ ref.set(value.toSet.join(","))
+}
+
+devices.find(DeviceQuery(_.properties.deviceRelationDownstreamDevicesMacs.containsIgnoreCase(relations(sv.deviceRelationThisDeviceMac).head)), limit = 1).foreach { upstreamDevice =>
+  log.warn("updating upstream device ${upstreamDevice.id}")
+  sv.deviceRelationUpstreamDevice.set(upstreamDevice.id)
+  val downstreamDevices = upstreamDevice.property.deviceRelationDownstreamDevices.getOr("").splitBy(",").toSet
+  if (!downstreamDevices.contains(device.id)) {
+    val addProperties = Map("deviceRelationDownstreamDevices" -> downstreamDevices.add(device.id).join(","))
+    http.localRest(
+      path = "/devices/${upstreamDevice.id}",
+      method = "PUT",
+      requireSuccess = true,
+      content = Json.object("addProperties" -> addProperties.encodeJson)
+    )
+  }
+}

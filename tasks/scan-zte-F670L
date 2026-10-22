@@ -1,0 +1,20 @@
+<config>
+  <log message="Starting WiFi scan diagnostics" />
+  <store target="sessionCounter" value="0" />
+  <store target="prefix" value="${device.rootObject}LANDevice.1.WIFI.Radio" />
+  <set key="${#prefix}.1.DiagnosticsState" value="Requested" />
+  <set key="${#prefix}.2.DiagnosticsState" value="Requested" />
+  <while expr="${#sessionCounter.toDouble &lt; 5 }">
+    <wait blocking="true" />
+    <if expr="${inform.diagnosticsComplete}">
+      <get key="${#prefix}.1.DiagnosticsState" output="state1" />
+      <get key="${#prefix}.2.DiagnosticsState" output="state2" />
+      <if expr="${#state1 == 'Completed' or #state1 == 'Complete' and #state2 == 'Completed' or #state2 == 'Complete'}">
+        <getParameters key="${device.rootObject}X_AVS_EXT.WiFiNeighborhood" />
+        <finish message="WiFi scan diagnostics completed" />
+      </if>
+    </if>
+    <store target="sessionCounter" value="${#sessionCounter.toDouble + 1}" />
+  </while>
+  <finish status="ERROR" message="WiFi scan diagnostics failed" />
+</config>

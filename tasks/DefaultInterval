@@ -1,0 +1,10 @@
+<config>
+  <store target="interval" value="${sv.`quickFix.defaultInterval`}" />
+  <if expr="${#interval != null}">
+    <set key="Root.ManagementServer.PeriodicInformInterval" value="${#interval}" />
+    <log message="Periodic inform interval set to ${#interval}" />
+    <else>
+      <finish status="WARNING" message="Define quickFix.defaultInterval profile first!" />
+    </else>
+  </if>
+</config>

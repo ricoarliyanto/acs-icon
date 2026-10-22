@@ -1,0 +1,34 @@
+/* IOT CWMP Compliance Testing
+* sending a test result to Google Form, which places it in a Google Sheet:
+* https://docs.google.com/spreadsheets/d/1NdHAEfqLxvl8h9JgYcYmM8M2ITnhT8Fpt0LS84xBxSY/edit?gid=1624865327#gid=1624865327
+*/
+
+var rawLog = ""
+try {
+  val testPassed = taskReport.property.testPassed.getOpt.getOr(
+    fail("Missing 'testPassed' taskReport property.")
+  ).toBoolean
+  val description = taskReport.property.description.getOr("")
+  val testCaseName = taskReport.property.testCaseName.getOpt.getOr(
+    fail("Missing 'testCaseName' taskReport property.")
+  )
+  val isPerformed = taskReport.property.isPerformed.getOr("true").toBoolean
+
+  val response = http.request(uri = sv.iotGoogleFormUrl.getOr(fail("Missing 'iotGoogleFormUrl' SV.")),
+    uriParameters = Seq(
+      sv.iotDeviceIdEntry.getOr(fail("Missing 'iotDeviceIdEntry' SV")) -> device.id,
+      sv.iotDeviceManufacturerEntry.getOr(fail("Missing 'iotDeviceManufacturerEntry' SV")) -> device.manufacturer,
+      sv.iotDeviceModelNameEntry.getOr(fail("Missing 'iotDeviceModelNameEntry' SV")) -> device.modelName,
+      sv.iotDeviceSoftwareVersionEntry.getOr(fail("Missing 'iotDeviceSoftwareVersionEntry' SV"))  -> device.softwareVersion,
+      sv.iotTestCaseEntry.getOr(fail("Missing 'iotTestCaseEntry' SV")) -> testCaseName,
+      sv.iotResultEntry.getOr(fail("Missing 'iotResultEntry' SV")) -> if (!isPerformed) "Not performed" else if(testPassed) "Pass" else "Failed",
+      sv.iotDescriptionEntry.getOr(fail("Missing 'iotDescriptionEntry' SV")) -> description,
+      "submit" -> "Submit"
+    )).send()
+
+  rawLog += "Sending results status ${response.status}\n"
+} catch { e => 
+	taskReport.property.error.set(e.toString)
+} finally {
+	taskReport.property.rawLog.set(rawLog)
+}

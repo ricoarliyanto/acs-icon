@@ -1,0 +1,21 @@
+<config>
+  <store target="ntpActiveServer" value="${task.property.ActiveServer}" />
+  <store target="ntpEnabled" value="${task.property.Enabled}" />
+  <store target="ntpPrimary" value="${task.property.PrimaryNtp}" />
+  <store target="ntpSecondary" value="${task.property.SecondaryNtp}" />
+  <store target="ntpServerDnsName" value="${task.property.ServerDnsNames}" />
+  <if expr="${#ntpEnabled=='true'}">
+    <store target="cliCommand" value="/system ntp client set enabled=yes primary-ntp=${#ntpPrimary} secondary-ntp=${#ntpSecondary} server-dns-names=${#ntpServerDnsName}" />
+    <else>
+      <store target="cliCommand" value="/system ntp client set enabled=no primary-ntp=${#ntpPrimary} secondary-ntp=${#ntpSecondary} server-dns-names=${#ntpServerDnsName}" />
+    </else>
+  </if>
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <if expr="${#output.contains('invalid value for argument')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <getParameters key="Device.X_AVS_EXT.NTP.Client." />
+</config>

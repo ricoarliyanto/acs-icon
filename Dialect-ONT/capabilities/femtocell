@@ -1,0 +1,6 @@
+# Femtocell capability
+# A device is able to configure and manage a femto access point. It also supports scanning of a radio environment.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Femtocell.%force-value = "true"
+}

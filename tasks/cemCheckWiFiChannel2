@@ -1,0 +1,52 @@
+// cemCheckWiFiChannel
+
+val wifiScanTemplateName = "wifiScanTemplateCemAnyBugfix"
+session.spawnTask(wifiScanTemplateName).tryAndFold(
+  e => fail("Could not perform WiFi scan. Reason: $e"),
+  output => {}
+)
+
+// For calculating channel rank we need to know BSSID for both 2.4GHz & 5GHz
+val (band24Instance, band5Instance) = (sv.cemWiFiVdmWlan24Instance.getOr("1").toInt, sv.cemWiFiVdmWlan5Instance.getOr("2").toInt)
+val (bssid24, bssid5) = (ldm.get(dmkey.root.X_AVS_EXT.WiFi(band24Instance).BSSID), ldm.get(dmkey.root.X_AVS_EXT.WiFi(band5Instance).BSSID))
+val (currentChannel24, currentChannel5) = (ldm.get(dmkey.root.X_AVS_EXT.WiFi(band24Instance).Channel).toInt, ldm.get(dmkey.root.X_AVS_EXT.WiFi(band5Instance).Channel).toInt)
+
+val channelRank24 = wifiOptimization.calculateRanks(device.id, bssid24)
+val channelRank5 = wifiOptimization.calculateRanks(device.id, bssid5)
+val swapTreshold = sv.cemChannelRankSwapTreshold.getOr("0.05").toDouble
+
+val message24 = if (channelRank24.nonEmpty) {
+  val currentChannelRank24 = channelRank24(currentChannel24)
+  val (bestChannel24, bestChannelRank24) = channelRank24.toSeq.maxBy((k,v) => v)
+  if(bestChannel24 != currentChannel24){
+    if(bestChannelRank24 > (currentChannelRank24 + swapTreshold)){
+      val channelRankDifference24 = (bestChannelRank24 - currentChannelRank24)*100
+      "2.4 GHz: Current channel ($currentChannel24) rank is ${channelRankDifference24.toInt}% lower than best possible, change channel to $bestChannel24 to avoid interference"
+    } else {
+      "2.4 GHz: Current channel ($currentChannel24) is the best channel."
+    }
+  } else {
+    "2.4 GHz: Current channel ($currentChannel24) is the best channel."
+  }
+} else {
+  "2.4 GHz: Neighbourhood is unavailable"
+}
+
+val message5 = if (channelRank5.nonEmpty) {
+  val (bestChannel5, bestChannelRank5) = channelRank5.toSeq.maxBy((k,v) => v)
+  val currentChannelRank5 = channelRank5.getOr(currentChannel5, 0)
+  if(bestChannel5 != currentChannel5){
+    if(bestChannelRank5 > (currentChannelRank5 + swapTreshold)){
+      val channelRankDifference5 = (bestChannelRank5 - currentChannelRank5)*100
+      "5 GHz: Current channel ($currentChannel5) rank is ${channelRankDifference5.toInt}% lower than best possible, change channel to $bestChannel5 to avoid interference"
+    } else {
+      "5 GHz: Current channel ($currentChannel5) is the best channel."
+    }
+  } else {
+    "5 GHz: Current channel ($currentChannel5) is the best channel."
+  }
+} else {
+  "5 GHz: Neighbourhood is unavailable"
+}
+
+workflow.setStatus("Success", "$message24 \n\n $message5") 

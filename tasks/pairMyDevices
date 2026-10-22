@@ -1,0 +1,17 @@
+<config>
+  <set key="Device.Time.NTPServer5" value="example.com" />
+  <restLocal url="/devices?searchCriteria=properties.allManaged%20matches%20%27.%2A${device.serialNumber}.%2A%27">
+    <out from="error" to="error" default="noError" />
+    <out to="searchResult" default="notFound" from=".1" />
+    <out to="allCpes" default="[]" />
+  </restLocal>
+  <foreach list="${#allCpes.replace('[','').replace(']','').replaceAllLiterally(&quot;&quot;&quot;'&quot;&quot;&quot;,'').split(',').asList}">
+    <restLocal url="tasksFromTemplates/device/${#i}?exactId=false" method="POST" content="{&quot;templateName&quot;:&quot;enablePairingButton&quot;,&quot;config&quot;:{&quot;taskName&quot;:&quot;example&quot;,&quot;isActive&quot;:true}}" />
+    <restLocal url="/sessions/${#i}?exactId=false" method="POST">
+      <out from="error" to="error" default="noError" />
+    </restLocal>
+  </foreach>
+  <log message="${#i}" level="ERROR" />
+  <comment text="enablePairingButton" />
+  <rest url="callback.proximus.com" content="Operation on ${device.id} has been finished ${#messageID}" />
+</config>

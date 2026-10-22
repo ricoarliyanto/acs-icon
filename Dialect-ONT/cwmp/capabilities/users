@@ -1,0 +1,6 @@
+# User Management capability
+# A device is able to configure and manage internal users accounts (i.e. for GUI) via CWMP
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Users.%force-value = "true"
+}

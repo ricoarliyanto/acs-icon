@@ -1,0 +1,8 @@
+# Real reference point configuration
+realReferencePoint {
+  type: REFERENCE
+  name = real
+}
+
+liveDatamodelStrategies += ${realReferencePoint}
+

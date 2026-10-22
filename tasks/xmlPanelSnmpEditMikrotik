@@ -1,0 +1,19 @@
+<config>
+  <store target="contact" value="${task.property.Contact}" />
+  <store target="engine-id" value="${task.property.EngineId}" />
+  <store target="location" value="${task.property.Location}" />
+  <store target="src-address" value="${task.property.Address}" />
+  <store target="trap-community" value="${task.property.Community}" />
+  <store target="trap-generators" value="${task.property.Generators}" />
+  <store target="trap-target" value="${task.property.Target}" />
+  <store target="trap-version" value="${task.property.Version}" />
+  <store target="trap-interfaces" value="${task.property.Interfaces}" />
+  <foreach list="${list(#contact,#`engine-id`,#location,#`src-address`,#`trap-community`,#`trap-generators`,#`trap-target`,#`trap-interfaces`,#`trap-version`).filter(p=&gt; !p.empty)}">
+    <log message="/snmp set ${#i} " />
+    <cli protocol="${sv.protocol}">
+      <command cmd="/snmp set ${#i} " />
+      <out target="output" />
+    </cli>
+  </foreach>
+  <getParameters key="Device.X_AVS_EXT.SNMP." />
+</config>

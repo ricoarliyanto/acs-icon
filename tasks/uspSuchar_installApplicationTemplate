@@ -1,0 +1,20 @@
+val resourceId = task.parameters.resourceId.get
+val currentVersion = task.parameters.currentVersion.getOr("1.0")
+val uuid = task.parameters.uuid.get
+
+val resourceDataJson = http.localRest("resources/$resourceId").body.asObject
+val name = resourceDataJson("properties").asObject("applicationNames").asString.replace("[\"", "").replace("\"]", "")
+val version = resourceDataJson("properties").asObject("applicationVersion").asString
+
+val path = if(task.parameters.upgrade.is("true")) {
+  device.dm.SoftwareModules.DeploymentUnit.any.Name.whereValueIs(name).key.parent
+} else {
+  val id = ldm.addObject(dmkey.root.SoftwareModules.DeploymentUnit)
+  dmkey.root.SoftwareModules.DeploymentUnit.apply(id.toInt)
+}
+
+ldm.setAll(
+  path.Name -> name,
+  path.Version -> version,
+  path.Status -> "Installed",
+  path.UUID -> uuid, 

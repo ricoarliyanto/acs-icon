@@ -1,0 +1,11 @@
+# Real patching configuration
+realPatching = {
+  type: PATCHING
+  patching {
+    root {
+      X_AVS_EXT.%drop = true
+    }
+  }
+}
+
+liveDatamodelStrategies += ${realPatching}

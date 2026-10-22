@@ -1,0 +1,47 @@
+val TASK_START_TIME = Timestamp.now()
+var PROVISIONING_HISTORY_PARAMETERS = Map.empty[String,String]
+
+val(
+  UMP_LOGIC_ERROR, 
+  UMP_INPUT_ERROR
+) = (
+  "UMP_LOGIC_ERROR", 
+  "UMP_INPUT_ERROR"
+)
+
+val(status, message, statusCodeOpt) = try {
+  val premiumWifi = task.parameters.premiumWifi.getOr(fail(UMP_INPUT_ERROR, "premiumWifi boolean is missing")).toBoolean
+  val globalConnectWifiToggle = sv.selectDynamic("globalConnectWifiToggle").getOr("true").toBoolean
+  val radios = dmkey.root.X_AVS_EXT.WiFi.getNames()
+  val printableState = if(!globalConnectWifiToggle == true) "Enabled" else "Disabled"
+  radios.foreach{ radio => 
+    ldm.set(dmkey.root.X_AVS_EXT.WiFi.apply(radio.name.toInt).Enable, (!globalConnectWifiToggle).toString)
+    PROVISIONING_HISTORY_PARAMETERS = PROVISIONING_HISTORY_PARAMETERS.update(key = "Radio ${radio.name}", value = "$printableState")
+  }
+  sv.selectDynamic("globalConnectWifiToggle").set((!globalConnectWifiToggle).toString)
+  PROVISIONING_HISTORY_PARAMETERS = PROVISIONING_HISTORY_PARAMETERS.update(key = "taskSummary", value = "Toggled all radios to ${printableState.toLower} state")
+  ("Success", PROVISIONING_HISTORY_PARAMETERS.getOr(key = "taskSummary", default = "Missing task summary"), Opt.empty[String])
+} catch { e =>
+  val (status, code) = e.code.splitBy(": ") |> {strs => if(strs.size<2) strs.prepend("ERROR") else strs} |> {o => (o.apply(0), o.apply(1))} //We can have either: "TEST_CODE" or "WARNING: TEST_CODE" here
+  val msg = e.message
+  if (status.startsWith("WARNING")) log.warn(e) else log.error(e)
+  PROVISIONING_HISTORY_PARAMETERS = PROVISIONING_HISTORY_PARAMETERS ++ Map("taskSummary" -> msg.replace("\n", "").replaceRegex("[,;]", ""), "errorCode" -> code)
+  (status, msg, code.opt)
+}
+
+//adding to provisioning history
+log.info("Saving to provisioning history")
+provisioningHistory.add(
+  status = status.toLower.capitalize, 
+  identity = device.id, 
+  operationId = "globalConnectCase1",
+  startTime = TASK_START_TIME,
+  endTime = Timestamp.now(),
+  parameters = PROVISIONING_HISTORY_PARAMETERS,
+  description = message,
+  provisioningAction = "globalConnectCase1",
+  umpId = device.id,
+  statusDetails = statusCodeOpt
+)
+
+finish(if(status.startsWith("WARNING")) "SUCCESS" else status.toUpper, PROVISIONING_HISTORY_PARAMETERS.encodeJsonString)

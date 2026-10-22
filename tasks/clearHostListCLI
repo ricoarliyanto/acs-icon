@@ -1,0 +1,17 @@
+<config>
+  <sshSession address="${device.currentWanIP}" windowsEndline="true" username="${sv.sshUser}" password="${sv.sshPass}">
+    <sshCommand command=":hostmgr clear" />
+    <sshCommand command="exit" />
+  </sshSession>
+  <store target="hostsToDelete" value="${device.properties.keySet.filter(prop =&gt; prop.startsWith(&quot;interfaceName_&quot;)).join(&quot;,&quot;)}" />
+  <store target="amount" value="${#hostsToDelete.split(&quot;,&quot;).length}" />
+  <while expr="${#amount.toInt &gt; 0}">
+    <store target="amount" value="${#amount.toInt - 1}" />
+    <removeProperty target="${#hostsToDelete.split(&quot;,&quot;).get(#amount.toInt)}" />
+  </while>
+  <removeProperty target="currentHosts" />
+  <task template="refreshDataModelTemplate" class="com.avsystem.ump.acs.task.RefreshDataModelTask" />
+  <foreach query="${root.X_AVS_EXT.LAN.Devices.any}">
+    <get key="${#i}.InterfaceName" />
+  </foreach>
+</config>

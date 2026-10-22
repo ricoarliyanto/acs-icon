@@ -1,0 +1,19 @@
+
+val resourceId = task.parameters.resourceId.get
+val uuid = task.parameters.uuid.getOr("")
+val upgrade = task.parameters.upgrade.is("true")
+
+if (upgrade) {
+	device.dm.SoftwareModules.DeploymentUnit.any.UUID.whereValueIs(uuid).key.parent.`Update()`.operation(
+  	argumentsMap = Map(
+    	"url" -> transfer.generateDownloadUrl(protocol = "HTTPS", resourceId = resourceId),
+    )
+  )
+} else {
+  dmkey.root.SoftwareModules.`InstallDU()`.key.operation(
+    argumentsMap = Map(
+    	"url" -> transfer.generateDownloadUrl(protocol = "HTTPS", resourceId = resourceId),
+      "UUID" -> uuid,
+    )
+  )
+}

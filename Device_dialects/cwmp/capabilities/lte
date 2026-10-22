@@ -1,0 +1,6 @@
+# LTE capability
+# A device is able to connect via LTE
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.LTE.%force-value = "true"
+}

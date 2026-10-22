@@ -1,0 +1,44 @@
+<config>
+  <store target="i" value="0" />
+  <store target="aps" value="${''}" />
+  <dataModelChanges referencePoint="wifi">
+    <object key="Root.X_AVS_EXT.WiFiNeighborhood." deleted="true" />
+  </dataModelChanges>
+  <snmpSession target="udp://${sv.snmpIP}:161" community="private">
+    <snmpSet>
+      <value oid="1.3.6.1.4.1.1429.79.2.2.1.26.1.0" val="1" type="INTEGER" />
+    </snmpSet>
+  </snmpSession>
+  <task class="com.avsystem.ump.acs.task.ScheduleInformTask">
+    <config delaySeconds="20" />
+  </task>
+  <wait />
+  <while expr="${#i.toInt &lt; 32}">
+    <snmpSession target="udp://${sv.snmpIP}:161" community="private">
+      <snmpGet ignoreFaults="true">
+        <oid oid="1.3.6.1.4.1.1429.79.2.2.1.26.2.1.1.${#i}" var="valid" />
+        <oid oid="1.3.6.1.4.1.1429.79.2.2.1.26.2.1.7.${#i}" var="bssid" />
+        <oid oid="1.3.6.1.4.1.1429.79.2.2.1.26.2.1.6.${#i}" var="channel" />
+        <oid oid="1.3.6.1.4.1.1429.79.2.2.1.26.2.1.2.${#i}" var="ssid" />
+        <oid oid="1.3.6.1.4.1.1429.79.2.2.1.26.2.1.3.${#i}" var="security" />
+        <oid oid="1.3.6.1.4.1.1429.79.2.2.1.26.2.1.5.${#i}" var="signalStrength" />
+        <oid oid="1.3.6.1.4.1.1429.79.2.2.1.26.2.1.4.${#i}" var="standard" />
+      </snmpGet>
+    </snmpSession>
+    <if expr="${#valid == '1'}">
+      <log message="Valid instance: ${#i}" />
+      <store target="bssid" value="${#bssid.decodeEscapedBytes.hex}" />
+      <dataModelChanges referencePoint="wifi">
+        <parameter key="Root.X_AVS_EXT.WiFiNeighborhood.${#i}.BSSID" value="${#bssid}" />
+        <parameter key="Root.X_AVS_EXT.WiFiNeighborhood.${#i}.Channel" value="${#channel}" />
+        <parameter key="Root.X_AVS_EXT.WiFiNeighborhood.${#i}.SSID" value="${#ssid}" />
+        <parameter key="Root.X_AVS_EXT.WiFiNeighborhood.${#i}.Security" value="${#security}" />
+        <parameter key="Root.X_AVS_EXT.WiFiNeighborhood.${#i}.SignalStrength" value="${#signalStrength}" />
+        <parameter key="Root.X_AVS_EXT.WiFiNeighborhood.${#i}.Standard" value="${#standard}" />
+      </dataModelChanges>
+      <store target="aps" value="${#aps + #bssid + ',' + #channel + ',' + #ssid + ',' + #security + ',' + #signalStrength + ',' + #standard + '|'}" />
+    </if>
+    <store target="i" value="${#i.toInt + 1}" />
+  </while>
+  <store type="devProp" target="network" value="${#aps.dropRight(1)}" />
+</config>

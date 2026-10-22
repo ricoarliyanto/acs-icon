@@ -1,0 +1,64 @@
+<config>
+  <if expr="${device.modelName == 'null' or device.modelName == 'n/a' or device.modelName == null}">
+    <get key="Device.X_AVS_EXT.Model" output="model" />
+    <else>
+      <store value="${device.modelName}" target="model" />
+    </else>
+  </if>
+  <if expr="${sv.physicalDeviceId == 'null' or sv.physicalDeviceId == null}">
+    <get key="Device.X_AVS_EXT.PhysicalDeviceId" output="id" />
+    <store type="devProp" value="${#id}" target="physicalDeviceId" />
+  </if>
+  <if expr="${sv.physicalDeviceId == 'null' or sv.physicalDeviceId == null}">
+    <finish status="ERROR" message="cmtsIdentity is missing" />
+  </if>
+  <store value="${sv.physicalDeviceId}" target="cmtsId" />
+  <store target="creatorCounter" value="0" />
+  <store target="virtualDeviceEntityShared" value="&quot;blacklisted&quot;: false,&#xA;&quot;provisioningEnabled&quot;: true,&#xA;&quot;ipAddress&quot;: &quot;${device.currentWanIP}&quot;,&#xA;&quot;oui&quot;: &quot;${device.oui}&quot;,&#xA;&quot;modelName&quot;: &quot;${#model} Virtual Port&quot;,&#xA;&quot;hardwareVersion&quot;: &quot;n/a&quot;,&#xA;&quot;softwareVersion&quot;: &quot;n/a&quot;,&#xA;&quot;productClass&quot;: &quot;HFC Line&quot;,&#xA;&quot;manufacturer&quot;: &quot;${device.manufacturer}&quot;," />
+  <store target="sharedProperties" value="&quot;cmtsId&quot;: &quot;${#cmtsId ? sv.cmtsId}&quot;,&#xA;&quot;cmtsIdentity&quot;: &quot;${device.id}&quot;,&#xA;&quot;telnetPassword&quot;: &quot;${sv.telnetPassword ? 'n/a'}&quot;,&#xA;&quot;telnetUsername&quot;: &quot;${sv.telnetUsername ? 'n/a'}&quot;,&#xA;&quot;sshPassword&quot;: &quot;${sv.sshPassword ? 'n/a'}&quot;,&#xA;&quot;sshUsername&quot;: &quot;${sv.sshUsername ? 'n/a'}&quot;,&#xA;&quot;snmpCommunity&quot;: &quot;${sv.snmpCommunity ? 'n/a'}&quot;,&#xA;&quot;physicalDeviceId&quot; : &quot;${sv.physicalDeviceId}&quot;," />
+  <store target="groups" value="&quot;root.ports.hfc.${#model}.${device.id}&quot;,&#xA;&quot;${device.directGroups.filter(_.matches('root.(snmp|telnet)')).anyElement}&quot;,&#xA;&quot;root.monitoring&quot;" />
+  <store target="tl1Properties" value="${''}" />
+  <if expr="${device.hasProperty('tl1Mnemonic')}">
+    <store target="tl1Properties" value="&quot;tl1Password&quot;: &quot;${sv.tl1Password}&quot;,&#xA;&quot;tl1Username&quot;: &quot;${sv.tl1Username}&quot;,&#xA;&quot;tl1Mnemonic&quot;: &quot;${sv.tl1Mnemonic}&quot;,&#xA;&quot;connectionRequestUrl&quot;: &quot;${sv.connectionRequestUrl}&quot;," />
+  </if>
+  <store target="telnetProperties" value="${''}" />
+  <if expr="${device.directGroups.contains('root.telnet')}">
+    <store target="telnetProperties" value="&quot;connectionRequestUrl&quot;: &quot;${sv.connectionRequestUrl}&quot;," />
+  </if>
+  <restLocal url="groups" method="POST" content="{&quot;id&quot;: &quot;root.ports.hfc.${device.modelName}.${device.id}&quot;,&#xA;&quot;description&quot;: &quot;Group for ${device.id} virtual ports&quot;}">
+    <out from="error" to="result" default="n/a" />
+  </restLocal>
+  <restLocal url="groups" method="POST" content="{&quot;id&quot;: &quot;root.cm.${device.id}&quot;,&#xA;&quot;description&quot;: &quot;Group for CMs connected to ${#cmtsId} CMTS.&quot;}">
+    <out from="error" to="result" default="n/a" />
+  </restLocal>
+  <foreach list="${dm.X_AVS_EXT.CMTS.Lines.any.orderedArrayInstances.keys}" iterator="key">
+    <in key="${#key}">
+      <store target="lineIndex" value="${#key.split('\\.').get(4)}" />
+      <defaults get.fromCache="true">
+        <get key="CpeMACAddress" output="cpeMACAddress" />
+        <get key="CpeIPAddress" output="cpeIPAddress" />
+      </defaults>
+    </in>
+    <if expr="${#cpeIPAddress.isIp and #cpeIPAddress != '0.0.0.0'}">
+      <store target="virtualDeviceId" value="${list(device.id, #cpeMACAddress).join('/')}" />
+      <store target="entityProperties" value="&quot;lineIndex&quot;: &quot;${#lineIndex ? 'n/a'}&quot;,&#xA;&quot;line_1_cpeMACAddress&quot;: &quot;${#cpeMACAddress ? 'n/a'}&quot;,&#xA;&quot;cmtsId&quot;: &quot;${taskReport.stringProperty.get('port/tcs-'+#index) ? 'n/a'}&quot;" />
+      <store target="properties" value="${#sharedProperties}${#telnetProperties}${#tl1Properties}${#entityProperties}" />
+      <store target="virtualDeviceEntity" value="${#virtualDeviceEntityShared}&#xA;&quot;serialNumber&quot;: &quot;${#cmtsId}&quot;,&#xA;&quot;description&quot;: &quot;HFC Line ${#lineIndex} on ${device.id}&quot;" />
+      <store target="payload" value="{&quot;id&quot;: &quot;${#virtualDeviceId}&quot;,&#xA;&quot;directGroups&quot;: [${#groups}],&#xA;&quot;properties&quot;: {${#properties}},&#xA;${#virtualDeviceEntity}}" />
+      <log message="Creating device ${#virtualDeviceId}" />
+      <restLocal url="devices" method="POST" content="${#payload}">
+        <out from="error" to="result" default="n/a" />
+      </restLocal>
+      <if expr="${#result != null or #result != 'n/a'}">
+        <log message="Updating ${#virtualDeviceId}" />
+        <store target="payloadUpdate" value="{&quot;addProperties&quot;: {${#properties}},&#xA;&quot;addGroups&quot;: [${#groups}],&#xA;${#virtualDeviceEntity}}" />
+        <restLocal url="devices/${#virtualDeviceId.replaceAll('/','%2F')}" method="PUT" content="${#payloadUpdate}" />
+      </if>
+      <store target="creatorCounter" value="${#creatorCounter.toInt + 1}" />
+      <else>
+        <log message="Skipping line ${#lineIndex}, IP: ${#cpeIPAddress}" />
+      </else>
+    </if>
+  </foreach>
+  <log message="Added ${#creatorCounter} virtual lines" />
+</config>

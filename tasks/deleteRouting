@@ -1,0 +1,17 @@
+<config>
+  <log message="Check DM1" />
+  <if expr="${device.directGroups.contains('root.dataModel.cwmp.InternetGatewayDevice1')}">
+    <find query="${root.Layer3Forwarding.any.moveUp}" in="true">
+      <delete key="Forwarding.${#instance}" />
+    </find>
+  </if>
+  <log message="Check DM2" />
+  <if expr="${device.directGroups.contains('root.dataModel.cwmp.Device2')}">
+    <find query="${root.Routing.Router.any}" in="true">
+      <delete key="IPv4Forwarding.${#instance}" />
+    </find>
+  </if>
+  <log message="VDM refresh" />
+  <getParameters key="${device.rootObject}.X_AVS_EXT.Routing." />
+  <finish message="Routing deleted. Instance number ${#instance}" />
+</config>

@@ -1,0 +1,218 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+# include "cwmp.capabilities.gpon" # Enable if GPON stats are available
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.voip"
+include "cwmp.capabilities.wifi"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+# include "cwmp.capabilities.neighborhood" # Enable if supported
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+include "tools.remapping"
+
+cwmp {
+    variables {
+        activeWan = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.3.WANIPConnection.1"
+    }
+}
+
+remappingStrategy {
+    wifiSecurity {
+        // Expression check if all real key values are set to NONE
+        isNone = """if(
+      realValue('BeaconType') == 'Basic' and
+      realValue('BasicEncryptionModes') == 'None' and
+      realValue('BasicAuthenticationMode') == 'None'
+    ) 'NONE'"""
+
+        // Expresion return proper value for relevant real key to set NONE
+        setNone = """if(value == 'NONE')(
+      map('BeaconType' -> 'Basic',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+
+        // Expression check if all real key values are set to WPA
+        isWpa = """if(
+      realValue('BeaconType') == 'WPA' and
+      realValue('WPAEncryptionModes') == 'TKIPEncryption' and
+      realValue('WPAAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA'"""
+
+        // Expresion return proper value for relevant real key to set WPA
+        setWpa = """if(value == 'WPA')(
+      map('BeaconType' -> 'WPA',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+
+        // Expression check if all real key values are set to WPA2
+        isWpa2 = """if(
+      realValue('BeaconType') == '11i' and
+      realValue('IEEE11iEncryptionModes') == 'AESEncryption' and
+      realValue('IEEE11iAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA2'"""
+
+        // Expresion return proper value for relevant real key to set WPA2
+        setWpa2 = """if(value == 'WPA2')(
+      map('BeaconType' -> '11i',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+
+        // Expression check if all real key values are set to WPA_WPA2
+        isWpa_Wpa2 = """if(
+      realValue('BeaconType') == 'WPAand11i' and
+      realValue('WPAEncryptionModes') == 'TKIPEncryption' and
+      realValue('WPAAuthenticationMode') == 'PSKAuthentication' and
+      realValue('IEEE11iEncryptionModes') == 'AESEncryption' and
+      realValue('IEEE11iAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA_WPA2'"""
+
+        // Expresion return proper value for relevant real key to set WPA_WPA2
+        setWpa_Wpa2 = """if(value == 'WPA_WPA2')(
+      map('BeaconType' -> 'WPAand11i',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+    }
+
+    read_converter {
+        WiFi.%i {
+            Security = ${tools.expression} {
+                expression = """${
+          """${remappingStrategy.wifiSecurity.isNone}""" else
+                """${remappingStrategy.wifiSecurity.isWpa}""" else
+                """${remappingStrategy.wifiSecurity.isWpa2}""" else
+                """${remappingStrategy.wifiSecurity.isWpa_Wpa2}""" else 'CUSTOM' }"""
+      }
+      ChannelWidth {
+        expression = "${map('0'->'Auto','1'->'20','2'->'40','3'->'Auto').getOr(singleValue,'NONE')}"
+        type = expression
+      }
+    }
+  }
+
+  write_converter {
+    WiFi.%i {
+      Security = ${tools.expression} {
+        expression = """${
+            """${remappingStrategy.wifiSecurity.setNone}""" else
+            """${remappingStrategy.wifiSecurity.setWpa}""" else
+            """${remappingStrategy.wifiSecurity.setWpa2}""" else
+            """${remappingStrategy.wifiSecurity.setWpa_Wpa2}""" else null}"""
+        }
+    }
+    Diagnostics.Download.DownloadURL = ${tools.expression} {
+        expression = "${if (key.keyName == 'DownloadURL') value else '4'}"
+    }
+    WiFi.1 {
+        ChannelWidth = ${tools.expression} {
+            expression = "${map('Auto'->'0','20'->'1','40'->'2').get(value)}"
+        }
+    }
+    WiFi.2 {
+        ChannelWidth = ${tools.expression} {
+            expression = "${map('Auto'->'3','20'->'1','40'->'2').get(value)}"
+        }
+    }
+}
+
+activeKey.gpon = "${sv.activeWan.toParameterKey}"
+# activeKey.pon = "root.WANDevice.1.X_GPON_InterfaceConfig" # Uncomment and adjust if GPON path is known
+
+mapping {
+    root.X_AVS_EXT.Diagnostics.Download.DownloadURL.real = ["root.DownloadDiagnostics.NumberOfConnections", "root.DownloadDiagnostics.DownloadURL"]
+
+    root.X_AVS_EXT.System {
+        # Adjust these if Phyhome has specific paths for CPU/Mem
+        # cpeCpuUsed.real = "root.DeviceInfo.ProcessStatus.CPUUsage" 
+        # cpeMemUsed.real = "root.DeviceInfo.MemoryStatus.Free"
+        Uptime.real = "root.DeviceInfo.UpTime"
+        HardwareVersion.real = "root.DeviceInfo.HardwareVersion"
+        SoftwareVersion.real = "root.DeviceInfo.SoftwareVersion"
+        SerialNumber.real = "root.DeviceInfo.SerialNumber"
+        MAC.real = "root.InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1.MACAddress"
+    }
+
+    root.X_AVS_EXT.LAN {
+        Port.%i {
+            DuplexMode.real = ${remappingStrategy.activeKey.lan}.LANEthernetInterfaceConfig.%i.DuplexMode
+        }
+    }
+
+    root.X_AVS_EXT {
+        WiFi {
+            1 {
+                Enable.real = "root.LANDevice.1.WLANConfiguration.1.RadioEnabled"
+                SSID.real = "root.LANDevice.1.WLANConfiguration.1.SSID"
+                Password.real = "root.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase"
+                ChannelWidth.real = "root.LANDevice.1.WLANConfiguration.1.ChannelBandwidth"
+                Security.real = "root.LANDevice.1.WLANConfiguration.1.BeaconType"
+                # Neighborhood mapping would go here if supported
+            }
+            # Add WiFi.2 block if dual-band is supported and path is known (e.g., WLANConfiguration.2 or .5)
+        }
+
+        WAN {
+            # GPON mapping requires specific vendor path
+            # GPON.1 { ... }
+        
+            # Standard WAN Stats
+            Stats.Downstream.Bytes.real = ${remappingStrategy.activeKey.gpon}.Stats.EthernetBytesReceived
+            Stats.Upstream.Bytes.real = ${remappingStrategy.activeKey.gpon}.Stats.EthernetBytesSent
+        }
+    }
+}
+}
+
+cwmp.messageTimeout = 180000
+cwmp.sessionTimeout = 180000
+
+# NeighborhoodPatching can be added here if the Phyhome datamodel path is discovered

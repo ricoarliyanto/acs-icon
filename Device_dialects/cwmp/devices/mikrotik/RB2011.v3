@@ -1,0 +1,77 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.ethernet"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.vlan"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+remappingStrategy {
+  mapping {
+    root.X_AVS_EXT {
+      # Device Identity Mapping
+      MAC.real = "root.Ethernet.Interface.1.MACAddress"
+      HardwareVersion.real = "root.DeviceInfo.HardwareVersion"
+      SoftwareVersion.real = "root.DeviceInfo.SoftwareVersion"
+      Manufacturer.real = "root.DeviceInfo.Manufacturer"
+      Model.real = "root.DeviceInfo.ModelName"
+      ProductClass.real = "root.DeviceInfo.ProductClass"
+      Serial.real = "root.DeviceInfo.SerialNumber"
+      OUI.real = "root.DeviceInfo.ManufacturerOUI"
+      
+      Status.UpTime.real = "root.DeviceInfo.UpTime"
+
+      # Device Resources Mapping
+      Resources {
+        CPUUsed.real = "root.DeviceInfo.ProcessStatus.CPUUsage"
+        RAMAvailable.real = "root.DeviceInfo.MemoryStatus.Total"
+        RAMFree.real = "root.DeviceInfo.MemoryStatus.Free"
+      }
+
+      # Diagnostics Mapping
+      Diagnostics {
+        Download.Result.TotalBytesReceived.real = "root.IP.Diagnostics.DownloadDiagnostics.TotalBytesReceived"
+        Upload.Result.TotalBytesSent.real = "root.IP.Diagnostics.UploadDiagnostics.TotalBytesSent"
+      }
+    }
+  }
+}
+
+virtualPatching {
+  patching {
+    root.X_AVS_EXT {
+      WiFi {
+        1 {
+          PossibleChannels.%force-value = "1,2,3,4,5,6,7,8,9,10,11"
+          SupportedStandards.%force-value="b,g,n"
+        }
+      }
+    }
+  }
+}

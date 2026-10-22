@@ -1,0 +1,6 @@
+# Mesh capability
+# A device is able to show status of Wi-Fi Mesh using DataElements (or MultiAP) sub-tree
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Mesh.%force-value = "true"
+}

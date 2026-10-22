@@ -1,0 +1,8 @@
+<config>
+  <find query="${root.Services.FAPService.any}" output="activeFap" />
+  <comment text="Storing data for activeFap" />
+  <if expr="${#activeFap != null}">
+    <store type="devProp" target="activeFap" value="${#activeFap}" />
+  </if>
+  <log message="sv.activeFap =  ${#activeFap}" level="DEBUG" />
+</config>

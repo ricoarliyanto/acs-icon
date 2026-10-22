@@ -1,0 +1,139 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.syslog"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet"
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.gpon"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.firewall"
+include "cwmp.capabilities.forwarding"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.process"
+include "cwmp.capabilities.radius"
+include "cwmp.capabilities.storage"
+include "cwmp.capabilities.usb"
+include "cwmp.capabilities.users"
+include "cwmp.capabilities.voip"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.xmpp"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+cwmp.setActiveWanFromInform = false
+
+remappingStrategy {
+        read_converter{
+      WAN.GPON.1.BiasCurrent = ${tools.expression}{
+        expression = "${singleValue.toDouble/1000}"
+        }
+  }
+  mapping {
+  root.X_AVS_EXT.WiFi {
+    1 {
+            AssociatedDevice.%i {
+//            Bandwidth.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceBandWidth"
+            IPAddress.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.IPAddress"
+            MACAddress.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.MACAddress"
+            SignalStrength.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.SignalStrength"
+            Band.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_ALU-COM_Antennas"
+//            HostName.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_AssociatedDevicedescriptions"
+//            NoiseFloor.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_Noise"
+            SNR.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_ALU-COM_SNR"
+          }
+    }
+        5 {
+            AssociatedDevice.%i {
+//            Bandwidth.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.AssociatedDeviceBandWidth"
+            IPAddress.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.IPAddress"
+            MACAddress.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.MACAddress"
+            SignalStrength.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.SignalStrength"
+            Band.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_ALU-COM_Antennas"
+//            HostName.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_AssociatedDevicedescriptions"
+//            NoiseFloor.real = "${sv.vdmWlan1.toParameterKey}.AssociatedDevice.%i.X_HW_Noise"
+            SNR.real = "${sv.vdmWlan5.toParameterKey}.AssociatedDevice.%i.X_ALU-COM_SNR"
+       }
+     }
+  }
+    root.X_AVS_EXT {
+      WAN.GPON.1 {
+        Status.real = "root.X_ALU_OntOpticalParam.Status"
+        Enable.real = "root.X_ALU_OntOpticalParam.Enable"
+        RXPower.real = "root.X_ALU_OntOpticalParam.RXPower"
+        TXPower.real = "root.X_ALU_OntOpticalParam.TXPower"
+        SupplyVoltage.real = "root.X_ALU_OntOpticalParam.SupplyVottage"
+        TransceiverTemperature.real = "root.X_ALU_OntOpticalParam.TransceiverTemperature"
+        BiasCurrent.real = "root.X_ALU_OntOpticalParam.BiasCurrent"
+
+                Stats {
+          DropPackets.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.X_ALU_PacketsDropped"
+          FECError.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.X_ALU_PacketsErrored"
+          Upstream {
+            Bytes.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.TotalBytesSent"
+            Packets.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.TotalPacketsSent"
+          }
+          Downstream {
+            Bytes.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.TotalBytesReceived"
+            Packets.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.TotalPacketsReceived"
+          }
+        }
+      }
+      WAN{
+                  Stats {
+          DropPackets.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.X_ALU_PacketsDropped"
+          FECError.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.X_ALU_PacketsErrored"
+          Upstream {
+            Bytes.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.TotalBytesSent"
+            Packets.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.TotalPacketsSent"
+          }
+          Downstream {
+            Bytes.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.TotalBytesReceived"
+            Packets.real = "${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.TotalPacketsReceived"
+          }
+        }
+      }
+      Diagnostics.Neighborhood {
+        State.real = "root.X_ALU-COM_NeighboringWiFiDiagnostic.DiagnosticsState"
+        Run.real = "root.X_ALU-COM_NeighboringWiFiDiagnostic.DiagnosticsState"
+      }
+      WiFiNeighborhood.%j {
+        BSSID.real = "root.X_ALU-COM_NeighboringWiFiDiagnostic.Result.%j.BSSID"
+        Channel.real = "root.X_ALU-COM_NeighboringWiFiDiagnostic.Result.%j.Channel"
+        SSID.real = "root.X_ALU-COM_NeighboringWiFiDiagnostic.Result.%j.SSID"
+        Security.real = "root.X_ALU-COM_NeighboringWiFiDiagnostic.Result.%j.Security"
+        SignalStrength.real = "root.X_ALU-COM_NeighboringWiFiDiagnostic.Result.%j.SignalStrength"
+        Standard.real = "root.X_ALU-COM_NeighboringWiFiDiagnostic.Result.%j.OperatingStandards"
+        ChannelBandwidth.real = "root.X_ALU-COM_NeighboringWiFiDiagnostic.Result.%j.OperatingChannelBandwidth"
+      }
+    }
+  }
+}
+virtualPatching.patching {
+  root.X_AVS_EXT.Diagnostics.Neighborhood.Run = ${tools.patching.executable}
+}
+virtualPatching.patching.root.X_AVS_EXT.WAN.GPON.1 {
+  Technology = ${tools.patching.readOnlyString} {
+    %force-value = "GPON"
+  }
+}

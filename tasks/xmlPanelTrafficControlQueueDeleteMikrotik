@@ -1,0 +1,9 @@
+<config>
+  <store target="name" value="${task.property.Name}" />
+  <log message="/queue simple remove numbers=[/queue simple find name=${#name}]" />
+  <cli protocol="${sv.protocol}">
+    <command cmd="/queue simple remove numbers=[/queue simple find name=${#name}]" />
+    <out target="output" />
+  </cli>
+  <getParameters key="Device.X_AVS_EXT.TrafficControl.Queue.Type." />
+</config>

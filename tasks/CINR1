@@ -1,0 +1,3 @@
+<config interval="2" samples="15">
+  <param key="Root.X_AVS_EXT.WAN.WiMAX.CINR1" alias="CINR1" />
+</config>

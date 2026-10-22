@@ -1,0 +1,20 @@
+val REQUESTED : String = "1"
+val COMPLETED : String = "Complete"
+var maxSessions = 1.to(5)
+val xAvsExt = dmkey.root.X_AVS_EXT
+
+xAvsExt.Diagnostics.Neighborhood.Run.set(REQUESTED)
+session.wait()
+
+maxSessions.foreach { sessionCounter =>
+  if (inform.periodic) {
+    log.warn("periodic session...")
+  } else if (inform.diagnosticsComplete) {
+    log.warn("Diagnostic complete session...")
+  }
+  val state = xAvsExt.Diagnostics.Neighborhood.State.get()
+  log.warn("current state (session $sessionCounter): $state")
+  if (state.contains(COMPLETED)) {
+    xAvsExt.WiFiNeighborhood.getObject()
+    finish()
+  } 

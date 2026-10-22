@@ -1,0 +1,6 @@
+# Diagnostics capability
+# A device has diagnostic capabilities
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Diagnostics.%force-value = "true"
+}

@@ -1,0 +1,6 @@
+# VLAN capability
+# A device is able to configure and manage VLANs via CWMP
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.VLAN.%force-value = "true"
+}

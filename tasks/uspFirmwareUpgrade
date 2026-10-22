@@ -1,0 +1,1 @@
+<config instance="1" protocol="${task.properties.getOr('protocol', sv.transferProtocol)}" resourceId="${task.property.resourceId}" />

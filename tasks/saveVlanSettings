@@ -1,0 +1,171 @@
+val interfaceSeq = Seq("WAN", "LAN1", "LAN2", "LAN3", "LAN4")
+val suffixes = Seq("Wan", "Lan0", "Lan1", "Lan2", "Lan3")
+val ids = Seq("0", "1", "2", "3", "4")
+
+val suffixMap = interfaceSeq.zip(suffixes).toMap
+
+val interfacesMap = interfaceSeq.map(id => (id, ldm.root.Ethernet.Interface.any.parameterValue("Alias", id).first.parameterKey)).toMap
+val idMap = interfaceSeq.zip(ids).toMap
+
+val pathsMap = interfacesMap.toSeq.map((id, path) => (path.raw, id)).toMap
+
+val bridgesWithVlan = ldm.root.Bridging.Bridge.any.keys.map(key => (key, key.VLAN.`1`.VLANID.get()))
+
+val nonZeroVlans = Seq.range(0, 16).map(i => (i, device.property.selectDynamic("vlanGroup${i}VlanId").getOr("0"))).filter((_, vlan) => vlan != "0")
+
+val defaultWanBridge = bridgesWithVlan.find((_, vlan) => vlan == "1")
+
+val bridgesToDelete = bridgesWithVlan.filter{(key, vlan) => !nonZeroVlans.exists((_, v) => v == vlan)}.filter((_, vlan) => vlan != "1") //filter out default WAN
+val bridgesToAdd = nonZeroVlans.filter((_, vlan) => !bridgesWithVlan.exists((_, v) => v == vlan))
+val bridgesToEdit = bridgesWithVlan.map((key, vlan) => (key, vlan, nonZeroVlans.find((i, v) => vlan == v).map((i, _) => i).getOr(-1))).filter((_,v,i) => i != -1 && v != "1")
+
+log.info("Bridges to delete: $bridgesToDelete")
+log.info("Bridges to add: $bridgesToAdd")
+log.info("Bridges to edit: $bridgesToEdit")
+
+bridgesToDelete.foreach{(keyToDelete, vlanId) =>
+  log.info("Deleteing bridge with key $keyToDelete and vlanId $vlanId")
+  keyToDelete.query.VLANPort.keys.foreach(key => 
+    try {key.deleteObject()} catch {ex => log.warn("Cloud not delete $key")}
+  )
+
+  keyToDelete.query.Port.keys.foreach(key => 
+    try {key.deleteObject()} catch {ex => log.warn("Cloud not delete $key")}
+  )
+
+  keyToDelete.query.VLAN.keys.foreach(key => 
+    try {key.deleteObject()} catch {ex => log.warn("Cloud not delete $key")}
+  )
+
+  try {keyToDelete.deleteObject()} catch {ex => log.warn("Cloud not delete bridge")}
+}
+
+bridgesToAdd.foreach{(id, vlanId) => 
+
+  val clientName = device.property.selectDynamic("vlanGroup${id}Name").get
+  log.info("Adding new bridge with VLANID $vlanId and client name $clientName")
+  val tagSettings = interfaceSeq.map(int => (int, device.property.selectDynamic("vlanGroup${id}${suffixMap(int)}").get)).toMap
+  val newInst = dmkey.root.Bridging.Bridge.addObject().toInt
+  val newBridge = dmkey.root.Bridging.Bridge(newInst)
+  val newPorts = interfaceSeq.filter(key => tagSettings(key) != "0").map{ key => 
+    val dKey = interfacesMap(key)
+    val inst = newBridge.Port.addObject().toInt
+    val newPort = newBridge.Port(inst)
+    newPort.LowerLayers.set(dKey.raw)
+    newPort.PVID.set(vlanId)
+    if(device.property.selectDynamic("portConfig${idMap(key)}VlanId").get == vlanId){
+      val priority = device.property.selectDynamic("portConfig${idMap(key)}Priority").get
+      if(newPort.DefaultUserPriority.get() != priority){
+        newPort.DefaultUserPriority.set(priority)
+      }
+    }
+    (key, newPort.parameterKey.raw)
+  }
+
+  val newVlan = newBridge.VLAN.addObject().toInt
+  newBridge.VLAN(newVlan).Name.set(clientName)
+
+  newBridge.VLAN(newVlan).VLANID.set(vlanId)
+
+  newPorts.foreach{ (key, path) =>
+    val newVlanPortInst = newBridge.VLANPort.addObject().toInt
+    val newVlanPort = newBridge.VLANPort(newVlanPortInst)
+    newVlanPort.Port.set(path)
+    newVlanPort.VLAN.set(newBridge.VLAN(newVlan).parameterKey.raw)
+    newVlanPort.Untagged.set(if(tagSettings(key) == "1") "true" else "false")
+    newVlanPort.Enable.set("true")
+  }
+}
+
+
+bridgesToEdit.foreach{(bridgePath, vlan, id) =>
+  val clientName = device.property.selectDynamic("vlanGroup${id}Name").get
+  log.info("Trying to edit bridge with VLANID $vlan and client name $clientName")
+  val tagSettings = interfaceSeq.map(int => (int, device.property.selectDynamic("vlanGroup${id}${suffixMap(int)}").get)).toMap
+  
+  val vlanPorts = bridgePath.query.VLANPort.any.keys.map(key => (key, key.Port.get()))
+  val ports = bridgePath.query.Port.any.keys.map(key => (key, key.LowerLayers.get()))
+  val vlanPortSettings = if(vlanPorts.forall((_, portPath) => portPath.opt.filter(_!="").isDefined)){
+    val portsMap = ports.map((key, ll) => (key.parameterKey.raw, ll)).toMap
+    vlanPorts.map((vlanPortPath, port) => (vlanPortPath, port.toDMKey.objectKey, portsMap(port)))
+  } else {
+    val actualPorts = if(ports.size > vlanPorts.size){
+      ports.drop(1)
+    } else {
+      ports
+    }
+    actualPorts.zip(vlanPorts).map{(p, vp) => 
+      val (portPath, lowerLayer) = p
+      val (vlanPortPath, _) = vp
+      (vlanPortPath, portPath, lowerLayer)
+    }
+  }
+  
+  val settingsToRemove = vlanPortSettings.filter((_,_, lowerLayer) => tagSettings(pathsMap(lowerLayer)) == "0")
+  val settingsToEdit = vlanPortSettings.filter{(vlanPortPath, _, lowerLayer) => 
+    val settings = tagSettings(pathsMap(lowerLayer))
+    val desiredUntagged = if(settings == "1") "true" else "false"
+    settings != "0" && vlanPortPath.Untagged.get() != desiredUntagged
+  }
+  
+  
+  val settingsToAdd = interfaceSeq.map(int => (int, tagSettings(int))).filter{(int, tagSetting) => 
+    val interfacePath = interfacesMap(int).raw
+    tagSetting != "0" && !vlanPortSettings.exists((_,_, lowerLayer) => lowerLayer == interfacePath)
+  }
+  
+  log.info("VLAN port settings to remove $settingsToRemove")
+  log.info("VLAN port settings to edit $settingsToEdit")
+  log.info("VLAN port settings to add $settingsToAdd")
+  
+  settingsToRemove.foreach{(vlanPortPath, portPath, _) => 
+    try {vlanPortPath.objectKey.deleteObject()} catch {ex => log.warn("Cloud not delete $vlanPortPath")}
+    try {portPath.objectKey.deleteObject()} catch {ex => log.warn("Cloud not delete $portPath")}
+  }
+  
+  settingsToAdd.foreach{(int, tagSetting) =>
+    val dKey = interfacesMap(int)
+    val inst = bridgePath.Port.addObject().toInt
+    val newPort = bridgePath.Port(inst)
+    newPort.LowerLayers.set(dKey.raw)
+    newPort.PVID.set(vlan)
+    if(device.property.selectDynamic("portConfig${idMap(int)}VlanId").get == vlan){
+      val priority = device.property.selectDynamic("portConfig${idMap(int)}Priority").get
+      if(newPort.DefaultUserPriority.get() != priority){
+        newPort.DefaultUserPriority.set(priority)
+      }
+    }
+    val newVlanPortInst = bridgePath.VLANPort.addObject().toInt
+    val newVlanPort = bridgePath.VLANPort(newVlanPortInst)
+    newVlanPort.Port.set(newPort.parameterKey.raw)
+    newVlanPort.VLAN.set(bridgePath.VLAN(1).parameterKey.raw)
+    newVlanPort.Untagged.set(if(tagSetting == "1") "true" else "false")
+    newVlanPort.Enable.set("true")
+  }
+  
+  settingsToEdit.foreach{(vlanPortPath, _, lowerLayer) => 
+    val settings = tagSettings(pathsMap(lowerLayer))
+    vlanPortPath.Untagged.set(if(settings == "1") "true" else "false")
+  }
+}
+
+val mgmtVlan = dmkey.root.Ethernet.VLANTermination.`1`.VLANID.get()
+
+try {
+  val mgmtVlan = dmkey.root.Ethernet.VLANTermination.`1`.VLANID.get()
+  val desiredMgmtVlan = device.property("portConfig5VlanId").get
+  if(mgmtVlan != desiredMgmtVlan){
+    dmkey.root.Ethernet.VLANTermination.`1`.VLANID.set(desiredMgmtVlan)
+  }
+} catch {
+  ex => log.error(ex)
+}
+
+defaultWanBridge.foreach{(key, _) => 
+  ldm.query(key).VLANPort.any.parameterValue("Port","").keys.foreach{key => 
+    key.deleteObject()
+  }
+}
+
+ldm.root.IP.Interface.any.parameterValue("LowerLayers", "").keys.foreach(_.deleteObject())
+ldm.root.Ethernet.Link.any.parameterValue("LowerLayers", "").keys.foreach(_.deleteObject())

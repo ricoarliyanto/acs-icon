@@ -1,0 +1,6 @@
+# LAN capability
+# A device is able to configure LAN
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.LAN.%force-value = "true"
+}

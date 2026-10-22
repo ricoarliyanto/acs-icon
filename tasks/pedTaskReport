@@ -1,0 +1,4 @@
+<config>
+  <get key="Device.ManagementServer.URL" output="tmp1" />
+  <get key="Device.ManagementServer.PeriodicInformInterval" output="tmp2" />
+</config>

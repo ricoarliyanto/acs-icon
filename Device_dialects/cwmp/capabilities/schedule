@@ -1,0 +1,6 @@
+# Schedule capability
+# A device supports scheduling
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Schedule.%force-value = "true"
+}

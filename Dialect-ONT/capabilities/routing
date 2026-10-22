@@ -1,0 +1,7 @@
+# Layer 3 (IP) routing capability
+# A device is able to configure and manage IP routing. It is possible to set source and destination networks
+# on a specific interface.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Routing.%force-value = "true"
+}

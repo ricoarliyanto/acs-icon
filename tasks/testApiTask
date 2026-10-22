@@ -1,0 +1,3 @@
+<config>
+  <get key="InternetGatewayDevice.X_AVS_EXT.Model" output="model" />
+</config>

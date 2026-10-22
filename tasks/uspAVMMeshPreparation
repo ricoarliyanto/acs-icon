@@ -1,0 +1,130 @@
+var connectedHostsData =  Map.empty[String, Map[String, String]]
+var repeatersDevices =  Seq.empty[Map[String, String]]
+var repeatersParentDevice =  Map.empty[String,String]
+
+var associatedDevices24 = Seq.empty[Map[String, String]]
+var associatedDevices5 = Seq.empty[Map[String, String]]
+
+var repeatersAssociatedDevices24 = Map.empty[String, Seq[String]]
+var repeatersAssociatedDevices5 = Map.empty[String, Seq[String]]
+
+val frequencyLimit = 2484000
+
+ldm.foreach(ldm.root.Hosts.Host.any) { host =>
+  val associatedDevice = host.AssociatedDevice.get()
+  val interface = host.interfaceType.get() ? "unknown"
+  var ieee1905Device = "unknown"
+  var interfaceIEEE = "unknown"
+  var frequency = "unknown"
+  val isHostActive = host.Active.get()
+
+  ldm.foreach(associatedDevice.toDMKey.query.IEEE1905Neighbor.any) { key =>
+    //Always get last - this may not be correct
+    ieee1905Device = key.raw
+  }
+
+  ldm.foreach(associatedDevice.toDMKey.query.Interface.any) { key =>
+    //Always get last - this may not be correct
+    interfaceIEEE = key.raw
+    frequency = key.`X_AVM-DE_PrimaryFrequency`.get()
+  }
+
+  val values = Map(
+    "host" -> host.raw,
+    "ieee1905Device" -> ieee1905Device,
+    "interfaceIEEE" -> interfaceIEEE,
+    "frequency" -> frequency,
+    "interface" -> interface
+  )
+	if (isHostActive == "1"){
+    connectedHostsData += (associatedDevice -> values)
+  }
+}
+
+ldm.foreach(ldm.root.IEEE1905.AL.NetworkTopology.IEEE1905Device.any) { device =>
+ ldm.foreach(device.query.IEEE1905Neighbor.any) { ieee1905Neighbor =>
+    //Always get last - this may not be correct
+    val parent = ieee1905Neighbor.`X_AVM-DE_NeighborDevice`.get()
+    repeatersParentDevice += (device.parameterKey.raw -> parent)
+  }
+}
+
+ldm.foreach(ldm.root.IEEE1905.AL.NetworkTopology.IEEE1905Device.any) { device =>
+  val role = device.`X_AVM-DE_MeshRole`.get()
+  val deviceKey = device.parameterKey.raw
+  log.info("Processing $deviceKey with role $role")
+
+  val connectdHost = connectedHostsData.get(deviceKey)
+  val ieee1905Device = connectdHost.get("ieee1905Device") ? "" 
+  val frequency = connectdHost.get("frequency").toInt ? 0
+  val interfaceIEEE =  connectdHost.get("interfaceIEEE")? ""
+  val interface =  connectdHost.get("interface") ? ""
+  if (!(ieee1905Device == "")){
+    
+    if(role == "Slave" || (role == "Unknown" && frequency > 0) && interface != "Ethernet" && interface != "USB") {
+      //Add Repeaters and STA as Associated Devices
+      if(connectedHostsData.contains(device.parameterKey.raw)) {
+        val data = Map(
+          "host" -> connectdHost.get("host"),
+          "ieee1905Device" -> ieee1905Device,
+          "interfaceIEEE" -> interfaceIEEE,
+        )
+        if(frequency <= frequencyLimit) {
+          associatedDevices24 += data
+        } else {
+          associatedDevices5 += data
+        }
+      }
+    }
+
+    if(role == "Slave") { // Repeaters have role Slave (Master is always 1 and hardocede in dialects)
+      log.info("Repeater found under key $deviceKey")
+      val data = Map(
+        "key" -> deviceKey,
+        "ieee1905Device" -> ieee1905Device,
+        "parent" -> repeatersParentDevice.getOr(deviceKey, "unknown")
+      )
+      repeatersDevices += data
+    } else if(role == "Unknown") { //STA have Role Unknown
+      log.info("STA found under key $deviceKey")
+      if(connectedHostsData.contains(deviceKey)) {
+        // Check if is STA connected to the Repeater
+        if(ieee1905Device != "Device.IEEE1905.AL.NetworkTopology.IEEE1905Device.1") {
+          log.info("Repeater Associated device, data $connectdHost")
+          if(frequency <= frequencyLimit) {
+            val current = repeatersAssociatedDevices24.getOr(repeatersParentDevice.getOr(deviceKey, "unknown"), Seq.empty)
+            val new = current + device.parameterKey.raw
+            repeatersAssociatedDevices24 = repeatersAssociatedDevices24.update(repeatersParentDevice.getOr(deviceKey, "unknown"), new)
+            log.debug("frequency : $frequency, current : $current, new $new")
+          } else {
+            val current = repeatersAssociatedDevices5.getOr(repeatersParentDevice.getOr(deviceKey, "unknown"), Seq.empty)
+            val new = current + device.parameterKey.raw
+            repeatersAssociatedDevices5 = repeatersAssociatedDevices5.update(repeatersParentDevice.getOr(deviceKey, "unknown"), new)
+            log.debug("frequency : $frequency, current : $current, new $new")
+          }
+        }
+      }
+    }
+  }
+}
+
+log.info("connectedHostsData : " + connectedHostsData.encodeJson.renderPretty())
+log.info("repeatersParentDevice : " + repeatersParentDevice.encodeJson.renderPretty())
+log.info("repeatersDevices : " + repeatersDevices.encodeJson.renderPretty())
+log.info("associatedDevices24 : " + associatedDevices24.encodeJson.renderPretty())
+log.info("associatedDevices5 : " + associatedDevices5.encodeJson.renderPretty())
+log.info("repeatersAssociatedDevices24 : " + repeatersAssociatedDevices24.encodeJson.renderPretty())
+log.info("repeatersAssociatedDevices5 : " + repeatersAssociatedDevices5.encodeJson.renderPretty())
+
+
+device.property.connectedHostsData.set(connectedHostsData.encodeJson.toString)
+device.property.associatedDevices24.set(associatedDevices24.encodeJson.toString)
+device.property.associatedDevices5.set(associatedDevices5.encodeJson.toString)
+device.property.repeatersDevices.set(repeatersDevices.encodeJson.toString)
+device.property.repeatersAssociatedDevices24.set(repeatersAssociatedDevices24.encodeJson.toString)
+device.property.repeatersAssociatedDevices5.set(repeatersAssociatedDevices5.encodeJson.toString)
+
+
+ldm.getAll(
+  dmkey.root.dot,
+)

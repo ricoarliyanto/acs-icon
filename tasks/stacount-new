@@ -1,0 +1,66 @@
+<config>
+  <store value="0" target="hostsCounter" />
+  
+  <!-- Method 1: Try mapped DevicesCount globally -->
+  <store target="devicesCount" value="${dm.getByPath('root.X_AVS_EXT.LAN.DevicesCount').value}" />
+  
+  <!-- If null, try absolute path as requested -->
+  <if expr="${#devicesCount == null or #devicesCount == ''}">
+    <!-- Attempt direct parameter fetch from device via direct get to bypass cache if needed -->
+    <get key="InternetGatewayDevice.X_AVS_EXT.LAN.DevicesCount" output="devicesCountGet" ignoreFaults="true"/>
+    <if expr="${#devicesCountGet != null and #devicesCountGet != ''}">
+      <store target="devicesCount" value="${#devicesCountGet}" />
+    </if>
+    <if expr="${#devicesCount == null or #devicesCount == ''}">
+      <store target="devicesCount" value="${dm.getByPath('InternetGatewayDevice.X_AVS_EXT.LAN.DevicesCount').value}" />
+    </if>
+  </if>
+
+  <!-- Jika valid, gunakan devicesCount (LAN + WiFi) -->
+  <if expr="${#devicesCount != null and #devicesCount != '' and #devicesCount.toInt > 0 and #devicesCount.toInt &lt;= 1000}">
+     <store value="${#devicesCount}" target="hostsCounter" />
+  </if>
+  
+  <!-- Method 2: Manual counting from LAN Devices (All active hosts - LAN + WiFi) -->
+  <if expr="${#hostsCounter.toInt == 0}">
+    <foreach query="${root.X_AVS_EXT.LAN.Devices.any}">
+      <store target="Active" value="${dm.getByPath(#i+'Active').value}" />
+      <if expr="${#Active.toBoolean}">
+        <store value="${#hostsCounter.toInt + 1}" target="hostsCounter" />
+      </if>
+    </foreach>
+  </if>
+  
+  <!-- Method 3: Manual counting from raw Hosts tree -->
+  <if expr="${#hostsCounter.toInt == 0}">
+    <foreach query="${root.LANDevice.`1`.Hosts.Host.any}">
+      <store target="Active" value="${dm.getByPath(#i+'Active').value}" />
+      <if expr="${#Active.toBoolean}">
+        <store value="${#hostsCounter.toInt + 1}" target="hostsCounter" />
+      </if>
+    </foreach>
+  </if>
+
+  <!-- Method 4: Fallback to WiFi TotalAssociations -->
+  <if expr="${#hostsCounter.toInt == 0}">
+    <foreach query="${root.X_AVS_EXT.WiFi.any}">
+      <store target="assocVal" value="${dm.getByPath(#i+'TotalAssociations').value}" />
+      <if expr="${#assocVal != null and #assocVal != '' and #assocVal.toInt > 0 and #assocVal.toInt &lt; 100}">
+        <store value="${#hostsCounter.toInt + #assocVal.toInt}" target="hostsCounter" />
+      </if>
+    </foreach>
+  </if>
+
+  <!-- Sanity Check: If hostsCounter > 1000 or has too many digits, overwrite with TotalAssociations -->
+  <if expr="${#hostsCounter.toInt > 1000 or (#hostsCounter != null and #hostsCounter.length > 4)}">
+     <store value="0" target="hostsCounter" />
+     <foreach query="${root.X_AVS_EXT.WiFi.any}">
+       <store target="assocVal" value="${dm.getByPath(#i+'TotalAssociations').value}" />
+       <if expr="${#assocVal != null and #assocVal != '' and #assocVal.toInt &lt; 100}">
+         <store value="${#hostsCounter.toInt + #assocVal.toInt}" target="hostsCounter" />
+       </if>
+     </foreach>
+  </if>
+
+  <store value="${#hostsCounter}" target="hostsCounter" type="devProp" />
+</config>

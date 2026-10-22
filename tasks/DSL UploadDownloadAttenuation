@@ -1,0 +1,5 @@
+<config samples="15" interval="2">
+  <param key="Root.X_AVS_EXT.WAN.DSL.Stats.Downstream.Attenuation" alias="DownstreamAttenuation" />
+  <param key="Root.X_AVS_EXT.WAN.DSL.Stats.Upstream.Attenuation" alias="UpstreamAttenuation" />
+  <param /> 
+</config>

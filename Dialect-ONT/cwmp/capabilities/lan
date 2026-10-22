@@ -1,0 +1,6 @@
+# LAN capapbility
+# A device is able to display basic information about a LAN configuration such as connected hosts and available ports.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.LAN.%force-value = "true"
+}

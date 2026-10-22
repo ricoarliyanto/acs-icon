@@ -1,0 +1,6 @@
+# Temperature capabilitiy
+# Temperature sensor capability
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Temperature.%force-value = "true"
+}

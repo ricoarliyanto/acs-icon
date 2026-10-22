@@ -1,0 +1,20 @@
+/** Save device properties
+*/
+val TimestampIso8601Format = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+val TimestampTimezone = "Europe/Warsaw"
+val UpdateDeviceError = "UMP_UPDATE_DEVICE_ERROR" // all expected error types
+var rawLog = "" // append to this variable with \n to see the output in parent task, i.e. rawLog += "Doing X\n"
+
+try {
+  rawLog += "LOOL"
+  if(math.random()>0.5){
+     val status = taskReport.property.status.getOr(taskReport.property.error.set(": Missing 'status'") |> (_ => finish()))
+  }else{
+     val status = taskReport.property.status.getOr(fail(UpdateDeviceError, "Missing 'startTime'"))
+  }
+  rawLog += "LOOL"
+}catch { e =>
+  taskReport.property.error.set(e.toString)
+} finally {
+  taskReport.property.rawLog.set(rawLog)
+} 

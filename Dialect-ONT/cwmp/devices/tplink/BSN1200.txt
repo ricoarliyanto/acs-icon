@@ -1,0 +1,106 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.syslog"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet"
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.firewall"
+include "cwmp.capabilities.forwarding"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.macFiltering"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.process"
+include "cwmp.capabilities.radius"
+include "cwmp.capabilities.storage"
+include "cwmp.capabilities.usb"
+include "cwmp.capabilities.wifi"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood.dm2"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+remappingStrategy {
+  activeKey.wifiScan1 = "root.X_TP_NeighboringWiFiDiagnostic"
+  
+   read_converter {
+    LAN.Devices.%i {
+      InterfaceType = ${tools.expression} {
+        expression = """${
+          if(singleValue.contains('WL'))
+            '802.11'
+          else if(singleValue.contains('LAN'))
+            'Ethernet'
+          else
+            'Unknown'}"""
+      }
+    }
+  }
+  
+    mapping {
+    root.X_AVS_EXT {
+      WiFi {
+        1 {
+          Enable.real = "root.LANDevice.1.WLANConfiguration.1.Enable"
+          OperatingChannelBandwidth.real = "root.LANDevice.1.WLANConfiguration.1.X_TP_Bandwidth"
+        }
+        5 {
+          Enable.real = "root.LANDevice.1.WLANConfiguration.2.Enable"
+          OperatingChannelBandwidth.real = "root.LANDevice.1.WLANConfiguration.2.X_TP_Bandwidth"
+        }
+      }
+      WAN.Stats {
+        Downstream {
+          Bytes.real = "root.WANDevice.1.WANEthernetInterfaceConfig.Stats.BytesReceived"
+          Packets.real = "root.WANDevice.1.WANEthernetInterfaceConfig.Stats.PacketsReceived"
+        }
+        Upstream {
+          Bytes.real = "root.WANDevice.1.WANEthernetInterfaceConfig.Stats.BytesSent"
+          Packets.real = "root.WANDevice.1.WANEthernetInterfaceConfig.Stats.PacketsSent"
+        }
+      }
+      LAN {
+        Devices.%i {
+        InterfaceType.real = "root.LANDevice.1.Hosts.Host.%i.Layer2Interface"
+        }
+      }
+    }
+  }
+}
+
+
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    WiFi {
+      %any {
+        SupportedStandards.%force-value = "a,n,ac"
+      }
+      1 {
+        SupportedChannelBandwidth.%force-value = "20MHz,40MHz,Auto"
+      }
+      5 {
+        SupportedChannelBandwidth.%force-value = "20MHz,40MHz,80MHz,160MHz,Auto"
+      }
+    }
+  }
+}

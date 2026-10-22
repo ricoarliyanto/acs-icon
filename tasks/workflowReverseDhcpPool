@@ -1,0 +1,11 @@
+<config>
+  <in key="Root.X_AVS_EXT.DHCP">
+    <get key="MaxAddress" output="maxAddress" />
+    <get key="MinAddress" output="minAddress" />
+    <if expr="${#minAddress.splitBy('.').map(_.toInt).useAs(first =&gt; #maxAddress.splitBy('.').map(_.toInt).useAs(second =&gt; list(0,1,2,3).map(x =&gt; first(x) &gt;= second(x)))).fold(true)(_ and _)}">
+      <set key="MinAddress" value="${#maxAddress}" />
+      <set key="MaxAddress" value="${#minAddress}" />
+    </if>
+  </in>
+  <workflowStatus value="Success" desc="workflows.onlineStepTemplate.workflowReverseDhcpPool.status.1.descriptionworkflowTranslatable ${#maxAddress}workflowTranslatable${#minAddress}workflowTranslatable" />
+</config> 

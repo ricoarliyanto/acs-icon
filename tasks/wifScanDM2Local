@@ -1,0 +1,40 @@
+<config>
+  <log message="Starting WiFi scan diagnostics" />
+  <store target="sessionCounter" value="0" />
+  <in key="Root.X_AVS_EXT.WiFi.${#Interface}">
+    <set key="NeighborhoodRescan" value="Requested" />
+    <get key="Band" output="band" />
+  </in>
+  <while expr="${inform.diagnosticsComplete or #sessionCounter.toDouble &lt; 3}">
+    <wait blocking="false" />
+    <get key="Root.X_AVS_EXT.WiFi.${#Interface}.NeighborhoodRescan" output="state" />
+    <if expr="${#state == 'Completed' or #state == 'Complete'}">
+      <defaults get.flush="false">
+        <foreach query="${root.X_AVS_EXT.WiFi.get(#Interface).NeighboringWiFiDiagnostic.any}" in="true">
+          <get key="SSID" output="SSID" />
+          <get key="BSSID" output="BSSID" />
+          <get key="Channel" output="Channel" />
+          <get key="SignalStrength" output="SignalStrength" />
+          <get key="Security" output="Security" />
+          <get key="Frequency" output="Frequency" />
+          <get key="Standard" output="Standard" />
+          <get key="ChannelBandwidth" output="ChannelBandwidth" />
+        </foreach>
+      </defaults>
+      <flush />
+      <foreach list="${dm.X_AVS_EXT.WiFi.get(#Interface).Neighborhood.any.keys}" iterator="result">
+        <log message="${#result}" />
+        <get key="${#result}.Channel" output="currentChannel" fromCache="true" />
+        <if expr="${(#band == '2.4' and #currentChannel.toInt &gt; 11) or (#band == '5' and #currentChannel.toInt &lt; 12)}">
+          <log message="deleting object ${#result}" />
+          <dataModelChanges referencePoint="virtual">
+            <object deleted="true" key="${#result}" />
+          </dataModelChanges>
+        </if>
+      </foreach>
+      <finish message="WiFi scan diagnostics completed" />
+    </if>
+    <store target="sessionCounter" value="${#sessionCounter.toDouble + 1}" />
+  </while>
+  <finish status="ERROR" message="WiFi scan diagnostics failed" />
+</config>

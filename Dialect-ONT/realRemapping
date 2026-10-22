@@ -1,0 +1,11 @@
+# Real remapping configuration
+realRemapping  = {
+  type: REMAPPING
+  alias.root = root.
+  read_converter {}
+  mapping {}
+  write_converter {}
+}
+
+
+liveDatamodelStrategies  += ${realRemapping}

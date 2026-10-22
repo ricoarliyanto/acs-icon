@@ -1,0 +1,16 @@
+<config>
+  <store target="parameters" value="${''}" />
+  <store target="cliCommand" value="${'/ip dhcp-server add '}" />
+  <foreach list="${task.properties.keySet.filter(key =&gt; key.charAt(0).isUpper and task.property.get(key) != '')}">
+    <store target="parameters" value="${#parameters+' '+#i.split('(?=[A-Z])').asList.map(p =&gt; p.toLowerCase).join('-') + &quot;=&quot; + task.property.get(#i)}" />
+  </foreach>
+  <store target="cliCommand" value="${#cliCommand + &quot; &quot; + #parameters}" />
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <if expr="${#output.contains('expected end of command') or #output.contains('input does not match any value of') or #output.contains('Script Error')}">
+    <finish status="ERROR" message="Error while executing the task ${#output}" />
+  </if>
+  <getParameters key="Device.X_AVS_EXT.DHCP.Server." />
+</config>

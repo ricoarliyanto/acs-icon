@@ -1,0 +1,6 @@
+<config>
+  <in key="Root.X_AVS_EXT.DHCP">
+    <set key="LeaseTime" value="7200" />
+  </in>
+  <workflowStatus value="Success" desc="workflows.onlineStepTemplate.workflowIncreaseLeaseTime.status.1.description" />
+</config> 

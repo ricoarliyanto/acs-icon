@@ -1,0 +1,18 @@
+<config saveUnchanged="true">
+  <parameter alias="WifiDataSent" name="${sv.activeWlan}TotalBytesSent" />
+  <parameter alias="WifiDataReceived" name="${sv.activeWlan}TotalBytesReceived" />
+  <parameter alias="InternetDataSent" name="${sv.activeWan}Stats.EthernetBytesSent" />
+  <parameter alias="InternetDataReceived" name="${sv.activeWan}Stats.EthernetBytesReceived" />
+  <parameter alias="Voip1DataSent" name="${sv.voipLine1Root}Stats.BytesSent" />
+  <parameter alias="Voip1DataReceived" name="${sv.voipLine1Root}Stats.BytesReceived" />
+  <parameter alias="Voip2DataSent" name="${sv.voipLine2Root}Stats.BytesSent" />
+  <parameter alias="Voip2DataReceived" name="${sv.voipLine2Root}Stats.BytesReceived" />
+  <parameter alias="IpTvDataSent" name="${sv.ipTvPvcRoot}Stats.EthernetBytesSent" />
+  <parameter alias="IpTvDataReceived" name="${sv.ipTvPvcRoot}Stats.EthernetBytesReceived" />
+  <parameter alias="UpstreamCurrRate" name="${sv.activeDslConfig}UpstreamCurrRate" />
+  <parameter alias="DownstreamCurrRate" name="${sv.activeDslConfig}DownstreamCurrRate" />
+  <parameter alias="UpstreamAttenuation" name="${sv.activeDslConfig}UpstreamAttenuation" />
+  <parameter alias="DownstreamAttenuation" name="${sv.activeDslConfig}DownstreamAttenuation" />
+  <parameter alias="UpstreamNoiseMargin" name="${sv.activeDslConfig}UpstreamNoiseMargin" />
+  <parameter alias="DownstreamNoiseMargin" name="${sv.activeDslConfig}DownstreamNoiseMargin" />
+</config>

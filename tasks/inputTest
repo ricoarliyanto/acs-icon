@@ -1,0 +1,4 @@
+val lanBind = task.property.lanBind.getOr("1,2,3,4")
+val wlanBind = task.property.wlanBind.getOr("1,5")
+device.property.lanBind.set(lanBind.toString)
+device.property.wlanBind.set(wlanBind.toString) 

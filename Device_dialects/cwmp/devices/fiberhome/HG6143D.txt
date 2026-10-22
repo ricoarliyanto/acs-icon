@@ -1,0 +1,400 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+include "cwmp.capabilities.syslog"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet"
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.wimax"
+include "cwmp.capabilities.gpon"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.applications"
+include "cwmp.capabilities.captivePortal"
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.femtocell"
+include "cwmp.capabilities.firewall"
+include "cwmp.capabilities.forwarding"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.macFiltering"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.process"
+include "cwmp.capabilities.radius"
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.storage"
+include "cwmp.capabilities.usb"
+include "cwmp.capabilities.users"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.xmpp"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+include "cwmp.capabilities.neighborhood"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+remappingStrategy {
+  activeKey.gpon = "${sv.activeWan.ancestorKey(3).toParameterKey}.X_FH_GponInterfaceConfig"
+  lan = "${sv.activeLan.toParameterKey}"
+  lanIpInterface = "${sv.activeLan.toParameterKey}.LANHostConfigManagement.IPInterface"
+
+  wifiSecurity {
+    isNone = """if(
+      realValue('BeaconType') == 'None' and
+      realValue('BasicEncryptionModes') == 'None' and
+      realValue('BasicAuthenticationMode') == 'OpenSystem'
+    ) 'NONE'"""
+
+    setNone = """if(value == 'NONE')(
+      map('BeaconType' -> 'None',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'OpenSystem',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+
+    isWep = """if(
+      realValue('BeaconType') == 'Basic' and
+      realValue('BasicEncryptionModes') == 'WEPEncryption' and
+      realValue('BasicAuthenticationMode') == 'SharedAuthentication'
+    ) 'WEP'"""
+
+    setWep = """if(value == 'WEP')(
+      map('BeaconType' -> 'Basic',
+          'BasicEncryptionModes' -> 'WEPEncryption',
+          'BasicAuthenticationMode' -> 'SharedAuthentication',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+
+    isWpa = """if(
+      realValue('BeaconType') == 'WPA' and
+      realValue('WPAEncryptionModes') == 'TKIPEncryption' and
+      realValue('WPAAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA'"""
+
+    setWpa = """if(value == 'WPA')(
+      map('BeaconType' -> 'WPA',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'WEPEncryption',
+          'BasicAuthenticationMode' -> 'SharedAuthentication',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication'
+      ).get(key.keyName)
+    )"""
+
+    isWpa2 = """if(
+      realValue('BeaconType') == '11i' and
+      realValue('IEEE11iEncryptionModes') == 'AESEncryption' and
+      realValue('IEEE11iAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA2'"""
+
+    setWpa2 = """if(value == 'WPA2')(
+      map('BeaconType' -> '11i',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'WEPEncryption',
+          'BasicAuthenticationMode' -> 'SharedAuthentication'
+      ).get(key.keyName)
+    )"""
+
+    isWpa_Wpa2 = """if(
+      realValue('BeaconType') == 'WPAand11i' and
+      realValue('WPAEncryptionModes') == 'TKIPEncryption' and
+      realValue('WPAAuthenticationMode') == 'PSKAuthentication' and
+      realValue('IEEE11iEncryptionModes') == 'AESEncryption' and
+      realValue('IEEE11iAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA_WPA2'"""
+
+    setWpa_Wpa2 = """if(value == 'WPA_WPA2')(
+      map('BeaconType' -> 'WPAand11i',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+  }
+  read_converter.WiFi.%i {
+    Security = ${tools.expression} {
+      expression = """${
+          """${remappingStrategy.wifiSecurity.isNone}""" else
+          """${remappingStrategy.wifiSecurity.isWep}""" else
+          """${remappingStrategy.wifiSecurity.isWpa}""" else
+          """${remappingStrategy.wifiSecurity.isWpa2}""" else
+          """${remappingStrategy.wifiSecurity.isWpa_Wpa2}""" else 'CUSTOM' }"""
+    }
+  }
+  write_converter.WiFi.%i {
+    Security = ${tools.expression} {
+      expression = """${
+          """${remappingStrategy.wifiSecurity.setNone}""" else
+          """${remappingStrategy.wifiSecurity.setWep}""" else
+          """${remappingStrategy.wifiSecurity.setWpa}""" else
+          """${remappingStrategy.wifiSecurity.setWpa2}""" else
+          """${remappingStrategy.wifiSecurity.setWpa_Wpa2}""" else null}"""
+    }
+  }
+
+  mapping {
+    root.X_AVS_EXT {
+      WAN.GPON.1 {
+        Status.real = ${remappingStrategy.activeKey.gpon}.Status
+        # MACAddress.real="${sv.activeWan.toParameterKey}.MACAddress"
+        # Technology.real="${sv.activeWan.ancestorKey(3).toParameterKey}.WANCommonInterfaceConfig.WANAccessType"
+        BiasCurrent.real = ${remappingStrategy.activeKey.gpon}.BiasCurrent
+        SupplyVoltage.real = ${remappingStrategy.activeKey.gpon}.SupplyVoltage
+        RXPower.real = ${remappingStrategy.activeKey.gpon}.RXPower
+        TXPower.real = ${remappingStrategy.activeKey.gpon}.TXPower
+        TransceiverTemperature.real = ${remappingStrategy.activeKey.gpon}.TransceiverTemperature
+        Stats {
+          # DropPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.DropPackets
+          # FECError.real = ${remappingStrategy.activeKey.gpon}.Stats.FECError"
+          # HECError.real = ${remappingStrategy.activeKey.gpon}.Stats.HECError"
+          Upstream {
+            # Bytes.real = ${remappingStrategy.activeKey.gpon}.Stats.BytesSent"
+            # Packets.real = ${remappingStrategy.activeKey.gpon}.Stats.PacketsSent"
+            BroadcastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.SBroadcastPackets
+            MulticastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.SMulticastPackets
+            # PausePackets.real = ${remappingStrategy.activeKey.gpon}.Stats.SpausePackets"
+            UnicastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.SUnicastPackets
+          }
+          Downstream {
+            # Bytes.real = ${remappingStrategy.activeKey.gpon}.Stats.BytesReceived"
+            # Packets.real = ${remappingStrategy.activeKey.gpon}.Stats.PacketsReceived"
+            BroadcastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.RBroadcastPackets
+            MulticastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.RMulticastPackets
+            # PausePackets.real = ${remappingStrategy.activeKey.gpon}.Stats.RpausePackets"
+            UnicastPackets.real = ${remappingStrategy.activeKey.gpon}.Stats.RUnicastPackets
+          }
+        }
+      }
+      WiFi.1 {
+        Enable.real = "root.LANDevice.1.WLANConfiguration.1.Enable"
+        Status.real = "root.LANDevice.1.WLANConfiguration.1.Status"
+        Channel.real = "root.LANDevice.1.WLANConfiguration.1.Channel"
+        BSSID.real = "root.LANDevice.1.WLANConfiguration.1.BSSID"
+        SSID.real = "root.LANDevice.1.WLANConfiguration.1.SSID"
+        Security.real = ["root.LANDevice.1.WLANConfiguration.1.BeaconType",
+          "root.LANDevice.1.WLANConfiguration.1.BasicEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.1.BasicAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.1.WPAEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.1.WPAAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.1.IEEE11iEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.1.IEEE11iAuthenticationMode"]
+        Password.real = "root.LANDevice.1.WLANConfiguration.1.KeyPassphrase"
+        Neighborhood.%j {
+          BSSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.BSSID"
+          Channel.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.Channel"
+          SSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SSID"
+          Security.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SecurityModeEnabled"
+          SignalStrength.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SignalStrength"
+          Standard.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingStandards"
+          ChannelBandwidth.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingChannelBandwidth"
+        }
+      }
+      WiFi.2 {
+        Enable.real = "root.LANDevice.1.WLANConfiguration.2.Enable"
+        Status.real = "root.LANDevice.1.WLANConfiguration.2.Status"
+        Channel.real = "root.LANDevice.1.WLANConfiguration.2.Channel"
+        BSSID.real = "root.LANDevice.1.WLANConfiguration.2.BSSID"
+        SSID.real = "root.LANDevice.1.WLANConfiguration.2.SSID"
+        Security.real = ["root.LANDevice.1.WLANConfiguration.2.BeaconType",
+          "root.LANDevice.1.WLANConfiguration.2.BasicEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.2.BasicAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.2.WPAEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.2.WPAAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.2.IEEE11iEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.2.IEEE11iAuthenticationMode"]
+        Password.real = "root.LANDevice.1.WLANConfiguration.2.KeyPassphrase"
+        Neighborhood.%j {
+          BSSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.BSSID"
+          Channel.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.Channel"
+          SSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SSID"
+          Security.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SecurityModeEnabled"
+          SignalStrength.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SignalStrength"
+          Standard.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingStandards"
+          ChannelBandwidth.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingChannelBandwidth"
+        }
+      }
+      WiFi.3 {
+        Enable.real = "root.LANDevice.1.WLANConfiguration.3.Enable"
+        Status.real = "root.LANDevice.1.WLANConfiguration.3.Status"
+        Channel.real = "root.LANDevice.1.WLANConfiguration.3.Channel"
+        BSSID.real = "root.LANDevice.1.WLANConfiguration.3.BSSID"
+        SSID.real = "root.LANDevice.1.WLANConfiguration.3.SSID"
+        Security.real = ["root.LANDevice.1.WLANConfiguration.3.BeaconType",
+          "root.LANDevice.1.WLANConfiguration.3.BasicEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.3.BasicAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.3.WPAEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.3.WPAAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.3.IEEE11iEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.3.IEEE11iAuthenticationMode"]
+        Password.real = "root.LANDevice.1.WLANConfiguration.3.KeyPassphrase"
+        Neighborhood.%j {
+          BSSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.BSSID"
+          Channel.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.Channel"
+          SSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SSID"
+          Security.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SecurityModeEnabled"
+          SignalStrength.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SignalStrength"
+          Standard.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingStandards"
+          ChannelBandwidth.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingChannelBandwidth"
+        }
+      }
+      WiFi.4 {
+        Enable.real = "root.LANDevice.1.WLANConfiguration.4.Enable"
+        Status.real = "root.LANDevice.1.WLANConfiguration.4.Status"
+        Channel.real = "root.LANDevice.1.WLANConfiguration.4.Channel"
+        BSSID.real = "root.LANDevice.1.WLANConfiguration.4.BSSID"
+        SSID.real = "root.LANDevice.1.WLANConfiguration.4.SSID"
+        Security.real = ["root.LANDevice.1.WLANConfiguration.4.BeaconType",
+          "root.LANDevice.1.WLANConfiguration.4.BasicEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.4.BasicAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.4.WPAEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.4.WPAAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.4.IEEE11iEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.4.IEEE11iAuthenticationMode"]
+        Password.real = "root.LANDevice.1.WLANConfiguration.4.KeyPassphrase"
+        Neighborhood.%j {
+          BSSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.BSSID"
+          Channel.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.Channel"
+          SSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SSID"
+          Security.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SecurityModeEnabled"
+          SignalStrength.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SignalStrength"
+          Standard.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingStandards"
+          ChannelBandwidth.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingChannelBandwidth"
+        }
+      }
+      WiFi.5 {
+        Enable.real = "root.LANDevice.1.WLANConfiguration.5.Enable"
+        Status.real = "root.LANDevice.1.WLANConfiguration.5.Status"
+        Channel.real = "root.LANDevice.1.WLANConfiguration.5.Channel"
+        BSSID.real = "root.LANDevice.1.WLANConfiguration.5.BSSID"
+        SSID.real = "root.LANDevice.1.WLANConfiguration.5.SSID"
+        Security.real = ["root.LANDevice.1.WLANConfiguration.5.BeaconType",
+          "root.LANDevice.1.WLANConfiguration.5.BasicEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.5.BasicAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.5.WPAEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.5.WPAAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.5.IEEE11iEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.5.IEEE11iAuthenticationMode"]
+        Password.real = "root.LANDevice.1.WLANConfiguration.5.KeyPassphrase"
+        Neighborhood.%j {
+          BSSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.BSSID"
+          Channel.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.Channel"
+          SSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SSID"
+          Security.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SecurityModeEnabled"
+          SignalStrength.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SignalStrength"
+          Standard.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingStandards"
+          ChannelBandwidth.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingChannelBandwidth"
+        }
+      }
+      WiFi.6 {
+        Enable.real = "root.LANDevice.1.WLANConfiguration.6.Enable"
+        Status.real = "root.LANDevice.1.WLANConfiguration.6.Status"
+        Channel.real = "root.LANDevice.1.WLANConfiguration.6.Channel"
+        BSSID.real = "root.LANDevice.1.WLANConfiguration.6.BSSID"
+        SSID.real = "root.LANDevice.1.WLANConfiguration.6.SSID"
+        Security.real = ["root.LANDevice.1.WLANConfiguration.6.BeaconType",
+          "root.LANDevice.1.WLANConfiguration.6.BasicEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.6.BasicAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.6.WPAEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.6.WPAAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.6.IEEE11iEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.6.IEEE11iAuthenticationMode"]
+        Password.real = "root.LANDevice.1.WLANConfiguration.6.KeyPassphrase"
+        Neighborhood.%j {
+          BSSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.BSSID"
+          Channel.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.Channel"
+          SSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SSID"
+          Security.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SecurityModeEnabled"
+          SignalStrength.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SignalStrength"
+          Standard.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingStandards"
+          ChannelBandwidth.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingChannelBandwidth"
+        }
+      }
+      WiFi.7 {
+        Enable.real = "root.LANDevice.1.WLANConfiguration.7.Enable"
+        Status.real = "root.LANDevice.1.WLANConfiguration.7.Status"
+        Channel.real = "root.LANDevice.1.WLANConfiguration.7.Channel"
+        BSSID.real = "root.LANDevice.1.WLANConfiguration.7.BSSID"
+        SSID.real = "root.LANDevice.1.WLANConfiguration.7.SSID"
+        Security.real = ["root.LANDevice.1.WLANConfiguration.7.BeaconType",
+          "root.LANDevice.1.WLANConfiguration.7.BasicEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.7.BasicAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.7.WPAEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.7.WPAAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.7.IEEE11iEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.7.IEEE11iAuthenticationMode"]
+        Password.real = "root.LANDevice.1.WLANConfiguration.7.KeyPassphrase"
+        Neighborhood.%j {
+          BSSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.BSSID"
+          Channel.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.Channel"
+          SSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SSID"
+          Security.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SecurityModeEnabled"
+          SignalStrength.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SignalStrength"
+          Standard.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingStandards"
+          ChannelBandwidth.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingChannelBandwidth"
+        }
+      }
+      WiFi.8 {
+        Enable.real = "root.LANDevice.1.WLANConfiguration.8.Enable"
+        Status.real = "root.LANDevice.1.WLANConfiguration.8.Status"
+        Channel.real = "root.LANDevice.1.WLANConfiguration.8.Channel"
+        BSSID.real = "root.LANDevice.1.WLANConfiguration.8.BSSID"
+        SSID.real = "root.LANDevice.1.WLANConfiguration.8.SSID"
+        Security.real = ["root.LANDevice.1.WLANConfiguration.8.BeaconType",
+          "root.LANDevice.1.WLANConfiguration.8.BasicEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.8.BasicAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.8.WPAEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.8.WPAAuthenticationMode",
+          "root.LANDevice.1.WLANConfiguration.8.IEEE11iEncryptionModes",
+          "root.LANDevice.1.WLANConfiguration.8.IEEE11iAuthenticationMode"]
+        Password.real = "root.LANDevice.1.WLANConfiguration.8.KeyPassphrase"
+        Neighborhood.%j {
+          BSSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.BSSID"
+          Channel.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.Channel"
+          SSID.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SSID"
+          Security.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SecurityModeEnabled"
+          SignalStrength.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.SignalStrength"
+          Standard.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingStandards"
+          ChannelBandwidth.real = "root.WiFi.NeighboringWiFiDiagnostic.Result.%j.OperatingChannelBandwidth"
+        }
+      }
+    }
+  }
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    WiFi.%any {
+      SupportedStandards.%force-value = "b,g,n"
+    }
+  }
+}

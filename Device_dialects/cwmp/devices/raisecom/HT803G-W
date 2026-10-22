@@ -1,0 +1,293 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.gpon"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.firewall"
+include "cwmp.capabilities.forwarding"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.macFiltering"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.process"
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.storage"
+include "cwmp.capabilities.usb"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.xmpp"
+
+# DIAGNOSTICS - Special Handling for HT803G-W
+include "cwmp.capabilities.diagnostics"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+# Tools
+include "tools.remapping"
+
+# Enable Connection Requests
+cwmp {
+  bootstrapDiscoveryExpression = "${false}"
+  crDiscoveryExpression = "${inform.isConnectionRequest}"
+}
+
+remappingStrategy {
+  # WiFi Security Remapping
+  wifiSecurity {
+    isNone = """if(
+      realValue('BeaconType') == 'None' and
+      realValue('BasicEncryptionModes') == 'None' and
+      realValue('BasicAuthenticationMode') == 'OpenSystem'
+    ) 'NONE'"""
+
+    setNone = """if(value == 'NONE')(
+      map('BeaconType' -> 'None',
+          'BasicEncryptionModes' -> 'None', 
+          'BasicAuthenticationMode' -> 'OpenSystem',
+          'WPAEncryptionModes' -> 'None',
+          'WPAAuthenticationMode' -> 'None', 
+          'IEEE11iEncryptionModes' -> 'None', 
+          'IEEE11iAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+
+    isWpa = """if(
+      realValue('BeaconType') == 'WPA' and
+      realValue('WPAEncryptionModes') == 'TKIPEncryption' and
+      realValue('WPAAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA'"""
+
+    setWpa = """if(value == 'WPA')(
+      map('BeaconType' -> 'WPA',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None',
+          'IEEE11iEncryptionModes' -> 'None',
+          'IEEE11iAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+
+    isWpa2 = """if(
+      realValue('BeaconType') == '11i' and
+      realValue('IEEE11iEncryptionModes') == 'AESEncryption' and
+      realValue('IEEE11iAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA2'"""
+
+    setWpa2 = """if(value == 'WPA2')(
+      map('BeaconType' -> '11i',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+          'WPAEncryptionModes' -> 'None',
+          'WPAAuthenticationMode' -> 'None',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+
+    isWpa_Wpa2 = """if(
+      realValue('BeaconType') == 'WPAand11i' and
+      (realValue('WPAEncryptionModes') == 'TKIPEncryption' or realValue('WPAEncryptionModes') == 'AESEncryption') and
+      realValue('WPAAuthenticationMode') == 'PSKAuthentication' and
+      (realValue('IEEE11iEncryptionModes') == 'TKIPEncryption' or realValue('IEEE11iEncryptionModes') == 'AESEncryption') and
+      realValue('IEEE11iAuthenticationMode') == 'PSKAuthentication'
+    ) 'WPA_WPA2'"""
+
+    setWpa_Wpa2 = """if(value == 'WPA_WPA2')(
+      map('BeaconType' -> 'WPAand11i',
+          'WPAEncryptionModes' -> 'TKIPEncryption',
+          'WPAAuthenticationMode' -> 'PSKAuthentication',
+          'IEEE11iEncryptionModes' -> 'AESEncryption',
+          'IEEE11iAuthenticationMode' -> 'PSKAuthentication',
+          'BasicEncryptionModes' -> 'None',
+          'BasicAuthenticationMode' -> 'None'
+      ).get(key.keyName)
+    )"""
+  }
+
+  read_converter {
+    WiFi.%i {
+      Security = ${tools.expression} {
+        expression = """${
+          """${remappingStrategy.wifiSecurity.isNone}""" else
+          """${remappingStrategy.wifiSecurity.isWpa}""" else
+          """${remappingStrategy.wifiSecurity.isWpa2}""" else
+          """${remappingStrategy.wifiSecurity.isWpa_Wpa2}""" else 'CUSTOM' }"""
+      }
+    }
+  }
+
+  write_converter {
+    WiFi.%i {
+      Security = ${tools.expression} {
+        expression = """${
+            """${remappingStrategy.wifiSecurity.setNone}""" else
+            """${remappingStrategy.wifiSecurity.setWpa}""" else
+            """${remappingStrategy.wifiSecurity.setWpa2}""" else
+            """${remappingStrategy.wifiSecurity.setWpa_Wpa2}""" else null}"""
+      }
+    }
+  }
+
+  mapping {
+    # Management - Enable Connection Request
+    root.InternetGatewayDevice.ManagementServer {
+       ConnectionRequestURL.real = "root.X_AVS_EXT.Management.Control.URL"
+       ConnectionRequestUsername.real = "root.X_AVS_EXT.Management.Control.Username"
+       ConnectionRequestPassword.real = "root.X_AVS_EXT.Management.Control.Password"
+    }
+
+    # GPON / WAN Status Mapping
+    # GPON / WAN Status Mapping
+    root.X_AVS_EXT.WAN.GPON.1 {
+      # Direct mapping (Raw Values) - because Expressions are failing
+      Status.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Status"
+      RXPower.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower"
+      TXPower.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.TXPower"
+      SupplyVoltage.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.SupplyVottage"
+      BiasCurrent.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.BiasCurrent"
+      TransceiverTemperature.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.TransceiverTemperature"
+      
+      # Mapping Technology to Status so it is not n/a
+      Technology.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Status"
+      "Link status".real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Status"
+      
+      # Stats
+      Stats {
+         BytesSent.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesSent"
+         BytesReceived.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesReceived"
+         PacketsSent.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsSent"
+         PacketsReceived.real = "root.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsReceived"
+      }
+    }
+
+    # Diagnostics - Using X_AVS_EXT as supported by HT803G-W DataModel
+    root.Diagnostics {
+      Download {
+        DiagnosticsState.real = "root.X_AVS_EXT.Diagnostics.Download.State"
+        DownloadURL.real = "root.X_AVS_EXT.Diagnostics.Download.DownloadURL"
+        Interface.real = "root.X_AVS_EXT.Diagnostics.Download.Interface"
+        DSCP.real = "root.X_AVS_EXT.Diagnostics.Download.DSCP"
+        EthernetPriority.real = "root.X_AVS_EXT.Diagnostics.Download.EthernetPriority"
+        
+        # Results
+        ROMTime.real = "root.X_AVS_EXT.Diagnostics.Download.Result.ROMTime"
+        BOMTime.real = "root.X_AVS_EXT.Diagnostics.Download.Result.BOMTime"
+        EOMTime.real = "root.X_AVS_EXT.Diagnostics.Download.Result.EOMTime"
+        TestBytesReceived.real = "root.X_AVS_EXT.Diagnostics.Download.Result.TestBytesReceived"
+        TotalBytesReceived.real = "root.X_AVS_EXT.Diagnostics.Download.Result.TotalBytesReceived"
+      }
+      
+      Upload {
+        DiagnosticsState.real = "root.X_AVS_EXT.Diagnostics.Upload.State"
+        UploadURL.real = "root.X_AVS_EXT.Diagnostics.Upload.UploadURL" 
+        Interface.real = "root.X_AVS_EXT.Diagnostics.Upload.Interface"
+        DSCP.real = "root.X_AVS_EXT.Diagnostics.Upload.DSCP"
+        EthernetPriority.real = "root.X_AVS_EXT.Diagnostics.Upload.EthernetPriority"
+        TestFileLength.real = "root.X_AVS_EXT.Diagnostics.Upload.TestFileLength"
+        
+        # Results
+        ROMTime.real = "root.X_AVS_EXT.Diagnostics.Upload.Result.ROMTime"
+        BOMTime.real = "root.X_AVS_EXT.Diagnostics.Upload.Result.BOMTime"
+        EOMTime.real = "root.X_AVS_EXT.Diagnostics.Upload.Result.EOMTime"
+        TotalBytesSent.real = "root.X_AVS_EXT.Diagnostics.Upload.Result.TotalBytesSent"
+      }
+      
+      IPPing {
+        DiagnosticsState.real = "root.X_AVS_EXT.Diagnostics.IPPing.State"
+        Host.real = "root.X_AVS_EXT.Diagnostics.IPPing.Host"
+        Interface.real = "root.X_AVS_EXT.Diagnostics.IPPing.Interface"
+        NumberOfRepetitions.real = "root.X_AVS_EXT.Diagnostics.IPPing.NumberOfRepetitions"
+        Timeout.real = "root.X_AVS_EXT.Diagnostics.IPPing.Timeout"
+        DataBlockSize.real = "root.X_AVS_EXT.Diagnostics.IPPing.DataBlockSize"
+        DSCP.real = "root.X_AVS_EXT.Diagnostics.IPPing.DSCP"
+        
+        # Results
+        SuccessCount.real = "root.X_AVS_EXT.Diagnostics.IPPing.Result.SuccessCount"
+        FailureCount.real = "root.X_AVS_EXT.Diagnostics.IPPing.Result.FailureCount"
+        AverageResponseTime.real = "root.X_AVS_EXT.Diagnostics.IPPing.Result.AverageResponseTime"
+        MinimumResponseTime.real = "root.X_AVS_EXT.Diagnostics.IPPing.Result.MinimumResponseTime"
+        MaximumResponseTime.real = "root.X_AVS_EXT.Diagnostics.IPPing.Result.MaximumResponseTime"
+      }
+      
+      TraceRoute {
+        DiagnosticsState.real = "root.X_AVS_EXT.Diagnostics.TraceRoute.State"
+        Host.real = "root.X_AVS_EXT.Diagnostics.TraceRoute.Host"
+        Interface.real = "root.X_AVS_EXT.Diagnostics.TraceRoute.Interface"
+        MaxHopCount.real = "root.X_AVS_EXT.Diagnostics.TraceRoute.MaxHopCount"
+        Timeout.real = "root.X_AVS_EXT.Diagnostics.TraceRoute.Timeout"
+        DataBlockSize.real = "root.X_AVS_EXT.Diagnostics.TraceRoute.DataBlockSize"
+        DSCP.real = "root.X_AVS_EXT.Diagnostics.TraceRoute.DSCP"
+        
+        # Results
+        ResponseTime.real = "root.X_AVS_EXT.Diagnostics.TraceRoute.Result.ResponseTime"
+      }
+    }
+
+    # WiFi Mapping
+    root.X_AVS_EXT.WiFi.%i {
+      Enable.real = "root.LANDevice.1.WLANConfiguration.%i.RadioEnabled"
+      SSID.real = "root.LANDevice.1.WLANConfiguration.%i.SSID"
+      Standard.real = "root.LANDevice.1.WLANConfiguration.%i.Standard"
+      Channel.real = "root.LANDevice.1.WLANConfiguration.%i.Channel"
+      # Mapping security related parameters
+      BeaconType.real = "root.LANDevice.1.WLANConfiguration.%i.BeaconType"
+      BasicEncryptionModes.real = "root.LANDevice.1.WLANConfiguration.%i.BasicEncryptionModes"
+      BasicAuthenticationMode.real = "root.LANDevice.1.WLANConfiguration.%i.BasicAuthenticationMode"
+      WPAEncryptionModes.real = "root.LANDevice.1.WLANConfiguration.%i.WPAEncryptionModes"
+      WPAAuthenticationMode.real = "root.LANDevice.1.WLANConfiguration.%i.WPAAuthenticationMode"
+      IEEE11iEncryptionModes.real = "root.LANDevice.1.WLANConfiguration.%i.IEEE11iEncryptionModes"
+      IEEE11iAuthenticationMode.real = "root.LANDevice.1.WLANConfiguration.%i.IEEE11iAuthenticationMode"
+      
+      # Additional Params
+      Status.real = "root.LANDevice.1.WLANConfiguration.%i.Status"
+      Password.real = "root.LANDevice.1.WLANConfiguration.%i.PreSharedKey.1.KeyPassphrase"
+    }
+  }
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT.WAN.GPON.1 {
+    Technology {
+      %force-value = "GPON"
+    }
+    RXPower {
+      %patch-value = "${((node.value.toDouble / 10.0) * 100).toLong / 100.0}"
+    }
+    TXPower {
+      %patch-value = "${((node.value.toDouble / 10.0) * 100).toLong / 100.0}"
+    }
+    SupplyVoltage {
+      %patch-value = "${((node.value.toDouble / 10000.0) * 100).toLong / 100.0}"
+    }
+    BiasCurrent {
+      %patch-value = "${((node.value.toDouble / 1000.0) * 100).toLong / 100.0}"
+    }
+    TransceiverTemperature {
+      %patch-value = "${((node.value.toDouble / 256.0) * 100).toLong / 100.0}"
+    }
+  }
+
+  root.X_AVS_EXT.WiFi.1 {
+    SupportedStandards {
+      %force-value = "b,g,n"
+    }
+  }
+}

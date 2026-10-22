@@ -1,0 +1,29 @@
+remappingStrategy.mapping {
+  root.X_AVS_EXT.WAN {
+    Enable.real = "${sv.activeWan.toParameterKey}".Enable
+    Status.real = "${sv.activeWan.toParameterKey}".ConnectionStatus
+    LastConnectionError.real = "${sv.activeWan.toParameterKey}".LastConnectionError
+    MACAddress.real = "${sv.activeWan.toParameterKey}".MACAddress
+    NATEnabled.real = "${sv.activeWan.toParameterKey}".NATEnabled
+    UpTime.real = "${sv.activeWan.toParameterKey}".Uptime
+    Name.real = "${sv.activeWan.toParameterKey}".Name
+    MTU.real = "${sv.activeWan.toParameterKey}".MaxMTUSize
+  }
+}
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    WAN {
+      Status.%patch-value = """${
+        map('Connected' -> 'Up',
+            'Disconnected' -> 'Down',
+            'Disconnecting' -> 'Down',
+            'Disconneting' -> 'Down',
+            'PendingDisconnect' -> 'Down',
+            'Unconfigured' -> 'Down',
+            'Connecting' -> 'Initializing',
+            'Authenticating' -> 'Initializing').getOr(node.value,'Unavailable')
+      }"""
+    }
+  }
+}

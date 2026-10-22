@@ -1,0 +1,1 @@
+<config path="${task.properties.get('requestUploadDatamodelPath') + '.Upload()'}" protocol="${task.properties.getOr('requestUploadProtocolType', sv.transferProtocol)}" fileType="2 Vendor Log File" />

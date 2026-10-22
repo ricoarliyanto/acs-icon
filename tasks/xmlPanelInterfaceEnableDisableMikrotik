@@ -1,0 +1,17 @@
+<config>
+  <store target="interfaceName" value="${task.property.Name}" />
+  <store target="interfaceStatus" value="${task.property.Status}" />
+  <store target="cliCommandDisable" value="/interface disable ${#interfaceName}" />
+  <store target="cliCommandEnable" value="/interface enable ${#interfaceName}" />
+  <if expr="${#interfaceStatus=='Up'}">
+    <cli protocol="${sv.protocol}">
+      <command cmd="${#cliCommandDisable}" />
+    </cli>
+    <else>
+      <cli protocol="${sv.protocol}">
+        <command cmd="${#cliCommandEnable}" />
+      </cli>
+    </else>
+  </if>
+  <getParameters key="Device.X_AVS_EXT.Interface" />
+</config>

@@ -1,0 +1,4 @@
+<config>
+  <set key="${sv.activeWan}Username" value="${sv.pppUsername}" type="xsd:string" />
+  <set key="${sv.activeWan}Password" value="${sv.pppPassword}" type="xsd:string" />
+</config>

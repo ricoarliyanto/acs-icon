@@ -1,0 +1,102 @@
+include "cwmp.ext.wan.ip.patching"
+include "tools.remapping"
+
+remappingStrategy {
+  read_converter {
+    WAN.IP.%any {
+      Status = ${tools.expression} {
+        expression = """${map(
+                "Unconfigured" -> "Down",
+                "Connecting" -> "Down",
+                "Connected" -> "Up",
+                "PendingDisconnect" -> "Down",
+                "Disconnecting" -> "Down",
+                "Disconnected" -> "Down"
+              ).getOr(singleValue, singleValue)}"""
+      }
+      IPv4.%any.Status = ${tools.expression} {
+        expression = """${map(
+                "Unconfigured" -> "Disabled",
+                "Connecting" -> "Disabled",
+                "Connected" -> "Enabled",
+                "PendingDisconnect" -> "Disabled",
+                "Disconnecting" -> "Disabled",
+                "Disconnected" -> "Disabled",
+                "Up" -> "Enabled"
+              ).getOr(singleValue, singleValue)}"""
+      }
+      IPv6.%any.Status = ${tools.expression} {
+        expression = """${map(
+                "Unconfigured" -> "Disabled",
+                "Connecting" -> "Disabled",
+                "Connected" -> "Enabled",
+                "PendingDisconnect" -> "Disabled",
+                "Disconnecting" -> "Disabled",
+                "Disconnected" -> "Disabled",
+                "Up" -> "Enabled"
+              ).getOr(singleValue, singleValue)}"""
+      }
+      IPv6Prefix.%any.Status = ${tools.expression} {
+        expression = """${if(singleValue == "Connected" || singleValue == "Up") "Enabled" else "Disabled"}"""
+      }
+    }
+  }
+  mapping {
+    root.X_AVS_EXT.WAN.IP {
+      1 {
+        interfaceKey = "undefined"
+        prefixKey = "undefined"
+        include "cwmp.ext.wan.ip.profile"
+        include "cwmp.ext.wan.ip.profile.stats"
+      }
+      2 {
+        interfaceKey = "undefined"
+        prefixKey = "undefined"
+        include "cwmp.ext.wan.ip.profile"
+        include "cwmp.ext.wan.ip.profile.stats"
+      }
+      3 {
+        interfaceKey = "undefined"
+        prefixKey = "undefined"
+        include "cwmp.ext.wan.ip.profile"
+        include "cwmp.ext.wan.ip.profile.stats"
+      }
+      4 {
+        interfaceKey = "undefined"
+        prefixKey = "undefined"
+        include "cwmp.ext.wan.ip.profile"
+        include "cwmp.ext.wan.ip.profile.stats"
+      }
+      5 {
+        interfaceKey = "undefined"
+        prefixKey = "undefined"
+        include "cwmp.ext.wan.ip.profile"
+        include "cwmp.ext.wan.ip.profile.stats"
+      }
+      5 {
+        interfaceKey = "undefined"
+        prefixKey = "undefined"
+        include "cwmp.ext.wan.ip.profile"
+        include "cwmp.ext.wan.ip.profile.stats"
+      }
+      6 {
+        interfaceKey = "undefined"
+        prefixKey = "undefined"
+        include "cwmp.ext.wan.ip.profile"
+        include "cwmp.ext.wan.ip.profile.stats"
+      }
+      7 {
+        interfaceKey = "undefined"
+        prefixKey = "undefined"
+        include "cwmp.ext.wan.ip.profile"
+        include "cwmp.ext.wan.ip.profile.stats"
+      }
+      8 {
+        interfaceKey = "undefined"
+        prefixKey = "undefined"
+        include "cwmp.ext.wan.ip.profile"
+        include "cwmp.ext.wan.ip.profile.stats"
+      }
+    }
+  }
+}

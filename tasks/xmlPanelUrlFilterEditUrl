@@ -1,0 +1,12 @@
+<config>
+  <store target="button" value="${task.properties.get('buttonIdentifier')}" />
+  <store target="URL" value="${task.properties.get('URL')}" />
+  <store target="Name" value="${task.properties.get('Name')}" />
+  <defaults get.flush="false" set.flush="false">
+    <add parentKey="${#button}.Filter">
+      <set key="Name" value="${#Name}" />
+      <set key="URL" value="${#URL}" />
+    </add>
+  </defaults>
+  <flush />
+</config>

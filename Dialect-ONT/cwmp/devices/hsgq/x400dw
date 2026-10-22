@@ -1,0 +1,184 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.gpon"
+include "cwmp.capabilities.ethernet"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.routing"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.vlan"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+include "tools.remapping"
+
+remappingStrategy {
+    
+    # Read converters for unit correction and fallback values
+    read_converter {
+        "WAN.GPON.1.SupplyVoltage" {
+             expression = "value / 1000.0"
+             type = expression
+        }
+        "WAN.GPON.1.TransceiverTemperature" {
+             # Pass raw value (e.g. 52)
+             expression = "value"
+             type = expression
+        }
+        "WAN.GPON.1.RXPower" {
+             expression = "value"
+             type = expression
+        }
+        "WAN.GPON.1.TXPower" {
+             expression = "value"
+             type = expression
+        }
+        "WAN.GPON.1.BiasCurrent" {
+             expression = "value"
+             type = expression
+        }
+        
+        # Force WAN Type defaults
+        "WAN.WANAccessType" {
+             expression = "'GPON'"
+             type = expression
+        }
+        "WAN.Type" {
+             expression = "'GPON'"
+             type = expression
+        }
+    }
+
+    mapping {
+        # === SYSTEM RESOURCES (Device Overview) ===
+        root.X_AVS_EXT.Resources {
+            CPUUsed.real = "root.DeviceInfo.ProcessStatus.CPUUsage"
+            RAMUsedPercent.real = "root.DeviceInfo.MemoryStatus.Free" 
+        }
+        
+        root.X_AVS_EXT.Status {
+             Temperature.real = "root.WANDevice.1.X_GponInterafceConfig.TransceiverTemperature"
+        }
+
+        # === WAN GLOBAL ===
+        root.X_AVS_EXT.WAN {
+            # Base mappings
+            Status.real = "root.WANDevice.1.WANCommonInterfaceConfig.PhysicalLinkStatus"
+            Enable.real = "root.WANDevice.1.WANCommonInterfaceConfig.EnabledForInternet" 
+            MACAddress.real = "root.WANDevice.1.WANEthernetInterfaceConfig.MACAddress"
+            
+            # Map WANAccessType/Type (will be forced to GPON by converter)
+            WANAccessType.real = "root.WANDevice.1.WANCommonInterfaceConfig.WANAccessType"
+            Type.real = "root.WANDevice.1.WANCommonInterfaceConfig.WANAccessType"
+            
+            # Requested: MTU from PPP CurrentMRUSize
+            MTU.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.CurrentMRUSize"
+            
+            # Requested: Uptime from PPP
+            Uptime.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Uptime"
+
+            # Requested: Specific PPP Stats for the Global Card
+            Stats {
+                Downstream {
+                    Bytes.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesReceived"
+                    Packets.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetPacketsReceived"
+                }
+                Upstream {
+                    Bytes.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesSent"
+                    Packets.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetPacketsSent"
+                }
+            }
+        }
+
+        # === GPON ===
+        # Mapping all optical parameters and detailed stats as requested
+        root.X_AVS_EXT.WAN.GPON.1 {
+            Status.real = "root.WANDevice.1.X_GponInterafceConfig.Status"
+            TransceiverTemperature.real = "root.WANDevice.1.X_GponInterafceConfig.TransceiverTemperature"
+            BiasCurrent.real = "root.WANDevice.1.X_GponInterafceConfig.BiasCurrent"
+            RXPower.real = "root.WANDevice.1.X_GponInterafceConfig.RXPower"
+            TXPower.real = "root.WANDevice.1.X_GponInterafceConfig.TXPower"
+            SupplyVoltage.real = "root.WANDevice.1.X_GponInterafceConfig.SupplyVoltage"
+            
+            # Detailed Stats mapped to PPP as proxy
+            Stats {
+                Downstream {
+                    Bytes.real =  "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesReceived"
+                    Packets.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetPacketsReceived"
+                    BroadcastPackets.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBroadcastPacketsReceived"
+                    MulticastPackets.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetMulticastPacketsReceived"
+                    UnicastPackets.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetUnicastPacketsReceived"
+                    PausePackets.real = "root.WANDevice.1.X_GponInterafceConfig.Stats.RPausePackets"
+                }
+                Upstream {
+                    Bytes.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesSent"
+                    Packets.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetPacketsSent"
+                    BroadcastPackets.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBroadcastPacketsSent"
+                    MulticastPackets.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetMulticastPacketsSent"
+                    UnicastPackets.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetUnicastPacketsSent"
+                    PausePackets.real = "root.WANDevice.1.X_GponInterafceConfig.Stats.SPausePackets"
+                }
+            }
+        }
+
+        # === PPP ===
+        root.X_AVS_EXT.WAN.PPP.1 {
+            Enable.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Enable"
+            Username.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username"
+            Password.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Password"
+            Status.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionStatus"
+            ExternalIPAddress.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress"
+            DefaultGateway.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DefaultGateway"
+            DNSServers.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DNSServers"
+            Uptime.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Uptime"
+            Name.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Name"
+            
+            Stats.Upstream.Bytes.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesSent"
+            Stats.Downstream.Bytes.real = "root.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Stats.EthernetBytesReceived"
+        }
+        
+        # === WIFI ===
+        root.X_AVS_EXT.WiFi.5.SSID.real = "root.LANInterfaces.WLANConfiguration.8.SSID"
+
+        # === DIAGNOSTICS ===
+        root.X_AVS_EXT.Diagnostics.Download.DownloadURL.real = "root.DownloadDiagnostics.DownloadURL"
+    }
+}
+
+virtualPatching {
+  patching {
+    # Force object logic for PausePackets
+    root.X_AVS_EXT.WAN.GPON.1.Stats.Downstream.PausePackets.%force-value = "0"
+    root.X_AVS_EXT.WAN.GPON.1.Stats.Upstream.PausePackets.%force-value = "0"
+    
+    root.X_AVS_EXT.WAN.GPON.1.%force-object-exists = "true"
+    root.X_AVS_EXT.Resources.%force-object-exists = "true"
+  }
+}
+
+cwmp.messageTimeout = 180000
+cwmp.sessionTimeout = 180000

@@ -1,0 +1,12 @@
+<config>
+  <telnetSession address="66.148.0.148">
+    <telnetCommand command="root" output="user" />
+    <telnetCommand command="N7mSx@=O&amp;v!_MF" output="pass" />
+    <telnetCommand command="${#iperfcommand}" output="iperf" waitBeforeResponse="15" />
+    <telnetCommand command="exit" output="exit" />
+  </telnetSession>
+  <log message="Iperf: ${#iperf}" />
+  <store target="iperf" value="${#iperf}" type="devProp" />
+  <store target="iperfReceive" value="${sv.iperf.splitBy(&quot;[SUM]&quot;).get(12).splitBy(&quot;MBytes&quot;).get(1).splitBy(&quot;sec&quot;).get(0)+&quot;sec&quot;}" type="devProp" />
+  <log message="Iperf Send: ${sv.iperfReceive}" />
+</config> 

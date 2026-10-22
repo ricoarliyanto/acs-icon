@@ -1,0 +1,12 @@
+taskReport.property.version.set("1.0")
+
+val connectionDevice = dmkey.root.WANDevice.`1`.WANConnectionDevice.`1`
+val propToValue = ldm.getLabelled(
+  taskReport.property.internetStatus -> connectionDevice.WANPPPConnection.`1`.ConnectionStatus,
+  taskReport.property.voiceStatus -> connectionDevice.WANIPConnection.`1`.ConnectionStatus,
+  taskReport.property.managementStatus -> connectionDevice.WANIPConnection.`3`.ConnectionStatus
+)
+
+propToValue.foreach { (taskReportProp, value) =>
+  taskReportProp.set(value)
+}

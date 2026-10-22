@@ -1,0 +1,6 @@
+# MTA capability
+# A device has MTA capabilities
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.MTA.%force-value = "true"
+}

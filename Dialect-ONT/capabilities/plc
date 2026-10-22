@@ -1,0 +1,6 @@
+# PLC (HomePlug) capabilitiy
+# Device is able to report PLC parameters including diagnostic and connected devices
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.PLC.%force-value = "true"
+}

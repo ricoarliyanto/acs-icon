@@ -1,0 +1,5 @@
+<config>
+  <getParameters key="${device.rootObject.toParameterKey}.X_AVS_EXT.LAN." />
+  <getParameters key="${device.rootObject.toParameterKey}.X_AVS_EXT.WiFi." />
+  <getParameters key="${device.rootObject.toParameterKey}.X_AVS_EXT.WAN." />
+</config> 

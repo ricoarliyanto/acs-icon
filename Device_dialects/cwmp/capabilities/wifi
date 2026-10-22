@@ -1,0 +1,6 @@
+# WiFi capability
+# A device supports WiFi
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.WiFi.%force-value = "true"
+}

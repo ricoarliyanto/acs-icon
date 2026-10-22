@@ -1,0 +1,13 @@
+<config>
+  <store target="status" value="${task.property.Enabled}" />
+  <store target="name" value="${task.property.Name}" />
+  <store target="cliCommand" value="/queue simple enable numbers=[/queue simple find name=${#name}]" />
+  <if expr="${#status.toBoolean}">
+    <store target="cliCommand" value="/queue simple disable numbers=[/queue simple find name=${#name}]" />
+  </if>
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <getParameters key="Device.X_AVS_EXT.TrafficControl.Queue.Simple." />
+</config>

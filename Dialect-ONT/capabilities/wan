@@ -1,0 +1,6 @@
+# WAN capability
+# A device is able to configure and manage a WAN connection as well as expose basic transfer statistics.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.WAN.%force-value = "true"
+}

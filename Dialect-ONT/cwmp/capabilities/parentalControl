@@ -1,0 +1,6 @@
+# Parental Control capabilitiy
+# A device is able to block websites with provided URLs
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.ParentalControl.%force-value = "true"
+}

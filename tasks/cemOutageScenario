@@ -1,0 +1,30 @@
+val enableOutageScenario = task.parameters.enableOutageScenario.getOpt.filter(_.nonEmpty).flatMap(_.toBooleanOpt).getOr(fail("Parameter enableOutageScenario is mandatory and must be either true or false"))
+
+val outageOnlineStatusMap = Map(true -> "offline.outage", false -> "online")
+val desiredOnlineStatus = outageOnlineStatusMap(enableOutageScenario)
+val currentOnlineStatus = outageOnlineStatusMap(!enableOutageScenario)
+
+val devicesToProcess = devices.find(DeviceQuery(_.properties.cemOnlineStatusGroup.endsWith(currentOnlineStatus)), limit = 1000000)
+if(enableOutageScenario) log.info("Outage scenario: ENABLED") else log.info("Outage scenario: DISABLED")
+log.info("Desired online status: $desiredOnlineStatus")
+log.info("Devices to process for outage scenario: ${devicesToProcess.map(_.id)}")
+var deviceUpdatedCounter = 0
+
+devicesToProcess.filter(device => math.random() < 0.9 || desiredOnlineStatus == "online").foreach { device =>
+  val groupToLeave = device.property.cemOnlineStatusGroup.get.toGroupId
+  // We need to somehow distinguish when we add the group ‘offline.outage’ (enableOutageScenario is true) and when we add ‘online’ (enableOutageScenario is false)
+  val onlineStatusDepth = if (enableOutageScenario) 1 else 2
+  val parentOfGroupToAdd = groupToLeave.ancestor(groupToLeave.depth - onlineStatusDepth) // (...).onlineStatus.online / (...).onlineStatus.offline.outage -> (...).onlineStatus
+  val groupToAdd = parentOfGroupToAdd.subgroup(desiredOnlineStatus)
+  val propertiesToAdd = Map("cemOnlineStatusGroup" -> groupToAdd.toString).encodeJson
+  val updateBodyJson = Json.object(
+  	"addGroups" -> Seq(groupToAdd.toString).encodeJson,
+    "removeGroups" -> Seq(groupToLeave.toString).encodeJson,
+    "addProperties" -> propertiesToAdd
+  )
+	http.localRest("devices/${device.id}", method = "PUT", content = updateBodyJson).tryAndFold(
+  	e => fail("Could not update device for outage scenario: ${e.code} ${e.message}"),
+    response => if (response.isSuccess) deviceUpdatedCounter += 1
+  )
+}
+log.info("Sucessfully updated $deviceUpdatedCounter devices.")

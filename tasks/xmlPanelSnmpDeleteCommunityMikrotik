@@ -1,0 +1,11 @@
+<config>
+  <store target="cliCommand" value="/snmp community remove numbers=${task.property.id.toInt-1}" />
+  <cli protocol="${sv.protocol}">
+    <command cmd="${#cliCommand}" />
+    <out target="output" />
+  </cli>
+  <if expr="${#output.contains('no such item')}">
+    <finish status="ERROR" message="Error while executing the task  ${#output}" />
+  </if>
+  <getParameters key="Device.X_AVS_EXT.SNMP.Community." />
+</config>

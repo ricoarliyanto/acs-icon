@@ -1,0 +1,10 @@
+<config>
+  <store target="button" value="${task.properties.get('buttonIdentifier').replace('X_AVS_EXT.ParentalControl', 'X_ZTE-COM_ParentalControl')}" />
+  <store target="Enable" value="${task.properties.get('Enable')}" />
+  <store target="Mode" value="${task.properties.get('Mode')}" />
+  <log message="settings ${#button}.Enable to ${#Enable}" level="DEBUG" />
+  <set key="${#button}.Enable" value="${#Enable}" />
+  <log message="settings ${#button}.Mode to ${#Mode}" level="DEBUG" />
+  <set key="${#button}.Mode" value="${#Mode}" />
+  <flush />
+</config>

@@ -1,0 +1,95 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS
+include "cwmp.capabilities.generic.dm2"
+include "cwmp.capabilities.localization.dm2"
+include "cwmp.capabilities.management.dm2"
+include "cwmp.capabilities.resources.dm2"
+
+# WAN - INTERNET ACCESS
+include "cwmp.capabilities.dsl.dm2"
+include "cwmp.capabilities.ethernet.dm2"
+# include "cwmp.capabilities.gpon.dm2"
+include "cwmp.capabilities.hfc.dm2"
+include "cwmp.capabilities.lte.dm2"
+include "cwmp.capabilities.ppp.dm2"
+include "cwmp.capabilities.wan.dm2"
+
+# LAN
+include "cwmp.capabilities.bridging.dm2"
+include "cwmp.capabilities.dhcp.dm2"
+include "cwmp.capabilities.dns.dm2"
+include "cwmp.capabilities.lan.dm2"
+
+# LAN - WI-FI
+include "cwmp.capabilities.wifi.dm2"
+include "cwmp.capabilities.macFiltering.dm2"
+include "cwmp.capabilities.mesh.dm2"
+
+# SERVICES
+include "cwmp.capabilities.captivePortal.dm2"
+include "cwmp.capabilities.firewall.dm2"
+include "cwmp.capabilities.forwarding.dm2"
+include "cwmp.capabilities.iptv.dm2"
+# include "cwmp.capabilities.iptvRich.dm2"
+include "cwmp.capabilities.ntp.dm2"
+include "cwmp.capabilities.radius.dm2"
+include "cwmp.capabilities.routing.dm2"
+include "cwmp.capabilities.storage.dm2"
+include "cwmp.capabilities.usb.dm2"
+include "cwmp.capabilities.users.dm2"
+include "cwmp.capabilities.voip.dm2"
+include "cwmp.capabilities.vlan.dm2"
+include "cwmp.capabilities.xmpp.dm2"
+
+# DIAGNOSTICS & MONITORING
+include "cwmp.capabilities.alarm.dm2"
+include "cwmp.capabilities.bulkData.dm2"
+include "cwmp.capabilities.diagnostics.dm2"
+include "cwmp.capabilities.neighborhood.dm2"
+include "cwmp.capabilities.process.dm2"
+include "cwmp.capabilities.status.dm2"
+include "cwmp.capabilities.temperature.dm2"
+include "cwmp.capabilities.syslog.dm2"
+
+# MAINTENANCE
+include "cwmp.capabilities.applications.dm2"
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.reboot"
+include "cwmp.capabilities.restore"
+include "cwmp.capabilities.schedule"
+
+# AVS EXTENSIONS (X_0023C7)
+# include "cwmp.ext.avsystem.dm2"
+
+# FIXES
+# No fixes by default
+
+# Device doesn't have any capabilities we can rely on in default dialect.
+# All capabilities are set to false in cwmp.default. (except Backup/Restore)
+include "capabilities"
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities {
+    Backup.%force-value = "true"
+    Reboot.%force-value = "true"
+    Restore.%force-value = "true"
+  }
+}
+
+remappingStrategy {
+  read_converter {
+    # remember that read converter works after mapping and before virtual patching
+    # Converters were using expression and multiplying the numbers, currenlty we have mac addresses under the lastDataRate not numbers :()
+    # they would fail the conversion action and they wouldn't alert it anywhere 
+    WiFi.%any.AssociatedDevice.%any.Stats.Downstream.LastDataRate = null
+    WiFi.%any.AssociatedDevice.%any.Stats.Upstream.LastDataRate = null
+  } 
+  mapping {
+    root.X_AVS_EXT {
+      WiFiNeighborhood {
+        State.real = "root.WiFi.NeighboringWiFiDiagnostic.DiagnosticsState"
+      }
+    }
+  }
+}

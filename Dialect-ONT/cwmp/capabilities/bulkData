@@ -1,0 +1,6 @@
+# BulkData capability
+# Device has bulk data collection capabilities
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.BulkData.%force-value = "true"
+}

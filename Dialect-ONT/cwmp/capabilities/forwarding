@@ -1,0 +1,6 @@
+# Port forwarding capability
+# A device is able to forward ports between IP addresses.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Forwarding.%force-value = "true"
+}

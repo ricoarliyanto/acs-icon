@@ -1,0 +1,101 @@
+# BDCOM GP1704-4F-E Dialect (Minimal / debug)
+# Stripped down to identify Source of Flush Error.
+# No Read Converters, No Virtual Patching. Pure Mapping.
+
+include "cwmp.default"
+include "cwmp.strategies"
+
+# CAPABILITIES
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.wifi"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.diagnostics"
+
+cwmp {
+  gpvMaxBatchSize = 1
+  bootstrapDiscoveryExpression = "${false}"
+  crDiscoveryExpression = "${inform.isConnectionRequest}"
+  
+  variables {
+     activeWan = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1"
+  }
+}
+
+remappingStrategy {
+  # NO READ CONVERTERS - Debugging Flush Error
+
+  mapping {
+    root.InternetGatewayDevice {
+      WANDevice.real = "InternetGatewayDevice.WANDevice"
+    }
+
+    root.X_AVS_EXT {
+      HardwareVersion.real = "InternetGatewayDevice.DeviceInfo.HardwareVersion"
+      SoftwareVersion.real = "InternetGatewayDevice.DeviceInfo.SoftwareVersion"
+      SerialNumber.real = "InternetGatewayDevice.DeviceInfo.ProvisioningCode"
+      
+      # Simple System Mapping (Direct, no Virtual Patching)
+      # If these don't exist, they will just be null, which is fine for now.
+      # System {
+      #   cpeCpuUsed.real = "InternetGatewayDevice.DeviceInfo.ProcessStatus.CPUUsage"
+      # }
+
+      WAN {
+        GPON.1 {
+           # --- ZTE VISUAL KEYS ---
+           "Wan type".real = "InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.WANAccessType"
+           "Link status".real = "InternetGatewayDevice.WANDevice.1.WANCommonInterfaceConfig.WANAccessType"
+           "MAC address".real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.MACAddress"
+           
+           "RX power".real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower"
+           "TX power".real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.TXPower"
+
+           # Direct stats mapping
+           Bytes.real =  "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesReceived"
+           Packets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsReceived"
+           
+           "Broadcast packets".real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RBroadcastPackets"
+           "Multicast packets".real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RMulticastPackets"
+           "Unicast packets".real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RUnicastPackets"
+           "Pause packets".real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.RpausePackets"
+
+           # --- STANDARD KEYS (Refresher Support) ---
+           RXPower.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.RXPower"
+           TXPower.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.TXPower"
+           Stats.Downstream.Bytes.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesReceived"
+           Stats.Upstream.Bytes.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.BytesSent"
+           Stats.Downstream.Packets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsReceived"
+           Stats.Upstream.Packets.real = "InternetGatewayDevice.WANDevice.1.X_CT-COM_GponInterfaceConfig.Stats.PacketsSent"
+        }
+        
+        PPP {
+             Enable.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Enable"
+             Status.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ConnectionStatus"
+             Name.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Name"
+             # Removed Expression-based mappings for now
+             NATEnabled.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.NATEnabled"
+             ExternalIPAddress.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.ExternalIPAddress"
+             SubnetMask.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.SubnetMask"
+             DefaultGateway.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DefaultGateway"
+             DNSServers.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.DNSServers"
+             MACAddress.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.MACAddress"
+             Uptime.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Uptime"
+             LastConnectionError.real = "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.LastConnectionError"
+        }
+      }
+      
+      WiFi {
+        1 {
+          Enable.real = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Enable"
+          SSID.real = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID"
+          Status.real = "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Status"
+        }
+      }
+
+      Diagnostics.Download.DiagnosticsState.real = "InternetGatewayDevice.DownloadDiagnostics.DiagnosticsState"
+    }
+  }
+}

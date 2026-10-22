@@ -1,0 +1,3 @@
+<config>
+  <getParameters key="${device.rootObject.toParameterKey}.X_AVS_EXT.WiFi." />
+</config> 

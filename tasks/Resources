@@ -1,0 +1,4 @@
+<config samples="15" interval="1">
+  <param key="Root.X_AVS_EXT.Resources.CPUUsed" alias="CPU" />
+  <param key="Root.X_AVS_EXT.Resources.RAMUsedPercent" alias="RAM" />
+</config>

@@ -1,0 +1,207 @@
+<config>
+  <store target="interfacesType" value="false" />
+  <store target="shelfSlotPortType" value="false" />
+  <store target="atm" value="false" />
+  <store target="fdb" value="false" />
+  <store target="fdbWithBridge" value="false" />
+  <store target="fdbWithVlan" value="false" />
+  <get key="Device.X_AVS_EXT.Model" output="model" />
+  <store target="creatorCounter" value="0" />
+  <store target="virtualDeviceEntity" value="&#xA;    &quot;blacklisted&quot;: false,&#xA;    &quot;provisioningEnabled&quot;: true,&#xA;    &quot;ipAddress&quot;: &quot;${device.currentWanIP}&quot;,&#xA;    &quot;serialNumber&quot;: &quot;${#virtualDeviceId}&quot;,&#xA;    &quot;oui&quot;: &quot;${device.oui}&quot;,&#xA;    &quot;modelName&quot;: &quot;${device.modelName} Virtual Port&quot;,&#xA;    &quot;hardwareVersion&quot;: &quot;n/a&quot;,&#xA;    &quot;softwareVersion&quot;: &quot;n/a&quot;,&#xA;    &quot;productClass&quot;: &quot;DSL Port&quot;,&#xA;    &quot;manufacturer&quot;: &quot;${device.manufacturer}&quot;,&#xA;  " />
+  <store target="sharedProperties" value="&#xA;    &quot;dslamId&quot;: &quot;${sv.dslamId}&quot;,&#xA;    &quot;telnetPassword&quot;: &quot;${sv.telnetPassword ? 'n/a'}&quot;,&#xA;    &quot;telnetUsername&quot;: &quot;${sv.telnetUsername ? 'n/a'}&quot;,&#xA;    &quot;sshPassword&quot;: &quot;${sv.sshPassword ? 'n/a'}&quot;,&#xA;    &quot;sshUsername&quot;: &quot;${sv.sshUsername ? 'n/a'}&quot;,&#xA;    &quot;physicalDeviceId&quot; : &quot;${sv.physicalDeviceId}&quot;,&#xA;  " />
+  <store target="sharedGroups" value="&#xA;     &quot;root.ports.dsl.${#model}.${device.id}&quot;,&#xA;     &quot;${device.directGroups.filter(_.matches('root.(snmp|telnet)')).anyElement}&quot;,&#xA;     &quot;root.monitoring&quot;&#xA;  " />
+  <store target="tl1Properties" value="${''}" />
+  <if expr="${device.hasProperty('tl1Mnemonic')}">
+    <store target="tl1Properties" value="&#xA;      &quot;deviceMgmtIp&quot;: &quot;${sv.deviceMgmtIp}&quot;,&#xA;      &quot;tl1Password&quot;: &quot;${sv.tl1Password}&quot;,&#xA;      &quot;tl1Username&quot;: &quot;${sv.tl1Username}&quot;,&#xA;      &quot;tl1Mnemonic&quot;: &quot;${sv.tl1Mnemonic}&quot;,&#xA;      &quot;connectionRequestUrl&quot;: &quot;${sv.connectionRequestUrl}&quot;,&#xA;    " />
+  </if>
+  <store target="telnet" value="${''}" />
+  <if expr="${device.directGroups.contains('root.telnet')}">
+    <store target="telnet" value="&#xA;      &quot;connectionRequestUrl&quot;: &quot;${sv.connectionRequestUrl}&quot;,&#xA;    " />
+  </if>
+  <restLocal url="groups" method="POST" content="&#xA;    {&#xA;       &quot;id&quot;: &quot;root.ports.dsl.${device.modelName}.${device.id}&quot;,&#xA;       &quot;description&quot;: &quot;Group for ${device.id} virtual ports&quot;&#xA;    }">
+    <out from="error" to="result" default="n/a" />
+  </restLocal>
+  <foreach list="${dm.X_AVS_EXT.DSLAM.any.keys}" iterator="table">
+    <if expr="${#table.keySegment(-1) == 'ATM'}">
+      <store target="atm" value="true" />
+    </if>
+    <if expr="${#table.keySegment(-1) == 'Bridge'}">
+      <store target="fdbWithBridge" value="true" />
+    </if>
+    <if expr="${#table.keySegment(-1) == 'VLAN'}">
+      <store target="fdbWithVlan" value="true" />
+    </if>
+    <if expr="${#table.keySegment(-1) == 'FDB'}">
+      <store target="fdb" value="true" />
+    </if>
+    <if expr="${#table.keySegment(-1) == 'Interfaces'}">
+      <store target="interfacesType" value="true" />
+    </if>
+    <if expr="${#table.keySegment(-1) == 'Shelf'}">
+      <store target="shelfSlotPortType" value="true" />
+    </if>
+  </foreach>
+  <if expr="${#atm.toBoolean}">
+    <foreach list="${dm.X_AVS_EXT.DSLAM.ATM.any.keys}" iterator="atmKey">
+      <in key="${#atmKey}">
+        <defaults get.fromCache="true">
+          <get key="Vpi" output="vpi" />
+          <get key="Vci" output="vci" />
+          <get key="LineIndex" output="lineIndex" />
+          <get key="PvcIndex" output="pvcIndex" />
+        </defaults>
+        <if expr="${taskReport.stringProperty.get(#lineIndex+'/pvc') == null}">
+          <store target="${#lineIndex}/pvc" value="${#vpi}/${#vci}" />
+          <store target="${#lineIndex}/pvcIndex" value="${#pvcIndex}" />
+          <store target="${#pvcIndex}/lineIndex" value="${#lineIndex}" />
+          <else>
+            <store target="${#lineIndex}/pvc" value="${taskReport.stringProperty.get(#lineIndex+'/pvc')},${#vpi}/${#vci}" />
+            <store target="${#lineIndex}/pvcIndex" value="${taskReport.stringProperty.get(#lineIndex+'/pvcIndex')},${#pvcIndex}" />
+            <store target="${#pvcIndex}/lineIndex" value="${taskReport.stringProperty.get(#pvcIndex+'/lineIndex')},${#lineIndex}" />
+          </else>
+        </if>
+      </in>
+    </foreach>
+    <!--<getParameters key="${#table}" flush="true" /> TODO: uncomment once [UMP-8625] is done-->
+  </if>
+  <if expr="${#fdbWithBridge.toBoolean}">
+    <foreach list="${dm.X_AVS_EXT.DSLAM.Bridge.any.keys}" iterator="bridgeKey">
+      <in key="${#bridgeKey}">
+        <defaults get.fromCache="true">
+          <get key="BridgeIndex" output="bridgeIndex" />
+          <get key="LineIndex" output="lineIndex" />
+        </defaults>
+        <if expr="${taskReport.stringProperty.get(#bridgeIndex+'/lineIndex') == null}">
+          <store target="${#bridgeIndex}/lineIndex" value="${#lineIndex}" />
+          <else>
+            <store target="${#bridgeIndex}/lineIndex" value="${taskReport.stringProperty.get(#bridgeIndex+'/lineIndex')},${#lineIndex}" />
+          </else>
+        </if>
+      </in>
+    </foreach>
+  </if>
+  <if expr="${#fdb.toBoolean}">
+    <foreach list="${dm.X_AVS_EXT.DSLAM.FDB.any.keys}" iterator="fdbKey">
+      <in key="${#fdbKey}">
+        <defaults get.fromCache="true">
+          <get key="CpeMACAddress" output="cpeMACAddress" />
+          <if expr="${#fdbWithBridge.toBoolean}">
+            <get key="LineIndex" output="bridgeIndex" />
+            <store target="lineIndex" value="${taskReport.stringProperty.get(#bridgeIndex+'/lineIndex')}" />
+            <else>
+              <get key="LineIndex" output="lineIndex" />
+            </else>
+          </if>
+        </defaults>
+        <if expr="${taskReport.stringProperty.get(#lineIndex+'/mac') == null}">
+          <store target="${#lineIndex}/mac" value="${#cpeMACAddress}" />
+          <else>
+            <store target="${#lineIndex}/mac" value="${taskReport.stringProperty.get(#lineIndex+'/mac')},${#cpeMACAddress}" />
+          </else>
+        </if>
+      </in>
+    </foreach>
+    <!--<getParameters key="${#table}" flush="true" /> TODO: uncomment once [UMP-8625] is done-->
+  </if>
+  <if expr="${#fdbWithVlan.toBoolean}">
+    <foreach list="${dm.X_AVS_EXT.DSLAM.VLAN.any.FDB.any.keys}" iterator="fdbKey">
+      <in key="${#fdbKey}">
+        <defaults get.fromCache="true">
+          <get key="CpeMACAddress" output="cpeMACAddress" />
+          <get key="LineIndex" output="lineIndex" />
+          <store target="lineIndex" value="${taskReport.stringProperty.get(#lineIndex+'/lineIndex')}" />
+        </defaults>
+        <if expr="${taskReport.stringProperty.get(#lineIndex+'/mac') == null}">
+          <store target="${#lineIndex}/mac" value="${#cpeMACAddress}" />
+          <else>
+            <store target="${#lineIndex}/mac" value="${taskReport.stringProperty.get(#lineIndex+'/mac')},${#cpeMACAddress}" />
+          </else>
+        </if>
+      </in>
+    </foreach>
+    <!--<getParameters key="${#table}" flush="true" /> TODO: uncomment once [UMP-8625] is done-->
+  </if>
+  <if expr="${#shelfSlotPortType.toBoolean}">
+    <foreach list="${dm.X_AVS_EXT.DSLAM.Shelf.any.Slot.any.Port.any.keys}" iterator="lineKey">
+      <store target="shelfId" value="${#lineKey.split('\\.').get(4)}" />
+      <store target="slotId" value="${#lineKey.split('\\.').get(6)}" />
+      <store target="portId" value="${#lineKey.split('\\.').get(8)}" />
+      <in key="${#lineKey}">
+        <defaults get.fromCache="true">
+          <get key="Description" output="description" />
+          <get key="LineIndex" output="lineIndex" />
+          <get key="ChannelIndex" output="channelIndex" />
+          <get key="AtmIndex" output="atmIndex" />
+          <get key="PvcIndex" output="pvcIndex" />
+          <get key="MacIndex" output="macIndex" />
+        </defaults>
+      </in>
+      <store target="virtualDeviceId" value="${list(device.id, #shelfId, #slotId, #portId).join('/')}" />
+      <store target="cpeProperties" value="${''}" />
+      <if expr="${(taskReport.stringProperty.get(#macIndex+'/mac') ? 'n/a') != 'n/a'}">
+        <store target="cpeProperties" value="&#xA;          &quot;line_1_cpeMACAddress&quot;: &quot;${taskReport.stringProperty.get(#macIndex+'/mac')}&quot;,&#xA;        " />
+      </if>
+      <store target="properties" value="         ${#sharedProperties}         ${#telnet}         ${#tl1Properties}         ${#cpeProperties}         &quot;shelfId&quot;: &quot;${#shelfId}&quot;,&#xA;        &quot;slotId&quot;: &quot;${#slotId}&quot;,&#xA;        &quot;portId&quot;: &quot;${#portId}&quot;,&#xA;        &quot;lineIndex&quot;: &quot;${#lineIndex}&quot;,&#xA;        &quot;atmIndex&quot;: &quot;${#atmIndex}&quot;,&#xA;        &quot;channelIndex&quot;: &quot;${#channelIndex}&quot;,&#xA;        &quot;pvcIndex&quot;: &quot;${taskReport.stringProperty.get(#lineIndex+'/pvcIndex') ? (#pvcIndex ? 'n/a')}&quot;,&#xA;        &quot;configuredPvcs&quot;: &quot;${taskReport.stringProperty.get(#lineIndex+'/pvc') ? 'n/a'}&quot;&#xA;      " />
+      <store target="payload" value="{&#xA;       &quot;id&quot;: &quot;${#virtualDeviceId}&quot;,&#xA;       &quot;directGroups&quot;: [${#sharedGroups}],&#xA;       &quot;properties&quot;: {${#properties}},&#xA;       ${#virtualDeviceEntity}        &quot;description&quot;: &quot;DSL Port ${list(#shelfId, #slotId, #portId).join('/')} on ${device.id}&quot;&#xA;       }" />
+      <log message="Creating device ${#virtualDeviceId}" />
+      <restLocal url="devices" method="POST" content="${#payload}">
+        <out from="error" to="result" default="n/a" />
+      </restLocal>
+      <if expr="${#result != null or #result != 'n/a'}">
+        <log message="Updating ${#virtualDeviceId}" />
+        <restLocal url="devices/${#virtualDeviceId.replaceAll('/','%2F').replaceAll('#','%23')}" method="PUT" content="{&#xA;         &quot;addProperties&quot;: {${#properties}},&#xA;         &quot;addGroups&quot;: [${#sharedGroups}],&#xA;         ${#virtualDeviceEntity}          &quot;description&quot;: &quot;DSL Port ${list(#shelfId, #slotId, #portId).join('/')} on ${device.id}&quot;&#xA;       }" />
+      </if>
+      <store target="creatorCounter" value="${#creatorCounter.toInt + 1}" />
+    </foreach>
+  </if>
+  <if expr="${#interfacesType.toBoolean}">
+    <foreach list="${dm.X_AVS_EXT.DSLAM.Interfaces.any.keys}" iterator="lineKey">
+      <store target="lineIndex" value="${#lineKey.split('\\.').get(4)}" />
+      <store target="macIndex" value="${#lineIndex}" />
+      <in key="${#lineKey}">
+        <defaults get.fromCache="true">
+          <get key="PortId" output="portId" />
+          <store target="shelfId" value="1" />
+          <get key="SlotId" output="slotId" />
+          <get key="Description" output="description" />
+          <!--<get key="ShelfId" target="shelfId" /> for safety-->
+        </defaults>
+      </in>
+      <store target="virtualDeviceId" value="${list(device.id, #shelfId, #slotId, #portId).join('/')}" />
+      <store target="cpeProperties" value="${''}" />
+      <if expr="${(taskReport.stringProperty.get(#macIndex+'/mac') ? 'n/a') != 'n/a'}">
+        <store target="cpeProperties" value="&#xA;          &quot;line_1_cpeMACAddress&quot;: &quot;${taskReport.stringProperty.get(#macIndex+'/mac')}&quot;,&#xA;        " />
+      </if>
+      <if expr="${#description.matches('ADSL|SHDSL|VDSL|XDSL_Channel')}">
+        <if expr="${#description.matches('ADSL|SHDSL|VDSL')}">
+          <restLocal url="groups" method="POST" content="&#xA;            {&#xA;              &quot;id&quot;: &quot;root.ports.dsltype.${#description.toLowerCase}.${#model}.${device.id}&quot;,&#xA;              &quot;description&quot;: &quot;Group for ${device.id} virtual ports, ${#description.toLowerCase} variant&quot;&#xA;            }">
+            <out from="error" to="result" default="n/a" />
+          </restLocal>
+          <store target="groups" value="&#xA;            &quot;root.ports.dsltype.${#description.toLowerCase}.${#model}.${device.id}&quot;,&#xA;            ${#sharedGroups}           " />
+          <store target="properties" value="             ${#sharedProperties}             ${#telnet}             ${#tl1Properties}             ${#cpeProperties}             &quot;shelfId&quot;: &quot;${#shelfId}&quot;,&#xA;            &quot;slotId&quot;: &quot;${#slotId}&quot;,&#xA;            &quot;portId&quot;: &quot;${#portId}&quot;,&#xA;            &quot;lineIndex&quot;: &quot;${#lineIndex}&quot;,&#xA;            &quot;pvcIndex&quot;: &quot;${taskReport.stringProperty.get(#lineIndex+'/pvcIndex') ? 'n/a'}&quot;,&#xA;            &quot;configuredPvcs&quot;: &quot;${taskReport.stringProperty.get(#lineIndex+'/pvc') ? 'n/a'}&quot;&#xA;          " />
+          <else>
+            <if expr="${#description == 'XDSL_Channel'}">
+              <store target="channelIndex" value="${#lineIndex}" />
+              <store target="groups" value="&#xA;                ${#sharedGroups}               " />
+              <store target="properties" value="&#xA;                &quot;shelfId&quot;: &quot;${#shelfId}&quot;,&#xA;                &quot;slotId&quot;: &quot;${#slotId}&quot;,&#xA;                &quot;portId&quot;: &quot;${#portId}&quot;,&#xA;                &quot;channelIndex&quot;: &quot;${#channelIndex}&quot;&#xA;              " />
+            </if>
+          </else>
+        </if>
+        <store target="payload" value="{&#xA;          &quot;id&quot;: &quot;${#virtualDeviceId}&quot;,&#xA;          &quot;directGroups&quot;: [${#groups}],&#xA;          &quot;properties&quot;: {${#properties}},&#xA;          ${#virtualDeviceEntity}           &quot;description&quot;: &quot;DSL Port ${list(#shelfId, #slotId, #portId).join('/')} on ${device.id}&quot;&#xA;        }" />
+        <log message="Creating device ${#virtualDeviceId}" />
+        <restLocal url="devices" method="POST" content="${#payload}">
+          <out from="error" to="result" default="n/a" />
+        </restLocal>
+        <if expr="${#result != null or #result != 'n/a'}">
+          <log message="Updating ${#virtualDeviceId}" />
+          <restLocal url="devices/${#virtualDeviceId.replaceAll('/','%2F').replaceAll('#','%23')}" method="PUT" content="{&#xA;            &quot;addProperties&quot;: {${#properties}},&#xA;            &quot;addGroups&quot;: [${#groups}],&#xA;            ${#virtualDeviceEntity}             &quot;description&quot;: &quot;DSL Port ${list(#shelfId, #slotId, #portId).join('/')} on ${device.id}&quot;&#xA;          }" />
+        </if>
+        <store target="creatorCounter" value="${#creatorCounter.toInt + 1}" />
+        <else>
+          <log message="Skipping interface: ${#description}" />
+        </else>
+      </if>
+    </foreach>
+  </if>
+  <log message="Added ${#creatorCounter} virtual lines" />
+</config>

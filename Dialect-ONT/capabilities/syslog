@@ -1,0 +1,6 @@
+# Syslog capability
+# A device is able to configure and manage Syslog
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.Syslog.%force-value = "true"
+}

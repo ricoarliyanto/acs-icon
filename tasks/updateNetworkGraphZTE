@@ -1,0 +1,19 @@
+var nodes = Seq.empty[Json]
+var links = Seq.empty[Json]
+
+val deviceMaster =  Json.object(Seq(
+  "nodeType" -> "MeshDeviceNode",
+  "id" -> sv.mac.get.toUpper.replace(":",""),
+  "mac" -> sv.mac.get.toUpper.replace(":",""),
+  "serial" -> device.serialNumber,
+  "role" -> "master",
+  "deviceName" -> device.productClass,
+).map { (k, v) => (k, Json.string(v)) })
+
+val interfaceLan =  Json.object(Seq(
+  "nodeType" -> "MeshInterfaceNode",
+  "id" -> "${sv.mac.get.toUpper.replace(":","")}-LAN-UP",
+  "mac" -> sv.mac.get.toUpper.replace(":",""),
+  "interfaceType" -> "LAN",
+  "name" -> "LAN-UP",
+).map { (k, v) => (k, Json.string(v)) })

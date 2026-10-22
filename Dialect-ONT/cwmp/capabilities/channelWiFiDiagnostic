@@ -1,0 +1,6 @@
+# WiFi channel diagnostic
+# A device is able to scan Wi-Fi channels and report the results.
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.ChannelWiFiDiagnostic.%force-value = "true"
+}

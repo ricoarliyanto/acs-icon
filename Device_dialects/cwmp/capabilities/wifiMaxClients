@@ -1,0 +1,6 @@
+# WiFi Max Clients capability
+# A device supports WiFi Max Clients configuration
+
+virtualPatching.patching {
+  root.X_AVS_EXT.Capabilities.WiFiMaxClients.%force-value = "true"
+}

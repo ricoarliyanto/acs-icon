@@ -1,0 +1,31 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic"
+include "cwmp.capabilities.management"
+include "cwmp.capabilities.resources"
+include "cwmp.capabilities.status"
+include "cwmp.capabilities.temperature"
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet"
+include "cwmp.capabilities.ppp"
+include "cwmp.capabilities.wan"
+include "cwmp.capabilities.gpon"
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging"
+include "cwmp.capabilities.dhcp"
+include "cwmp.capabilities.dns"
+include "cwmp.capabilities.lan"
+include "cwmp.capabilities.ntp"
+include "cwmp.capabilities.wifi"
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics"
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+remappingStrategy.mapping {
+  root.LANDevice.1.WLANConfiguration.1.RadioEnabled.real = "root.LANDevice.1.WLANConfiguration.1.Enable"
+}

@@ -1,0 +1,90 @@
+# Default strategies for CWMP
+include "cwmp.strategies"
+
+# CPE STATUS & MONITORING
+include "cwmp.capabilities.generic.dm2"
+include "cwmp.capabilities.management.dm2"
+include "cwmp.capabilities.resources.dm2"
+include "cwmp.capabilities.status.dm2"
+include "cwmp.capabilities.syslog.dm2"
+
+# INTERNET ACCESS
+include "cwmp.capabilities.ethernet.dm2"
+include "cwmp.capabilities.ppp.dm2"
+include "cwmp.capabilities.wan.dm2"
+
+# AVAILABLE FEATURES & SERVICES
+include "cwmp.capabilities.bridging.dm2"
+include "cwmp.capabilities.dhcp.dm2"
+include "cwmp.capabilities.dns.dm2"
+include "cwmp.capabilities.firewall.dm2"
+include "cwmp.capabilities.forwarding.dm2"
+include "cwmp.capabilities.iptv.dm2"
+include "cwmp.capabilities.lan.dm2"
+include "cwmp.capabilities.macFiltering.dm2"
+include "cwmp.capabilities.ntp.dm2"
+include "cwmp.capabilities.process.dm2"
+include "cwmp.capabilities.radius.dm2"
+include "cwmp.capabilities.routing.dm2"
+include "cwmp.capabilities.storage.dm2"
+include "cwmp.capabilities.usb.dm2"
+include "cwmp.capabilities.users.dm2"
+include "cwmp.capabilities.voip.dm2"
+include "cwmp.capabilities.vlan.dm2"
+include "cwmp.capabilities.wifi.dm2"
+include "cwmp.capabilities.xmpp.dm2"
+
+# DIAGNOSTICS
+include "cwmp.capabilities.diagnostics.dm2"
+include "cwmp.capabilities.neighborhood.dm2"
+
+# CONFIGURATION MANAGEMENT
+include "cwmp.capabilities.backup"
+include "cwmp.capabilities.restore"
+
+# MAINTENANCE
+include "cwmp.capabilities.reboot"
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    WiFi {
+      %any {
+        SupportedStandards = null
+        SupportedStandards = {}
+      }
+    }
+  }
+}
+
+remappingStrategy {
+ 
+mapping {
+  root.X_AVS_EXT.WAN {
+      Stats {
+          Downstream.Bytes.real = "root.Ethernet.Interface.1.Stats.BytesReceived"
+          Downstream.Packets.real = "root.Ethernet.Interface.1.Stats.BroadcastPacketsReceived"
+          Upstream.Bytes.real = "root.Ethernet.Interface.1.Stats.BytesSent"
+          Upstream.Packets.real = "root.Ethernet.Interface.1.Stats.BroadcastPacketsSent"
+      }
+    }
+  }
+}
+
+realPatching.patching {
+  root.IP.Diagnostics {
+    DownloadDiagnostics {
+      NumberOfConnections.%force-value = "1"
+      TimeBasedTestDuration.%force-value = "5"
+    }
+    IPPing {
+      Host.%force-value = "speedtest.maxis.com.my"
+      NumberOfRepetitions.%force-value = "4"
+    }
+    UploadDiagnostics {
+      UploadURL.%force-value = "http://tr143-test-server04.maxis.com.my/upload"
+      NumberOfConnections.%force-value = "1"
+      TimeBasedTestDuration.%force-value = "5"
+    }
+  }
+}
+

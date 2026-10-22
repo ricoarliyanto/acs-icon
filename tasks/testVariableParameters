@@ -1,0 +1,6 @@
+<config>
+  <log message="size: ${task.parameters.size}" />
+  <foreach list="${task.parameters.keySet}">
+    <log message="nazwa: ${#i} wartosc: ${getVariable(#i)}" />
+  </foreach>
+</config>

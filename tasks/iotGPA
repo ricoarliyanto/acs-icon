@@ -1,0 +1,3 @@
+<config saveResult="true">
+  <parameter name="${#dataModelKey.toString}" />
+</config>

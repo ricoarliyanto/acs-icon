@@ -1,0 +1,29 @@
+<config>
+  <sshSession address="${device.currentWanIP}" windowsEndline="true" username="${sv.sshUser}" password="${sv.sshPass}">
+    <sshCommand command=":hostmgr list" output="hosts" />
+    <sshCommand command="exit" />
+  </sshSession>
+  <if expr="${#hosts.split(&quot;\\n&quot;).length &lt; 3}">
+    <finish status="ERROR" message="Invalid command output. Probably connection error/timeout" />
+  </if>
+  <store target="hostsParsed" value="${#hosts = #hosts.split(&quot;\n&quot;).asList.dropWhile(!_.startsWith('MAC-address')).join(&quot;\n&quot;);&#xA;#s = #hosts.split(&quot;\n&quot;).get(0);&#xA;#sixth = #s.indexOf(&quot;Hw Intf&quot;).toString;&#xA;#seventh = #s.indexOf(&quot;Hostname&quot;).toString;&#xA;#hosts.split(&quot;\n&quot;).asList.drop(2).dropRight(1).map(s=&gt;s.substring(#sixth.toInt)).map(s =&gt; {&#xA;#int = s.substring(0, s.indexOf(&quot; &quot;, #seventh.toInt-#sixth.toInt-1)).stripLineEnd;&#xA;#host = s.substring(s.indexOf(&quot; &quot;, #seventh.toInt-#sixth.toInt-1)).stripLineEnd;&#xA;string.trimToEmpty(#host) + &quot;`&quot; + string.trimToEmpty(#int);&#xA;}).join(&quot;\n&quot;);&#xA;}" />
+  <store target="amount" value="${#hostsParsed.split(&quot;\n&quot;).length}" />
+  <store type="devProp" target="currentHosts" value=" " />
+  <while expr="${#amount.toInt &gt; 0}">
+    <store target="amount" value="${#amount.toInt - 1}" />
+    <store target="currentHosts" value="${&quot;interfaceName_&quot; + #hostsParsed.split(&quot;\n&quot;).asList.get(#amount.toInt).split(&quot;`&quot;).asList.get(0) + &quot;,&quot; + sv.currentHosts}" type="devProp" />
+    <store type="devProp" target="interfaceName_${#hostsParsed.split(&quot;\n&quot;).asList.get(#amount.toInt).split(&quot;`&quot;).asList.get(0)}" value="${#hostsParsed.split(&quot;\n&quot;).asList.get(#amount.toInt).split(&quot;`&quot;).asList.get(1)}" />
+  </while>
+  <store target="hostsToDelete" value="${device.properties.keySet.filter(prop =&gt; prop.startsWith(&quot;interfaceName_&quot;)).filter(prop =&gt; !sv.currentHosts.split(&quot;,&quot;).asList.contains(prop)).join(&quot;,&quot;)}" />
+  <store target="amount" value="${#hostsToDelete.split(&quot;\n&quot;).length}" />
+  <while expr="${#amount.toInt &gt; 0}">
+    <store target="amount" value="${#amount.toInt - 1}" />
+    <removeProperty target="${#hostsToDelete.split(&quot;,&quot;).get(#amount.toInt)}" />
+  </while>
+  <removeProperty target="currentHosts" />
+  <store target="hosts" value="${#hosts.split(&quot;\n&quot;).asList.dropRight(1).join(&quot;\n&quot;)}" />
+  <task template="refreshDataModelTemplate" class="com.avsystem.ump.acs.task.RefreshDataModelTask" />
+  <foreach query="${root.X_AVS_EXT.LAN.Devices.any}">
+    <get key="${#i}.InterfaceName" />
+  </foreach>
+</config>

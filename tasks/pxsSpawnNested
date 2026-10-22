@@ -1,0 +1,19 @@
+log.warn("this is a nested spawn")
+
+val employee: Json = Json.object(
+  "name" -> Json.string("Bob Foo"),
+  "salary" -> Json.number(50000),
+  "age" -> Json.number(31)
+)
+val response: HttpResponse = http.sendRequest(
+  "http://dummy.restapiexample.com/api/v1/create",
+  timeout = 2.seconds,
+  method = "POST",
+  headers = Seq(
+    "Content-Type" -> "application/json"
+  ),
+  content = employee.render.encodeUTF8
+)
+val respJson: Json = response.content.decodeUTF8.parseJson
+val id: Int = respJson.data.id.asInt
+log.info("New employee id is $id") 

@@ -1,0 +1,64 @@
+<config>
+  <comment text="This is for showcase purpose. For prod the speedtest servers needs to be configured." />
+  <log message="Performing IP Ping" />
+  <message message="Performing IP Ping" />
+  <log message="Performing Download test" />
+  <message message="Performing Download test" />
+  <log message="OK" />
+  <message message="&lt;font color='green'&gt;OK&lt;/font&gt;" />
+  <task class="com.avsystem.ump.acs.task.diagnostics.DownloadDiagnosticsTask">
+    <config>
+      <Resource ResourceId="DownloadDiagnosticResource1024" />
+    </config>
+    <output var="Result.TotalBytesReceived" alias="TotalBytesReceived" />
+    <output var="Result.BOMTime" alias="BOMTime" />
+    <output var="Result.EOMTime" alias="EOMTime" />
+  </task>
+  <store target="TotalBytesReceived" value="${1000000+(math.random*1000000).toInt}" />
+  <store target="BOMTime" value="1900-01-00T00:00:00.000000" />
+  <store target="EOMTime" value="1900-01-00T00:00:05.000000" />
+  <store target="Speed" value="${#TotalBytesReceived.toInt*1000/(#EOMTime.toDate('YYYY-MM-DD\'T\'hh:mm:ss.SSSSSSS').millis - #BOMTime.toDate('YYYY-MM-DD\'T\'hh:mm:ss.SSSSSSS').millis)}" />
+  <log message="Speed is ${3+(math.random*20).toInt} Mbps" />
+  <message message="Get WiFi Parameters " />
+  <log message="Get WiFi Parameters" />
+  <message message="Get WiFi Parameters " />
+  <in key="InternetGatewayDevice.X_AVS_EXT.WiFi.1">
+    <get key="Security" output="Security" />
+    <store target="Clients" value="0" />
+    <foreach query="${prefix.AssociatedDevice.any}">
+      <store target="Clients" value="${#Clients.toInt + 1}" />
+    </foreach>
+  </in>
+  <log message="Diagnosing problem ..." />
+  <message message="Diagnosing problem ..." />
+  <log message="No problems found" />
+  <message message="No problems found" />
+  <store target="ChangeChannal" value="false" />
+  <store target="SetSecurity" value="false" />
+  <if expr="${#Speed.toInt &lt; 1000}">
+    <log message="Low speed detected ${#Speed}" level="WARN" />
+    <message message="Low speed detected" level="WARN" />
+    <store target="ChangeChannal" value="true" />
+  </if>
+  <if expr="${#Security == 'NONE'}">
+    <log message="Unsecured WiFi" level="WARN" />
+    <message message="Unsecured WiFi" level="WARN" />
+    <if expr="${#Clients.toInt &gt; 10}">
+      <log message="Too many clients" level="WARN" />
+      <message message="Too many clients" level="WARN" />
+      <store target="SetSecurity" value="true" />
+    </if>
+  </if>
+  <log message="Diagnostic complete." />
+  <message message="Diagnostic complete." />
+  <if expr="${#ChangeChannal.toBoolean}">
+    <set key="InternetGatewayDevice.X_AVS_EXT.WiFi.1.Channel" value="${(math.random * 12 + 1).toInt}" />
+    <log message="Applying fix: Change WiFi channel" />
+    <message message="Applying fix: Change WiFi channel" />
+  </if>
+  <if expr="${#SetSecurity.toBoolean}">
+    <set key="InternetGatewayDevice.X_AVS_EXT.WiFi.1.Security" value="WPA2" />
+    <log message="Applying fix: Change WiFi security" />
+    <message message="Applying fix: Change WiFi security" />
+  </if>
+</config>

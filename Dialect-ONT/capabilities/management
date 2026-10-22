@@ -1,0 +1,19 @@
+# CWMP management capability
+# A device is able to configure CWMP parameters important for a management server.
+
+virtualPatching.patching {
+  root.X_AVS_EXT {
+    Management {
+      %force-object-exists = true
+      Domain {
+        %force-value = "${device.domain}"
+        %force-type = "xsd:string"
+      }
+      Protocols {
+        %force-value = "${'"${managementProtocols}"'.splitBy(',').filter(_.nonEmpty).toSet.toList.sorted.join(',')}"
+        %force-type = "xsd:string"
+      }
+    }
+    Capabilities.Management.%force-value = "true"
+  }
+}
